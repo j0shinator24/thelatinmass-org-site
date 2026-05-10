@@ -514,6 +514,44 @@
   }
   .link-btn:hover { color: var(--burgundy); }
 
+  /* ─── Daily-goal mini bar shown above the flashcard ─── */
+  .card-goal {
+    margin: -12px 0 -4px;
+    padding: 8px 12px;
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+  .card-goal-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--taupe-deep);
+  }
+  .card-goal-badge {
+    color: var(--green);
+    font-size: 0.95rem;
+    line-height: 1;
+  }
+  .card-goal-bar {
+    height: 4px;
+    background: #e8dac4;
+    overflow: hidden;
+    border-radius: 2px;
+  }
+  .card-goal-bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--burgundy);
+    transition: width 0.35s ease-out;
+  }
+
   /* ─── Today's goal banner (Calendar view) ─── */
   .goal-banner {
     background: #fff;
@@ -798,7 +836,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v13-2026-05-10-learning-steps';
+  var APP_BUILD = 'v14-2026-05-10-card-goal-bar';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1619,12 +1657,31 @@
 
     var canUndo = HISTORY.length > 0;
     var ts = getTodayStats();
-    var todayProgress = ts.reviewedToday + ' / ' + (ts.reviewedToday + ts.totalGoal) + ' today';
+    var goalDone = ts.reviewedToday;
+    // Goal denominator is whichever is bigger: today's full target (done +
+    // remaining) or what you've already done. After you blow past target,
+    // bar stays full at 100% rather than going > 100%.
+    var goalTotal = Math.max(goalDone, goalDone + ts.totalGoal);
+    var goalPct = goalTotal > 0 ? Math.min(100, Math.round(100 * goalDone / goalTotal)) : 0;
+    var goalLabel;
+    if (goalTotal === 0) {
+      goalLabel = 'Bonus round';
+    } else if (goalDone >= goalTotal) {
+      goalLabel = 'Today\'s goal complete · ' + goalDone + ' done';
+    } else {
+      goalLabel = goalDone + ' / ' + goalTotal + ' today';
+    }
     var html = '<div class="card-section">'
             + '<div class="progress">'
               + '<button id="backBtn">← Back to decks</button>'
-              + '<span class="prog-mid">' + ACTIVE_DECK.name + ' &middot; ' + todayProgress + '</span>'
+              + '<span class="prog-mid">' + escapeHtml(ACTIVE_DECK.name) + '</span>'
               + '<button id="prevBtn" class="prev-btn"' + (canUndo ? '' : ' disabled aria-disabled="true"') + ' title="' + (canUndo ? 'Previous card (undo last rating)' : 'No previous card to go back to') + '">← Previous</button>'
+            + '</div>'
+            + '<div class="card-goal">'
+              + '<div class="card-goal-row"><span>' + escapeHtml(goalLabel) + '</span>'
+              + (goalDone >= goalTotal && goalTotal > 0 ? '<span class="card-goal-badge">✓</span>' : '')
+              + '</div>'
+              + '<div class="card-goal-bar"><span class="card-goal-bar-fill" style="width:' + goalPct + '%"></span></div>'
             + '</div>'
             + '<div class="card" id="cardEl">'
               // Pre-flip: just the Latin prompt. Post-flip: image (memory
