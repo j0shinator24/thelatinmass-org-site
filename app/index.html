@@ -167,15 +167,19 @@
   /* ─── Card view ─── */
   .card-section { display: flex; flex-direction: column; gap: 24px; }
   .progress {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
     align-items: center;
+    gap: 8px;
     color: var(--taupe);
     font-family: 'Cinzel', serif;
     font-size: 0.7rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
   }
+  .progress > .prog-mid { text-align: center; }
+  .progress > #backBtn { justify-self: start; }
+  .progress > .prev-btn { justify-self: end; }
   .progress button {
     background: transparent;
     border: 0;
@@ -183,8 +187,33 @@
     cursor: pointer;
     font: inherit;
     padding: 8px 4px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
   .progress button:hover { color: var(--burgundy); }
+  .progress .prev-btn[disabled] { color: #cdc4b6; cursor: default; }
+  .progress .prev-btn[disabled]:hover { color: #cdc4b6; }
+
+  /* Un-flip button below the rate row -- secondary action, smaller. */
+  .unflip-btn {
+    background: transparent;
+    border: 0;
+    color: var(--taupe-dark);
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    margin: 4px auto 0;
+    display: block;
+    min-height: 40px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+  .unflip-btn:hover { color: var(--burgundy); }
   .card {
     background: #fff;
     border: 1px solid var(--rule);
@@ -651,7 +680,7 @@
 </main>
 
 <script>
-  console.info('[thelatinmass] app-v8-2026-05-10-peek-button');
+  console.info('[thelatinmass] app-v9-2026-05-10-back-buttons');
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -806,6 +835,11 @@
   var CURRENT = null;
   var CURRENT_FLIPPED = false;
   var IMAGE_PEEKED = false;
+  // Undo history. Each entry is {card, prevUserState} captured BEFORE that
+  // card was rated. "Previous" pops the top, restores card + state, lets the
+  // user re-rate (overwrites the prior upsert).
+  var HISTORY = [];
+  var HISTORY_MAX = 50;
   var REVIEW_START = 0;
   var SESSION_REVIEWS = 0;
 
@@ -1286,6 +1320,7 @@
   function startDeck(deckId) {
     ACTIVE_DECK = STATIC.decks.find(function (d) { return d.id === deckId; });
     SESSION_REVIEWS = 0;
+    HISTORY = [];
     buildQueue();
     nextCard();
   }
@@ -1387,10 +1422,12 @@
       ? '<div class="interlinear">' + escapeHtml(english) + '</div>'
       : '';
 
+    var canUndo = HISTORY.length > 0;
     var html = '<div class="card-section">'
             + '<div class="progress">'
               + '<button id="backBtn">← Back to decks</button>'
-              + '<span>' + ACTIVE_DECK.name + ' &middot; reviewed: ' + SESSION_REVIEWS + '</span>'
+              + '<span class="prog-mid">' + ACTIVE_DECK.name + ' &middot; reviewed: ' + SESSION_REVIEWS + '</span>'
+              + '<button id="prevBtn" class="prev-btn"' + (canUndo ? '' : ' disabled aria-disabled="true"') + ' title="' + (canUndo ? 'Previous card (undo last rating)' : 'No previous card to go back to') + '">← Previous</button>'
             + '</div>'
             + '<div class="card" id="cardEl">'
               // Pre-flip: just the Latin prompt. Post-flip: image (memory
@@ -1419,12 +1456,21 @@
             + '<button class="rate-btn" data-rating="2">Hard<span class="interval-hint">' + hint[2] + '</span></button>'
             + '<button class="rate-btn" data-rating="3">Good<span class="interval-hint">' + hint[3] + '</span></button>'
             + '<button class="rate-btn" data-rating="4">Easy<span class="interval-hint">' + hint[4] + '</span></button>'
-            + '</div>';
+            + '</div>'
+            + '<button id="unflipBtn" class="unflip-btn" type="button">↑ Hide answer</button>';
     }
     html += '</div>';
     document.getElementById('main').innerHTML = html;
 
     document.getElementById('backBtn').addEventListener('click', showDeckPicker);
+    var prevBtn = document.getElementById('prevBtn');
+    if (prevBtn) {
+      prevBtn.addEventListener('click', function (e) {
+        if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+        if (HISTORY.length === 0) return;
+        goPrevious();
+      });
+    }
     if (!CURRENT_FLIPPED) {
       document.getElementById('revealBtn').addEventListener('click', flip);
       // Tapping the card area flips, but we don't want a tap on the peek
@@ -1442,6 +1488,8 @@
       document.querySelectorAll('.rate-btn').forEach(function (btn) {
         btn.addEventListener('click', function () { rate(parseInt(btn.dataset.rating, 10)); });
       });
+      var unflipBtn = document.getElementById('unflipBtn');
+      if (unflipBtn) unflipBtn.addEventListener('click', unflip);
       // Auto-play the Latin audio on flip. The flip itself was a user gesture
       // (tap on cardEl or revealBtn), so iOS Safari's autoplay block doesn't
       // bite us. If the user taps the replay button, we restart from zero.
@@ -1613,6 +1661,15 @@
       ? Math.max(0, Math.round((Date.now() - new Date(prev.last_review).getTime()) / 86400000))
       : 0;
 
+    // Snapshot the pre-rate state into HISTORY so "Previous" can restore it.
+    // We deep-copy prev (or null if this was a brand-new card) so subsequent
+    // mutations of USER_STATE don't bleed into the snapshot.
+    HISTORY.push({
+      card: CURRENT,
+      prevState: prev ? JSON.parse(JSON.stringify(prev)) : null,
+    });
+    if (HISTORY.length > HISTORY_MAX) HISTORY.shift();
+
     // optimistic local update
     USER_STATE[CURRENT.id] = {
       card_id: CURRENT.id,
@@ -1656,6 +1713,39 @@
 
     SESSION_REVIEWS += 1;
     nextCard();
+  }
+
+  // Anki-style "Previous" / undo. Pops the last rated card off HISTORY,
+  // restores both the displayed card AND its USER_STATE row, and shows it
+  // flipped so the user can re-rate. The next rate() call overwrites the
+  // earlier server-side upsert (same composite PK), so re-rating doesn't
+  // double-count. We DON'T re-insert into QUEUE; if they rate this card
+  // again, that becomes the new tail and they continue forward.
+  function goPrevious() {
+    if (!HISTORY.length) return;
+    var entry = HISTORY.pop();
+    // Restore previous user_card_state row (or remove it if the card was new).
+    if (entry.prevState) {
+      USER_STATE[entry.card.id] = entry.prevState;
+    } else {
+      delete USER_STATE[entry.card.id];
+    }
+    // If we'd already advanced to a later card, that card is still in
+    // CURRENT/QUEUE -- push CURRENT back onto QUEUE front so it's the next
+    // card after the user re-rates.
+    if (CURRENT && CURRENT.id !== entry.card.id) QUEUE.unshift(CURRENT);
+    CURRENT = entry.card;
+    CURRENT_FLIPPED = true;
+    IMAGE_PEEKED = false;
+    // SESSION_REVIEWS gets one back too, since they're going to re-rate.
+    SESSION_REVIEWS = Math.max(0, SESSION_REVIEWS - 1);
+    renderCard();
+  }
+
+  // Un-flip: return to the front of the same card without advancing.
+  function unflip() {
+    CURRENT_FLIPPED = false;
+    renderCard();
   }
 
   // ─── Done state ─────────────────────────────────────────────────────────
