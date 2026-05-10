@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Latin Mass — memorise the Tridentine vocabulary and Order of Mass</title>
+<meta name="description" content="A spaced-repetition flashcard app for the 1962 Latin Mass. Memorise 510 vocabulary lemmas and 83 phrase pairs from the Order of Mass. Beta in progress; sign up for early access.">
+<link rel="preconnect" href="https://kugcbqfqataxbyjtaume.supabase.co">
+<style>
+  :root {
+    --navy-900: #0a1628;
+    --navy-800: #11233e;
+    --navy-700: #1a3055;
+    --ivory: #f5efe0;
+    --ivory-dim: rgba(245, 239, 224, 0.7);
+    --ivory-faint: rgba(245, 239, 224, 0.4);
+    --amber: #d4a64b;
+    --amber-bright: #e8b85a;
+    --crimson: #8a2c2c;
+    --teal: #2d6e7d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Iowan Old Style', 'Palatino', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
+    background: var(--navy-900);
+    color: var(--ivory);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 4rem 1.5rem; }
+  .hero {
+    text-align: center;
+    padding: 6rem 1.5rem 4rem;
+    border-bottom: 1px solid rgba(212, 166, 75, 0.2);
+  }
+  .hero h1 {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    color: var(--amber);
+    margin-bottom: 0.5rem;
+  }
+  .hero .ornament {
+    font-size: 1.5rem;
+    color: var(--amber);
+    opacity: 0.6;
+    margin: 0.5rem 0 1.5rem;
+    letter-spacing: 0.5em;
+  }
+  .hero p.tagline {
+    font-size: 1.25rem;
+    color: var(--ivory-dim);
+    font-style: italic;
+    max-width: 500px;
+    margin: 0 auto 2rem;
+  }
+  .badge {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    border: 1px solid rgba(212, 166, 75, 0.4);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: var(--amber);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  section { padding: 3rem 1.5rem; }
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 400;
+    color: var(--amber);
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+  .feature {
+    padding: 1.5rem;
+    background: var(--navy-800);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(212, 166, 75, 0.15);
+  }
+  .feature .num {
+    font-size: 2.5rem;
+    color: var(--amber);
+    font-weight: 300;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+  }
+  .feature .label {
+    color: var(--ivory-dim);
+    font-size: 0.95rem;
+  }
+  .signup {
+    background: var(--navy-800);
+    padding: 2.5rem 2rem;
+    border-radius: 0.75rem;
+    margin: 2rem 0;
+    border: 1px solid rgba(212, 166, 75, 0.2);
+  }
+  .signup h2 { text-align: left; }
+  .signup p { color: var(--ivory-dim); margin-bottom: 1.5rem; }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .field label {
+    font-size: 0.9rem;
+    color: var(--ivory-faint);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .field input {
+    background: var(--navy-900);
+    border: 1px solid rgba(245, 239, 224, 0.2);
+    color: var(--ivory);
+    padding: 0.85rem 1rem;
+    border-radius: 0.4rem;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  .field input:focus {
+    outline: none;
+    border-color: var(--amber);
+  }
+  button.primary {
+    background: var(--amber);
+    color: var(--navy-900);
+    border: 0;
+    padding: 0.9rem 1.5rem;
+    border-radius: 0.4rem;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+    font-family: inherit;
+  }
+  button.primary:hover { background: var(--amber-bright); }
+  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  button.secondary {
+    background: transparent;
+    color: var(--ivory);
+    border: 1px solid rgba(245, 239, 224, 0.3);
+    padding: 0.85rem 1rem;
+    border-radius: 0.4rem;
+    font-size: 0.95rem;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 0.5rem;
+    font-family: inherit;
+  }
+  button.secondary:hover { border-color: var(--amber); }
+  .msg {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.4rem;
+    font-size: 0.95rem;
+  }
+  .msg.success { background: rgba(45, 110, 125, 0.2); color: #7ec8d8; border: 1px solid var(--teal); }
+  .msg.error { background: rgba(138, 44, 44, 0.15); color: #d97a7a; border: 1px solid var(--crimson); }
+  .msg.info { background: rgba(212, 166, 75, 0.1); color: var(--amber); border: 1px solid rgba(212, 166, 75, 0.3); }
+  .donate {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    border-top: 1px solid rgba(212, 166, 75, 0.2);
+  }
+  .donate p { color: var(--ivory-dim); max-width: 600px; margin: 1rem auto; }
+  .donate strong { color: var(--ivory); }
+  footer {
+    text-align: center;
+    padding: 2rem 1.5rem 3rem;
+    color: var(--ivory-faint);
+    font-size: 0.9rem;
+  }
+  footer a { color: var(--ivory-dim); text-decoration: none; border-bottom: 1px dotted var(--ivory-faint); }
+  footer a:hover { color: var(--amber); border-color: var(--amber); }
+  .latin-quote {
+    font-style: italic;
+    color: var(--ivory-faint);
+    text-align: center;
+    margin: 2rem 0;
+    font-size: 0.95rem;
+  }
+  .latin-quote::before, .latin-quote::after { content: '" '; }
+  .latin-quote::after { content: ' "'; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <span class="badge">Beta in Progress</span>
+  <h1 style="margin-top:1.5rem">The Latin Mass</h1>
+  <div class="ornament">+ + +</div>
+  <p class="tagline">Spaced-repetition study for the Tridentine vocabulary and Order of Mass.</p>
+</div>
+
+<div class="container">
+
+  <section>
+    <h2>What's coming</h2>
+    <div class="features">
+      <div class="feature">
+        <div class="num">510</div>
+        <div class="label">vocabulary cards from the 1962 Missale Romanum</div>
+      </div>
+      <div class="feature">
+        <div class="num">83</div>
+        <div class="label">phrase pairs from the Order of Mass</div>
+      </div>
+      <div class="feature">
+        <div class="num">FSRS</div>
+        <div class="label">scheduling algorithm for efficient memorisation</div>
+      </div>
+      <div class="feature">
+        <div class="num">2</div>
+        <div class="label">recorded voices · curated Renaissance imagery</div>
+      </div>
+    </div>
+  </section>
+
+  <p class="latin-quote">Introibo ad altare Dei. Ad Deum qui laetificat juventutem meam.</p>
+
+  <div class="signup">
+    <h2 id="signup">Sign up for early access</h2>
+    <p>The full app launches soon. Create an account now to be among the first.</p>
+    <form id="signupForm">
+      <div class="field">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autocomplete="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="password">Password (8+ characters)</label>
+        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password" placeholder="">
+      </div>
+      <button type="submit" class="primary" id="submitBtn">Create account</button>
+      <button type="button" class="secondary" id="signinToggle">Already have an account? Sign in</button>
+    </form>
+    <div id="msg" class="msg" style="display:none"></div>
+  </div>
+
+  <section class="donate">
+    <h2>Where the money goes</h2>
+    <p>This is a not-for-profit project. After Stripe processing fees and minimal operating costs, all subscription revenue will be split <strong>50/50</strong> between <strong>Mary Immaculate Annerley</strong> and <strong>St Joseph's Chapel (FSSP)</strong> at Nudgee College — both Latin Mass parishes in Brisbane, Australia.</p>
+    <p>A public transparency ledger of every disbursement will be published when subscriptions go live.</p>
+  </section>
+
+</div>
+
+<footer>
+  <p>&copy; 2026 thelatinmass.org · Built by a parishioner of Mary Immaculate Annerley</p>
+  <p style="margin-top:0.5rem"><a href="mailto:info@thelatinmass.org">info@thelatinmass.org</a></p>
+</footer>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+
+  const supabase = createClient(
+    'https://kugcbqfqataxbyjtaume.supabase.co',
+    'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi'
+  );
+
+  const form = document.getElementById('signupForm');
+  const emailEl = document.getElementById('email');
+  const pwEl = document.getElementById('password');
+  const submitBtn = document.getElementById('submitBtn');
+  const toggleBtn = document.getElementById('signinToggle');
+  const msg = document.getElementById('msg');
+
+  let mode = 'signup'; // or 'signin'
+
+  function setMode(m) {
+    mode = m;
+    submitBtn.textContent = m === 'signup' ? 'Create account' : 'Sign in';
+    toggleBtn.textContent = m === 'signup' ? 'Already have an account? Sign in' : "Don't have an account? Sign up";
+  }
+
+  function showMsg(text, kind) {
+    msg.textContent = text;
+    msg.className = 'msg ' + kind;
+    msg.style.display = 'block';
+  }
+
+  toggleBtn.addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    msg.style.display = 'none';
+    const email = emailEl.value.trim();
+    const password = pwEl.value;
+    try {
+      let res;
+      if (mode === 'signup') {
+        res = await supabase.auth.signUp({ email, password });
+      } else {
+        res = await supabase.auth.signInWithPassword({ email, password });
+      }
+      if (res.error) {
+        showMsg(res.error.message, 'error');
+      } else if (mode === 'signup' && res.data?.user && !res.data?.session) {
+        showMsg('Check your email to confirm your account. We\'ll email you when the full app is ready.', 'success');
+      } else if (res.data?.session) {
+        showMsg('Signed in. The full app is still in beta — we\'ll email you the moment it launches.', 'success');
+      } else {
+        showMsg('Account created. We\'ll email you the moment the full app is ready.', 'success');
+      }
+    } catch (err) {
+      showMsg(err.message || 'Something went wrong. Please try again.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+
+  // If already signed in, greet the user.
+  supabase.auth.getSession().then(({ data }) => {
+    if (data?.session?.user?.email) {
+      showMsg(`Signed in as ${data.session.user.email}. We'll email you the moment the full app launches.`, 'info');
+    }
+  });
+</script>
+
+</body>
+</html>
