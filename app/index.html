@@ -294,22 +294,26 @@
   }
 
   /* ─── Card media (image + audio) ─── */
+  /* Image fits inside the card's content area, full width up to a sensible
+     cap, square-cropped so non-1:1 sources don't distort. NO negative-margin
+     tricks (those were the previous bug — pulled the image past the frame). */
   .card .card-image {
-    margin: -16px -8px 14px;
+    width: 100%;
+    margin: 0 0 14px;
     display: flex;
     justify-content: center;
-    width: calc(100% + 16px);
-    max-width: calc(100% + 16px);
+    align-items: center;
   }
   .card .card-image img {
     display: block;
     width: 100%;
-    max-width: 360px;
+    max-width: 280px;
     height: auto;
     aspect-ratio: 1 / 1;
     object-fit: cover;
     border: 1px solid var(--rule);
     background: var(--cream);
+    border-radius: 2px;
   }
   .card .back .card-audio {
     margin: 6px 0 14px;
@@ -657,8 +661,8 @@
     .forecast-row { padding: 10px 12px; flex-wrap: wrap; }
     .forecast-row .bar-wrap { order: 3; flex-basis: 100%; margin: 8px 0 0; }
     .heatmap-grid { grid-auto-columns: minmax(8px, 1fr); gap: 2px; }
-    .card .card-image { margin: -8px -4px 12px; width: calc(100% + 8px); max-width: calc(100% + 8px); }
-    .card .card-image img { max-width: 280px; }
+    .card .card-image { margin: 0 0 12px; }
+    .card .card-image img { max-width: 220px; }
   }
 </style>
 </head>
@@ -680,7 +684,8 @@
 </main>
 
 <script>
-  console.info('[thelatinmass] app-v9-2026-05-10-back-buttons');
+  var APP_BUILD = 'v10-2026-05-10-image-fit-real';
+  console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -996,7 +1001,9 @@
   }
 
   function fetchStatic() {
-    return fetch('./static.json').then(function (r) {
+    // Cache-bust by build version so a phone running an older app HTML never
+    // gets stuck pairing it with stale static.json (or vice versa).
+    return fetch('./static.json?v=' + APP_BUILD).then(function (r) {
       if (!r.ok) throw new Error('Could not load card data (HTTP ' + r.status + ')');
       return r.json();
     }).then(function (data) {
