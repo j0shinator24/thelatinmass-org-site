@@ -976,7 +976,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v19-2026-05-10-science-explainer';
+  var APP_BUILD = 'v20-2026-05-10-extra-additive-fix';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1769,7 +1769,11 @@
         if (new Date(s.due).getTime() <= nowMs) dueNow++;
       });
     }
-    var newRemaining = Math.max(0, getDailyTarget() + getExtraToday() - newIntroducedToday);
+    // Extra (today-only override) is purely additive on top of whatever
+    // base remains. If you've already overshot the daily target the base
+    // remainder is 0; extra still grants its full slot count anyway.
+    var baseRemaining = Math.max(0, getDailyTarget() - newIntroducedToday);
+    var newRemaining = baseRemaining + getExtraToday();
     var totalGoal = newRemaining + dueNow;
     return {
       reviewedToday: reviewedToday,
@@ -2332,25 +2336,24 @@
   }
 
   // "Study N more (today only)" override. Adds N to today's extra slot,
-  // rebuilds the queue for the active deck, and starts a fresh review run.
+  // rebuilds the queue for the active deck if any, and starts a fresh
+  // review run. If the active deck has no unseen cards left, routes to
+  // the deck picker so the user can pick a deck that does.
   function studyExtraNew(n) {
     addExtraToday(n);
-    if (!ACTIVE_DECK) {
-      // Drop them on the deck picker — they'll choose where to spend the
-      // extra budget. The badge below the deck name shows the new total.
-      showDeckPicker();
-      return;
+    console.info('[tlm-app] +' + n + ' extra new today; total extra now', getExtraToday());
+    if (ACTIVE_DECK) {
+      SESSION_REVIEWS = 0;
+      HISTORY = [];
+      buildQueue();
+      if (QUEUE.length > 0) {
+        nextCard();
+        return;
+      }
     }
-    SESSION_REVIEWS = 0;
-    HISTORY = [];
-    buildQueue();
-    if (QUEUE.length === 0) {
-      // Edge case: cap raised but no new available in this deck. Show
-      // deck picker so the user can pick a deck that has capacity.
-      showDeckPicker();
-      return;
-    }
-    nextCard();
+    // Either no active deck or the active deck has no fresh cards left.
+    // Drop on deck picker; the new daily-goal numbers show the override.
+    showDeckPicker();
   }
 
   // ─── Done state ─────────────────────────────────────────────────────────
