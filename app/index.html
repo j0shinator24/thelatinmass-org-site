@@ -357,7 +357,7 @@
 </main>
 
 <script>
-  console.info('[thelatinmass] app-v1-' + Date.now());
+  console.info('[thelatinmass] app-v2-2026-05-10-async-refresh');
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -365,39 +365,77 @@
   var AUTH = SUPABASE_URL + '/auth/v1';
 
   // ─── Auth bootstrapping ─────────────────────────────────────────────────
-  function loadSession() {
+  // Reads tlm_session from localStorage, refreshes the access token if it's
+  // expired (or about to be), and returns a usable session — or null if the
+  // session is unrecoverable. Single in-flight refresh is shared via a
+  // cached Promise so concurrent rest() calls don't all issue refresh requests.
+  var _refreshInFlight = null;
+
+  function readRawSession() {
     try {
       var raw = localStorage.getItem('tlm_session');
       if (!raw) return null;
       var s = JSON.parse(raw);
       if (!s || !s.access_token || !s.user) return null;
-      // refresh stub: check expiry, fall through to refresh later
-      var expAt = s.expires_at ? s.expires_at * 1000 : 0;
-      if (expAt && Date.now() >= expAt - 60000) {
-        // expired; try to refresh
-        if (s.refresh_token) {
-          fetch(AUTH + '/token?grant_type=refresh_token', {
-            method: 'POST',
-            headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({ refresh_token: s.refresh_token }),
-          }).then(function (r) { return r.json(); })
-            .then(function (j) {
-              if (j && j.access_token) {
-                localStorage.setItem('tlm_session', JSON.stringify(j));
-                location.reload();
-              } else {
-                localStorage.removeItem('tlm_session');
-                redirectToLanding();
-              }
-            });
-        }
-      }
       return s;
-    } catch (e) { return null; }
+    } catch (_) { return null; }
   }
+
+  function isExpiringSoon(s) {
+    var expAt = s && s.expires_at ? s.expires_at * 1000 : 0;
+    if (!expAt) return false;
+    // Refresh if within 60 seconds of expiry (or already past it)
+    return Date.now() >= expAt - 60000;
+  }
+
+  function refreshSession(s) {
+    if (_refreshInFlight) return _refreshInFlight;
+    if (!s || !s.refresh_token) {
+      return Promise.resolve(null);
+    }
+    console.info('[tlm-app] refreshing access token');
+    _refreshInFlight = fetch(AUTH + '/token?grant_type=refresh_token', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: s.refresh_token }),
+    }).then(function (r) {
+      return r.json().then(function (j) { return { ok: r.ok, body: j }; });
+    }).then(function (res) {
+      if (res.ok && res.body && res.body.access_token) {
+        // Supabase refresh response sometimes omits expires_at — derive from
+        // expires_in if missing, so isExpiringSoon() works next time.
+        if (!res.body.expires_at && res.body.expires_in) {
+          res.body.expires_at = Math.floor(Date.now() / 1000) + res.body.expires_in;
+        }
+        // Preserve user object across refresh (some refresh responses elide it)
+        if (!res.body.user && s.user) res.body.user = s.user;
+        localStorage.setItem('tlm_session', JSON.stringify(res.body));
+        console.info('[tlm-app] refresh ok, new expiry:', new Date(res.body.expires_at * 1000).toISOString());
+        return res.body;
+      }
+      console.warn('[tlm-app] refresh failed:', res.body);
+      return null;
+    }).catch(function (e) {
+      console.warn('[tlm-app] refresh threw:', e);
+      return null;
+    }).finally(function () {
+      _refreshInFlight = null;
+    });
+    return _refreshInFlight;
+  }
+
+  // Returns a usable session (refreshed if needed) or null. Awaitable.
+  function loadSession() {
+    var s = readRawSession();
+    if (!s) return Promise.resolve(null);
+    if (!isExpiringSoon(s)) return Promise.resolve(s);
+    return refreshSession(s);
+  }
+
   function redirectToLanding() { location.href = '../'; }
+
   function signOut() {
-    var s = loadSession();
+    var s = readRawSession();
     if (s && s.access_token) {
       fetch(AUTH + '/logout', {
         method: 'POST',
@@ -421,22 +459,47 @@
       'Prefer': 'return=representation',
     };
   }
+  // rest() — issues a PostgREST request with the current session's JWT.
+  // On 401 it transparently refreshes the token and retries once, so a study
+  // session that crosses the 1h access-token boundary doesn't fall over.
   function rest(path, session, opts) {
     opts = opts || {};
-    return fetch(REST + path, Object.assign({
-      method: opts.method || 'GET',
-      headers: authHeaders(session),
-      body: opts.body ? JSON.stringify(opts.body) : undefined,
-    }, {})).then(function (r) {
-      return r.text().then(function (t) {
-        var j = null;
-        try { j = t ? JSON.parse(t) : null; } catch (_) {}
-        if (!r.ok) {
-          var msg = (j && (j.message || j.error || j.error_description)) || ('HTTP ' + r.status);
-          throw new Error(msg);
-        }
-        return j;
+    var extraHeaders = opts.headers || {};
+    function exec(sess) {
+      return fetch(REST + path, {
+        method: opts.method || 'GET',
+        headers: Object.assign({}, authHeaders(sess), extraHeaders),
+        body: opts.body ? JSON.stringify(opts.body) : undefined,
+      }).then(function (r) {
+        return r.text().then(function (t) {
+          var j = null;
+          try { j = t ? JSON.parse(t) : null; } catch (_) {}
+          return { ok: r.ok, status: r.status, body: j };
+        });
       });
+    }
+    return exec(session).then(function (res) {
+      if (res.status === 401 && !opts._retried) {
+        return refreshSession(readRawSession()).then(function (newSess) {
+          if (!newSess) {
+            throw new Error('Session expired. Please sign in again.');
+          }
+          SESSION = newSess;
+          opts._retried = true;
+          return exec(newSess).then(function (r2) {
+            if (!r2.ok) {
+              var m = (r2.body && (r2.body.message || r2.body.error)) || ('HTTP ' + r2.status);
+              throw new Error(m);
+            }
+            return r2.body;
+          });
+        });
+      }
+      if (!res.ok) {
+        var msg = (res.body && (res.body.message || res.body.error || res.body.error_description)) || ('HTTP ' + res.status);
+        throw new Error(msg);
+      }
+      return res.body;
     });
   }
 
@@ -452,17 +515,43 @@
   var SESSION_REVIEWS = 0;
 
   // ─── Boot ───────────────────────────────────────────────────────────────
-  SESSION = loadSession();
-  if (!SESSION) { redirectToLanding(); }
-  else { boot(); }
+  // Resolve the session async (will refresh if expired), then either run the
+  // app or show a "session expired" screen. We never silently redirect away
+  // from /app/ — that looked like a "click and refresh" bug to the user.
+  loadSession().then(function (session) {
+    SESSION = session;
+    if (!SESSION) {
+      showSignedOut();
+      return;
+    }
+    boot();
+  }).catch(function (err) {
+    console.warn('[tlm-app] loadSession failed:', err);
+    showSignedOut();
+  });
 
   function boot() {
+    console.info('[tlm-app] boot ok, user:', SESSION.user && SESSION.user.email);
     document.getElementById('userEmail').textContent = (SESSION.user && SESSION.user.email) || '';
     Promise.all([fetchStatic(), fetchUserState()])
       .then(function () { showDeckPicker(); })
       .catch(function (err) {
+        // 401 from fetchUserState would already have triggered a refresh+retry
+        // inside rest(). If we still get here it's a hard failure — show it.
         showErr('Failed to load: ' + (err.message || err));
       });
+  }
+
+  function showSignedOut() {
+    var main = document.getElementById('main');
+    main.innerHTML = '<div class="done">'
+                   + '<h2>Your session expired</h2>'
+                   + '<p>Please sign in again to continue studying.</p>'
+                   + '<a class="reveal-btn" href="../" style="display:inline-block;text-decoration:none">Sign in</a>'
+                   + '</div>';
+    // Also nuke the stale session so the landing shows the signup form, not the
+    // "Continue to study" CTA, on the next visit.
+    try { localStorage.removeItem('tlm_session'); } catch (_) {}
   }
 
   function fetchStatic() {
@@ -761,17 +850,19 @@
       state_after: nextState.state,
     };
 
-    // Fire-and-forget (don't block UI on round-trip; surface errors silently)
-    fetch(REST + '/user_card_state?on_conflict=user_id,card_id', {
+    // Fire-and-forget through rest() so a 401 (e.g. mid-session token expiry)
+    // transparently refreshes and retries instead of silently dropping the
+    // write.
+    rest('/user_card_state?on_conflict=user_id,card_id', SESSION, {
       method: 'POST',
-      headers: Object.assign(authHeaders(SESSION), { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
-      body: JSON.stringify(upsert),
+      body: upsert,
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
     }).catch(function (e) { console.warn('save state failed', e); });
 
-    fetch(REST + '/user_review_log', {
+    rest('/user_review_log', SESSION, {
       method: 'POST',
-      headers: Object.assign(authHeaders(SESSION), { 'Prefer': 'return=minimal' }),
-      body: JSON.stringify(logEntry),
+      body: logEntry,
+      headers: { 'Prefer': 'return=minimal' },
     }).catch(function (e) { console.warn('save review failed', e); });
 
     SESSION_REVIEWS += 1;
