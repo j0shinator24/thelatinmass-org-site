@@ -836,7 +836,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v14-2026-05-10-card-goal-bar';
+  var APP_BUILD = 'v15-2026-05-10-calendar-today-row';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1284,6 +1284,18 @@
     // Buckets that count overdue belong to "today" too — overdue is due now
     if (buckets.length) buckets[0].count += overdueCount;
 
+    // Augment today's bucket with the reviewed-count and a goal-progress
+    // value so the row reads as "you did X today" rather than blank.
+    var ts0 = getTodayStats();
+    if (buckets.length) {
+      buckets[0].doneToday = ts0.reviewedToday;
+      buckets[0].dueRemaining = buckets[0].count; // already includes overdue
+      var todayTotal = ts0.reviewedToday + ts0.totalGoal;
+      buckets[0].goalPct = todayTotal > 0
+        ? Math.min(100, Math.round(100 * ts0.reviewedToday / todayTotal))
+        : 100;
+    }
+
     var maxCount = Math.max(1, buckets.reduce(function (m, b) { return Math.max(m, b.count); }, 0), laterBucket.count);
 
     // Today's goal banner: a fresh user reads this and knows what "enough"
@@ -1318,14 +1330,39 @@
              + '</div>'
              + '<div class="forecast-list">';
     buckets.forEach(function (b) {
-      var pct = Math.round(100 * b.count / maxCount);
-      html += '<div class="forecast-row' + (b.isToday ? ' today' : '') + (b.count === 0 ? ' empty' : '') + '">'
-            + '<span class="day">' + escapeHtml(b.label)
-              + (b.sub ? '<span class="sub">' + escapeHtml(b.sub) + '</span>' : '')
-            + '</span>'
-            + '<span class="bar-wrap"><span class="bar" style="width:' + pct + '%"></span></span>'
-            + '<span class="count">' + b.count + '</span>'
-            + '</div>';
+      if (b.isToday) {
+        // Today's row: show "X done · Y due" and fill the bar to
+        // daily-goal progress so the row reflects activity, not just
+        // forward-looking schedule.
+        var done = b.doneToday || 0;
+        var dueR = b.dueRemaining || 0;
+        var rightLabel;
+        if (done === 0 && dueR === 0) {
+          rightLabel = '0';
+        } else if (dueR === 0) {
+          rightLabel = done + ' done';
+        } else if (done === 0) {
+          rightLabel = dueR + ' due';
+        } else {
+          rightLabel = done + ' / ' + dueR + ' due';
+        }
+        html += '<div class="forecast-row today' + (done === 0 && dueR === 0 ? ' empty' : '') + '">'
+              + '<span class="day">' + escapeHtml(b.label)
+                + '<span class="sub">today</span>'
+              + '</span>'
+              + '<span class="bar-wrap"><span class="bar" style="width:' + (b.goalPct || 0) + '%"></span></span>'
+              + '<span class="count">' + escapeHtml(rightLabel) + '</span>'
+              + '</div>';
+      } else {
+        var pct = Math.round(100 * b.count / maxCount);
+        html += '<div class="forecast-row' + (b.count === 0 ? ' empty' : '') + '">'
+              + '<span class="day">' + escapeHtml(b.label)
+                + (b.sub ? '<span class="sub">' + escapeHtml(b.sub) + '</span>' : '')
+              + '</span>'
+              + '<span class="bar-wrap"><span class="bar" style="width:' + pct + '%"></span></span>'
+              + '<span class="count">' + b.count + '</span>'
+              + '</div>';
+      }
     });
     if (laterBucket.count > 0) {
       var pct2 = Math.round(100 * laterBucket.count / maxCount);
