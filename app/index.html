@@ -683,8 +683,55 @@
   .goal-settings-hint {
     font-size: 0.82rem;
     color: var(--ink-soft);
-    line-height: 1.45;
+    line-height: 1.5;
+    margin-bottom: 10px;
   }
+  .goal-settings-hint em {
+    font-style: italic;
+    color: var(--ink);
+  }
+  .goal-science {
+    border-top: 1px solid var(--rule);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  .goal-science > summary {
+    cursor: pointer;
+    list-style: none;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--taupe-deep);
+    -webkit-tap-highlight-color: transparent;
+    padding: 4px 0;
+  }
+  .goal-science > summary::-webkit-details-marker { display: none; }
+  .goal-science > summary::before {
+    content: '▸';
+    margin-right: 8px;
+    color: var(--taupe);
+    transition: transform 0.15s;
+    display: inline-block;
+  }
+  .goal-science[open] > summary::before { transform: rotate(90deg); }
+  .goal-science > summary:hover { color: var(--burgundy); }
+  .goal-science-body {
+    margin-top: 12px;
+    color: var(--ink-soft);
+    font-size: 0.86rem;
+    line-height: 1.6;
+  }
+  .goal-science-body p { margin-bottom: 12px; }
+  .goal-science-body p:last-child { margin-bottom: 0; }
+  .goal-science-body strong { color: var(--ink); font-weight: 600; }
+  .goal-science-body em { font-style: italic; color: var(--ink); }
+  .goal-science-body a {
+    color: var(--burgundy);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .goal-science-body a:hover { color: var(--taupe-deep); }
 
   /* ─── Nav active state ─── */
   header.app-header nav a.active,
@@ -929,7 +976,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v18-2026-05-10-extra-override';
+  var APP_BUILD = 'v19-2026-05-10-science-explainer';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1466,7 +1513,17 @@
                         + '<span class="goal-settings-current">' + current + '</span>'
                       + '</div>'
                       + '<div class="target-chips">' + chips + '</div>'
-                      + '<p class="goal-settings-hint">Higher = faster through the deck, more time per day. Below 5 the spacing rhythm starts to break down.</p>'
+                      + '<p class="goal-settings-hint">Pick a number you can hit <em>every single day</em>. Daily five beats weekly fifty. Below 5 the spacing rhythm starts to break down; above 20 the daily review pile compounds and most learners quit within a fortnight.</p>'
+                      + '<details class="goal-science">'
+                        + '<summary>Why these numbers matter</summary>'
+                        + '<div class="goal-science-body">'
+                          + '<p><strong>The forgetting curve (Ebbinghaus, 1885)</strong> — we lose roughly half of new information within 24 hours and ~70% within a week unless something brings it back. Spacing the review just before you would have forgotten is what turns short daily practice into long-term retention.</p>'
+                          + '<p><strong>SuperMemo (Piotr Wozniak, 1987 onwards)</strong> turned that observation into the SM-family of algorithms. Anki popularised SM-2. The app you\'re holding uses <a href="https://github.com/open-spaced-repetition/fsrs4anki" target="_blank" rel="noopener">FSRS-4.5</a> (Jarrett Ye et al, 2023) which models three latent variables per card — Difficulty, Stability, Retrievability — and schedules each review at the moment your retention probability hits 90%. That target retention of 0.9 is the published sweet spot: lower wastes reviews on cards you still know, higher drowns you in re-reviews of cards you keep forgetting.</p>'
+                          + '<p><strong>Why a daily cap on new cards</strong> — every new card you start today adds roughly 0.7 to 1.5 future reviews per day to your steady-state load, depending on its difficulty. At 10 new/day the mature daily review queue settles around 25 to 40 cards total, about 5 to 10 minutes per day. At 30 new/day it piles up to 80 to 120 daily reviews, 30 to 45 minutes — and the public Anki / SuperMemo retention surveys (Wozniak\'s own user data, Anki community polls) show drop-off accelerates sharply past ~30 daily minutes.</p>'
+                          + '<p><strong>Cognitive interference</strong> is the second cap. Adult vocabulary-acquisition research (Pimsleur 1967, Nation 2001, Krashen) consistently finds that introducing more than around 15 to 20 new items in one sitting causes the items to blur into each other — you remember the <em>list</em> rather than the individual words. The 10-per-day default keeps each new lemma well under that threshold and gives every word at least one isolated retrieval before the next batch arrives.</p>'
+                          + '<p>So the practical heuristic: <em>diminishing returns are real and they hit fast above 20</em>. Sustainable rhythm beats heroic sessions. The cap is here to protect future you from past you.</p>'
+                        + '</div>'
+                      + '</details>'
                     + '</div>';
 
     var html = '<div class="view-header">'
