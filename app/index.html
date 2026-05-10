@@ -596,6 +596,80 @@
     line-height: 1.45;
   }
 
+  /* Daily-target settings strip below the goal banner. */
+  .goal-settings {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 16px 18px;
+    margin-bottom: 22px;
+  }
+  .goal-settings-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .goal-settings-title {
+    font-family: 'Cinzel', serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--taupe-deep);
+  }
+  .goal-settings-current {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    color: var(--burgundy);
+    font-weight: 600;
+  }
+  .target-chips {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .target-chip {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 10px 4px;
+    cursor: pointer;
+    font: inherit;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+  }
+  .target-chip:hover { border-color: var(--taupe); }
+  .target-chip.active {
+    background: var(--burgundy);
+    border-color: var(--burgundy);
+    color: #fff;
+  }
+  .target-chip.active .chip-lbl { color: rgba(255,255,255,0.85); }
+  .target-chip .chip-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .target-chip .chip-lbl {
+    font-family: 'Cinzel', serif;
+    font-size: 0.54rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    line-height: 1.2;
+    text-align: center;
+  }
+  .goal-settings-hint {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+
   /* ─── Nav active state ─── */
   header.app-header nav a.active,
   header.app-header nav button.active { color: var(--burgundy); border-bottom: 2px solid var(--burgundy); }
@@ -815,6 +889,9 @@
     .card .card-image img { max-width: 220px; }
     .done-stats { grid-template-columns: 1fr 1fr; }
     .done-stats .stat-tile:nth-child(3) { grid-column: 1 / -1; }
+    .target-chip { padding: 8px 2px; }
+    .target-chip .chip-num { font-size: 1.2rem; }
+    .target-chip .chip-lbl { font-size: 0.5rem; letter-spacing: 0.1em; }
   }
 </style>
 </head>
@@ -836,7 +913,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v16-2026-05-10-done-message';
+  var APP_BUILD = 'v17-2026-05-10-target-settings';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1000,7 +1077,21 @@
   // Daily-target settings. Cap on new-card introductions per calendar day,
   // applied globally across both decks. Due reviews are uncapped — once a
   // card is in rotation, you owe it as many reviews as scheduling demands.
-  var NEW_PER_DAY = 10;
+  // User-overridable via the Calendar view; persisted in localStorage.
+  var NEW_PER_DAY_DEFAULT = 10;
+  var NEW_PER_DAY_KEY = 'tlm_new_per_day';
+  function getDailyTarget() {
+    try {
+      var v = parseInt(localStorage.getItem(NEW_PER_DAY_KEY), 10);
+      if (isFinite(v) && v >= 1 && v <= 100) return v;
+    } catch (_) {}
+    return NEW_PER_DAY_DEFAULT;
+  }
+  function setDailyTarget(n) {
+    n = Math.max(1, Math.min(100, parseInt(n, 10) || NEW_PER_DAY_DEFAULT));
+    try { localStorage.setItem(NEW_PER_DAY_KEY, String(n)); } catch (_) {}
+    return n;
+  }
   var REVIEW_START = 0;
   var SESSION_REVIEWS = 0;
 
@@ -1317,12 +1408,38 @@
                    + '<p class="goal-sub">' + escapeHtml(goalSubtitle) + '</p>'
                  + '</div>';
 
+    // Settings: pick how many new cards/day. Five preset chips + a custom
+    // input. Selected preset highlighted in burgundy.
+    var current = getDailyTarget();
+    var presets = [
+      { n: 5,  label: 'Gentle' },
+      { n: 10, label: 'Standard' },
+      { n: 15, label: 'Eager' },
+      { n: 20, label: 'Intensive' },
+      { n: 30, label: 'Power' },
+    ];
+    var chips = presets.map(function (p) {
+      return '<button type="button" class="target-chip' + (p.n === current ? ' active' : '') + '" data-target="' + p.n + '">'
+           + '<span class="chip-num">' + p.n + '</span>'
+           + '<span class="chip-lbl">' + escapeHtml(p.label) + '</span>'
+           + '</button>';
+    }).join('');
+    var settingsStrip = '<div class="goal-settings">'
+                      + '<div class="goal-settings-head">'
+                        + '<span class="goal-settings-title">New cards per day</span>'
+                        + '<span class="goal-settings-current">' + current + '</span>'
+                      + '</div>'
+                      + '<div class="target-chips">' + chips + '</div>'
+                      + '<p class="goal-settings-hint">Higher = faster through the deck, more time per day. Below 5 the spacing rhythm starts to break down.</p>'
+                    + '</div>';
+
     var html = '<div class="view-header">'
              + '<span class="eyebrow">Forecast</span>'
              + '<h2>Next two weeks</h2>'
-             + '<p class="lede">Cards scheduled to come due, day by day. The system caps new cards at ' + NEW_PER_DAY + ' per day so you don\'t burn out — due reviews are uncapped.</p>'
+             + '<p class="lede">Cards scheduled to come due, day by day. The system caps new cards at ' + getDailyTarget() + ' per day so you don\'t burn out — due reviews are uncapped.</p>'
              + '</div>'
              + goalBanner
+             + settingsStrip
              + '<div class="forecast-summary">'
                + '<div class="stat"><div class="num">' + (overdueCount + buckets[0].count - overdueCount) + '</div><div class="lbl">Due today</div></div>'
                + '<div class="stat"><div class="num">' + newCount + '</div><div class="lbl">New cards</div></div>'
@@ -1374,6 +1491,16 @@
     }
     html += '</div>';
     main.innerHTML = html;
+
+    // Wire the daily-target preset chips. Picking one persists to
+    // localStorage and re-renders the calendar with the new value.
+    document.querySelectorAll('.target-chip').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var n = parseInt(btn.dataset.target, 10);
+        setDailyTarget(n);
+        showCalendar();
+      });
+    });
   }
 
   // ─── Stats (heatmap, streak, retention, totals) ─────────────────────────
@@ -1549,7 +1676,7 @@
         if (new Date(s.due).getTime() <= nowMs) dueNow++;
       });
     }
-    var newRemaining = Math.max(0, NEW_PER_DAY - newIntroducedToday);
+    var newRemaining = Math.max(0, getDailyTarget() - newIntroducedToday);
     var totalGoal = newRemaining + dueNow;
     return {
       reviewedToday: reviewedToday,
