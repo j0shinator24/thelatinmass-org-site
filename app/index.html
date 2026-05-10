@@ -513,6 +513,22 @@
     touch-action: manipulation;
   }
   .link-btn:hover { color: var(--burgundy); }
+  .extra-btn {
+    background: transparent;
+    border: 1px dashed var(--burgundy);
+    color: var(--burgundy);
+    padding: 12px 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background 0.15s;
+  }
+  .extra-btn:hover { background: rgba(94,42,42,0.06); }
 
   /* ─── Daily-goal mini bar shown above the flashcard ─── */
   .card-goal {
@@ -913,7 +929,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v17-2026-05-10-target-settings';
+  var APP_BUILD = 'v18-2026-05-10-extra-override';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1091,6 +1107,26 @@
     n = Math.max(1, Math.min(100, parseInt(n, 10) || NEW_PER_DAY_DEFAULT));
     try { localStorage.setItem(NEW_PER_DAY_KEY, String(n)); } catch (_) {}
     return n;
+  }
+
+  // Today-only override: lets the user grab extra new cards beyond the daily
+  // cap without changing the long-term setting. Stored per-date in
+  // localStorage so it auto-clears at midnight.
+  function todayKey() {
+    var d = new Date();
+    return 'tlm_extra_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function getExtraToday() {
+    try {
+      var v = parseInt(localStorage.getItem(todayKey()), 10);
+      if (isFinite(v) && v >= 0) return v;
+    } catch (_) {}
+    return 0;
+  }
+  function addExtraToday(n) {
+    var next = getExtraToday() + Math.max(0, parseInt(n, 10) || 0);
+    try { localStorage.setItem(todayKey(), String(next)); } catch (_) {}
+    return next;
   }
   var REVIEW_START = 0;
   var SESSION_REVIEWS = 0;
@@ -1676,7 +1712,7 @@
         if (new Date(s.due).getTime() <= nowMs) dueNow++;
       });
     }
-    var newRemaining = Math.max(0, getDailyTarget() - newIntroducedToday);
+    var newRemaining = Math.max(0, getDailyTarget() + getExtraToday() - newIntroducedToday);
     var totalGoal = newRemaining + dueNow;
     return {
       reviewedToday: reviewedToday,
@@ -2230,6 +2266,36 @@
     renderCard();
   }
 
+  // How many cards across all decks have never been seen yet?
+  function countUnseenCards() {
+    if (!STATIC || !STATIC.cards) return 0;
+    var n = 0;
+    STATIC.cards.forEach(function (c) { if (!USER_STATE[c.id]) n++; });
+    return n;
+  }
+
+  // "Study N more (today only)" override. Adds N to today's extra slot,
+  // rebuilds the queue for the active deck, and starts a fresh review run.
+  function studyExtraNew(n) {
+    addExtraToday(n);
+    if (!ACTIVE_DECK) {
+      // Drop them on the deck picker — they'll choose where to spend the
+      // extra budget. The badge below the deck name shows the new total.
+      showDeckPicker();
+      return;
+    }
+    SESSION_REVIEWS = 0;
+    HISTORY = [];
+    buildQueue();
+    if (QUEUE.length === 0) {
+      // Edge case: cap raised but no new available in this deck. Show
+      // deck picker so the user can pick a deck that has capacity.
+      showDeckPicker();
+      return;
+    }
+    nextCard();
+  }
+
   // ─── Done state ─────────────────────────────────────────────────────────
   function showDone() {
     var stats = getTodayStats();
@@ -2260,6 +2326,15 @@
               + ' in this session, ' + nWord + ' total today. Rest now and come back tomorrow.';
     }
 
+    var unseen = countUnseenCards();
+    var extraSize = Math.min(5, unseen);
+    var extraBtn = '';
+    if (extraSize > 0) {
+      extraBtn = '<button class="extra-btn" id="goExtraBtn">'
+               + '+ Study ' + extraSize + ' more new (today only)'
+               + '</button>';
+    }
+
     main.innerHTML = '<div class="done">'
                    + '<h2>' + escapeHtml(headline) + '</h2>'
                    + '<p>' + escapeHtml(message) + '</p>'
@@ -2270,11 +2345,14 @@
                    + '</div>'
                    + '<div class="done-cta">'
                      + '<button class="reveal-btn" id="goCalBtn">View calendar</button>'
+                     + extraBtn
                      + '<button class="link-btn" id="goDecksBtn">Back to decks</button>'
                    + '</div>'
                    + '</div>';
     document.getElementById('goCalBtn').addEventListener('click', showCalendar);
     document.getElementById('goDecksBtn').addEventListener('click', showDeckPicker);
+    var extraBtnEl = document.getElementById('goExtraBtn');
+    if (extraBtnEl) extraBtnEl.addEventListener('click', function () { studyExtraNew(5); });
   }
 
   function showErr(msg) {
