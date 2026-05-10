@@ -6,257 +6,396 @@
 <title>The Latin Mass — memorise the Tridentine vocabulary and Order of Mass</title>
 <meta name="description" content="A spaced-repetition flashcard app for the 1962 Latin Mass. Memorise 510 vocabulary lemmas and 83 phrase pairs from the Order of Mass. Beta in progress; sign up for early access.">
 <link rel="preconnect" href="https://kugcbqfqataxbyjtaume.supabase.co">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="image" href="./hero.jpg" fetchpriority="high">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lato:wght@300;400;700&family=Cinzel:wght@400;500;600&display=swap">
 <style>
   :root {
-    --navy-900: #0a1628;
-    --navy-800: #11233e;
-    --navy-700: #1a3055;
-    --ivory: #f5efe0;
-    --ivory-dim: rgba(245, 239, 224, 0.7);
-    --ivory-faint: rgba(245, 239, 224, 0.4);
-    --amber: #d4a64b;
-    --amber-bright: #e8b85a;
-    --crimson: #8a2c2c;
-    --teal: #2d6e7d;
+    --ink: #2A2520;
+    --ink-soft: #5A5048;
+    --cream: #F7F2EA;
+    --cream-soft: #FBF8F2;
+    --rule: #E2D9CB;
+    --taupe: #987F71;
+    --taupe-dark: #7A6357;
+    --taupe-deep: #5C4A40;
+    --gold: #C8A871;
+    --burgundy: #5E2A2A;
+    --slider-cream: #E8DAC4;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
   body {
-    font-family: 'Iowan Old Style', 'Palatino', 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
-    background: var(--navy-900);
-    color: var(--ivory);
-    line-height: 1.6;
-    min-height: 100vh;
+    font-family: 'Lato', system-ui, sans-serif;
+    font-weight: 300;
+    color: var(--ink);
+    background: #fff;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
   }
-  .container { max-width: 720px; margin: 0 auto; padding: 4rem 1.5rem; }
-  .hero {
-    text-align: center;
-    padding: 6rem 1.5rem 4rem;
-    border-bottom: 1px solid rgba(212, 166, 75, 0.2);
+  img { max-width: 100%; display: block; }
+
+  h1, h2, h3 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--ink);
   }
-  .hero h1 {
-    font-size: clamp(2.5rem, 6vw, 4rem);
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    color: var(--amber);
-    margin-bottom: 0.5rem;
-  }
-  .hero .ornament {
-    font-size: 1.5rem;
-    color: var(--amber);
-    opacity: 0.6;
-    margin: 0.5rem 0 1.5rem;
-    letter-spacing: 0.5em;
-  }
-  .hero p.tagline {
-    font-size: 1.25rem;
-    color: var(--ivory-dim);
-    font-style: italic;
-    max-width: 500px;
-    margin: 0 auto 2rem;
-  }
-  .badge {
-    display: inline-block;
-    padding: 0.4rem 1rem;
-    border: 1px solid rgba(212, 166, 75, 0.4);
-    border-radius: 999px;
-    font-size: 0.85rem;
-    color: var(--amber);
-    letter-spacing: 0.05em;
+
+  .eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.28em;
     text-transform: uppercase;
+    color: var(--taupe);
+    font-weight: 500;
+    display: block;
   }
-  section { padding: 3rem 1.5rem; }
-  h2 {
-    font-size: 1.75rem;
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* ───── Hero ───── */
+  .hero {
+    position: relative;
+    min-height: 78vh;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; text-align: center;
+    background:
+      linear-gradient(rgba(20,15,10,.55), rgba(20,15,10,.7)),
+      url('./hero.jpg') center/cover no-repeat;
+  }
+  .hero-inner { max-width: 780px; padding: 80px 24px; }
+  .hero .eyebrow { color: var(--slider-cream); margin-bottom: 18px; }
+  .hero h1 {
+    font-size: clamp(2.6rem, 5vw, 4.4rem);
+    color: #fff;
     font-weight: 400;
-    color: var(--amber);
-    margin-bottom: 1rem;
+    letter-spacing: 0.01em;
+    margin-bottom: 12px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: var(--slider-cream);
+    font-weight: 400;
+  }
+  .hero .tagline {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.15rem, 2vw, 1.45rem);
+    color: var(--slider-cream);
+    max-width: 580px;
+    margin: 0 auto 32px;
+    font-weight: 400;
+    line-height: 1.5;
+  }
+  .hero-buttons { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+  .cta {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 14px 28px;
+    border: 1px solid var(--slider-cream);
+    background: transparent;
+    color: var(--slider-cream);
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.25s;
+    font-weight: 500;
+    text-decoration: none;
+  }
+  .cta:hover { background: var(--slider-cream); color: var(--ink); }
+  .cta.solid { background: var(--slider-cream); color: var(--ink); }
+  .cta.solid:hover { background: #fff; border-color: #fff; }
+
+  /* ───── Sections ───── */
+  section.feature-band {
+    padding: 88px 24px 72px;
+    background: var(--cream-soft);
+    border-bottom: 1px solid var(--rule);
     text-align: center;
+  }
+  section h2 {
+    font-size: clamp(1.9rem, 3.5vw, 2.6rem);
+    color: var(--ink);
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+  section .lede {
+    color: var(--ink-soft);
+    max-width: 580px;
+    margin: 0 auto 48px;
+    font-size: 1.05rem;
   }
   .features {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin: 2rem 0;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 28px;
+    max-width: 1000px;
+    margin: 0 auto;
   }
   .feature {
-    padding: 1.5rem;
-    background: var(--navy-800);
-    border-radius: 0.5rem;
-    border: 1px solid rgba(212, 166, 75, 0.15);
+    padding: 36px 24px;
+    background: #fff;
+    border: 1px solid var(--rule);
+    text-align: center;
   }
   .feature .num {
-    font-size: 2.5rem;
-    color: var(--amber);
-    font-weight: 300;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.2rem;
+    color: var(--burgundy);
+    font-weight: 500;
     line-height: 1;
-    margin-bottom: 0.5rem;
+    margin-bottom: 12px;
   }
   .feature .label {
-    color: var(--ivory-dim);
+    color: var(--ink-soft);
     font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  /* ───── Quote band ───── */
+  .quote-band {
+    padding: 64px 24px;
+    text-align: center;
+    background: var(--cream);
+    border-bottom: 1px solid var(--rule);
+  }
+  .quote-band .latin {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1.3rem, 2.5vw, 1.7rem);
+    color: var(--ink);
+    max-width: 700px;
+    margin: 0 auto 12px;
+    line-height: 1.5;
+  }
+  .quote-band .english {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.92rem;
+    color: var(--taupe);
+    letter-spacing: 0.04em;
+  }
+
+  /* ───── Signup ───── */
+  .signup-band {
+    padding: 88px 24px;
+    background: #fff;
   }
   .signup {
-    background: var(--navy-800);
-    padding: 2.5rem 2rem;
-    border-radius: 0.75rem;
-    margin: 2rem 0;
-    border: 1px solid rgba(212, 166, 75, 0.2);
+    max-width: 480px;
+    margin: 0 auto;
+    text-align: center;
   }
-  .signup h2 { text-align: left; }
-  .signup p { color: var(--ivory-dim); margin-bottom: 1.5rem; }
+  .signup .eyebrow { margin-bottom: 16px; }
+  .signup h2 { margin-bottom: 12px; }
+  .signup .lede { margin-bottom: 32px; }
+
+  .form-card {
+    background: var(--cream-soft);
+    border: 1px solid var(--rule);
+    padding: 36px 32px;
+    text-align: left;
+  }
   .field {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    gap: 6px;
+    margin-bottom: 18px;
   }
   .field label {
-    font-size: 0.9rem;
-    color: var(--ivory-faint);
-    letter-spacing: 0.05em;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    color: var(--taupe-dark);
+    letter-spacing: 0.2em;
     text-transform: uppercase;
   }
   .field input {
-    background: var(--navy-900);
-    border: 1px solid rgba(245, 239, 224, 0.2);
-    color: var(--ivory);
-    padding: 0.85rem 1rem;
-    border-radius: 0.4rem;
+    background: #fff;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 12px 14px;
     font-size: 1rem;
-    font-family: inherit;
+    font-family: 'Lato', sans-serif;
+    transition: border-color 0.2s;
   }
   .field input:focus {
     outline: none;
-    border-color: var(--amber);
+    border-color: var(--taupe);
   }
   button.primary {
-    background: var(--amber);
-    color: var(--navy-900);
-    border: 0;
-    padding: 0.9rem 1.5rem;
-    border-radius: 0.4rem;
-    font-size: 1rem;
-    font-weight: 600;
+    background: var(--burgundy);
+    color: #fff;
+    border: 1px solid var(--burgundy);
+    padding: 14px 24px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
     cursor: pointer;
     width: 100%;
-    transition: background 0.2s;
-    font-family: inherit;
+    transition: all 0.25s;
+    font-weight: 500;
+    margin-top: 4px;
   }
-  button.primary:hover { background: var(--amber-bright); }
-  button.primary:disabled { opacity: 0.5; cursor: not-allowed; }
-  button.secondary {
+  button.primary:hover {
+    background: var(--taupe-deep);
+    border-color: var(--taupe-deep);
+  }
+  button.primary:disabled { opacity: 0.5; cursor: wait; }
+  button.link {
     background: transparent;
-    color: var(--ivory);
-    border: 1px solid rgba(245, 239, 224, 0.3);
-    padding: 0.85rem 1rem;
-    border-radius: 0.4rem;
-    font-size: 0.95rem;
+    border: 0;
+    color: var(--taupe-dark);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.92rem;
     cursor: pointer;
+    margin-top: 14px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
     width: 100%;
-    margin-top: 0.5rem;
-    font-family: inherit;
   }
-  button.secondary:hover { border-color: var(--amber); }
+  button.link:hover { color: var(--burgundy); }
   .msg {
-    margin-top: 1rem;
-    padding: 0.75rem 1rem;
-    border-radius: 0.4rem;
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 2px;
     font-size: 0.95rem;
+    line-height: 1.5;
   }
-  .msg.success { background: rgba(45, 110, 125, 0.2); color: #7ec8d8; border: 1px solid var(--teal); }
-  .msg.error { background: rgba(138, 44, 44, 0.15); color: #d97a7a; border: 1px solid var(--crimson); }
-  .msg.info { background: rgba(212, 166, 75, 0.1); color: var(--amber); border: 1px solid rgba(212, 166, 75, 0.3); }
-  .donate {
+  .msg.success { background: #f0eee6; color: var(--taupe-deep); border: 1px solid var(--taupe); }
+  .msg.error { background: #f8e8e8; color: var(--burgundy); border: 1px solid var(--burgundy); }
+  .msg.info { background: #f5efe2; color: var(--taupe-deep); border: 1px solid var(--gold); }
+
+  /* ───── Donate band ───── */
+  .donate-band {
+    padding: 80px 24px;
+    background: var(--ink);
+    color: var(--cream);
     text-align: center;
-    padding: 3rem 1.5rem;
-    border-top: 1px solid rgba(212, 166, 75, 0.2);
   }
-  .donate p { color: var(--ivory-dim); max-width: 600px; margin: 1rem auto; }
-  .donate strong { color: var(--ivory); }
-  footer {
-    text-align: center;
-    padding: 2rem 1.5rem 3rem;
-    color: var(--ivory-faint);
-    font-size: 0.9rem;
+  .donate-band .eyebrow { color: var(--gold); margin-bottom: 18px; }
+  .donate-band h2 {
+    color: #fff;
+    margin-bottom: 24px;
   }
-  footer a { color: var(--ivory-dim); text-decoration: none; border-bottom: 1px dotted var(--ivory-faint); }
-  footer a:hover { color: var(--amber); border-color: var(--amber); }
-  .latin-quote {
+  .donate-band p {
+    max-width: 640px;
+    margin: 0 auto 16px;
+    color: rgba(247, 242, 234, 0.78);
+    font-size: 1.05rem;
+  }
+  .donate-band strong { color: var(--slider-cream); font-weight: 400; }
+  .donate-band .parishes {
+    display: flex;
+    justify-content: center;
+    gap: 48px;
+    flex-wrap: wrap;
+    margin: 32px 0 0;
+    font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    color: var(--ivory-faint);
-    text-align: center;
-    margin: 2rem 0;
-    font-size: 0.95rem;
+    font-size: 1.2rem;
+    color: var(--slider-cream);
   }
-  .latin-quote::before, .latin-quote::after { content: '" '; }
-  .latin-quote::after { content: ' "'; }
+  .donate-band .parishes span {
+    border-top: 1px solid rgba(232, 218, 196, 0.3);
+    padding-top: 14px;
+  }
+
+  /* ───── Footer ───── */
+  footer {
+    background: var(--ink);
+    color: rgba(247, 242, 234, 0.55);
+    text-align: center;
+    padding: 32px 24px 40px;
+    border-top: 1px solid rgba(232, 218, 196, 0.1);
+    font-size: 0.88rem;
+  }
+  footer a { color: rgba(247, 242, 234, 0.78); text-decoration: none; border-bottom: 1px dotted rgba(232, 218, 196, 0.3); }
+  footer a:hover { color: var(--slider-cream); border-color: var(--slider-cream); }
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <span class="badge">Beta in Progress</span>
-  <h1 style="margin-top:1.5rem">The Latin Mass</h1>
-  <div class="ornament">+ + +</div>
-  <p class="tagline">Spaced-repetition study for the Tridentine vocabulary and Order of Mass.</p>
-</div>
-
-<div class="container">
-
-  <section>
-    <h2>What's coming</h2>
-    <div class="features">
-      <div class="feature">
-        <div class="num">510</div>
-        <div class="label">vocabulary cards from the 1962 Missale Romanum</div>
-      </div>
-      <div class="feature">
-        <div class="num">83</div>
-        <div class="label">phrase pairs from the Order of Mass</div>
-      </div>
-      <div class="feature">
-        <div class="num">FSRS</div>
-        <div class="label">scheduling algorithm for efficient memorisation</div>
-      </div>
-      <div class="feature">
-        <div class="num">2</div>
-        <div class="label">recorded voices · curated Renaissance imagery</div>
-      </div>
+<section class="hero">
+  <div class="hero-inner">
+    <span class="eyebrow">Beta in Progress</span>
+    <h1>The <em>Latin Mass</em></h1>
+    <p class="tagline">Spaced-repetition study for the Tridentine vocabulary and the Order of Mass.</p>
+    <div class="hero-buttons">
+      <a href="#signup" class="cta solid">Sign up for early access</a>
+      <a href="#funding" class="cta">About the project</a>
     </div>
-  </section>
-
-  <p class="latin-quote">Introibo ad altare Dei. Ad Deum qui laetificat juventutem meam.</p>
-
-  <div class="signup">
-    <h2 id="signup">Sign up for early access</h2>
-    <p>The full app launches soon. Create an account now to be among the first.</p>
-    <form id="signupForm">
-      <div class="field">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required autocomplete="email" placeholder="you@example.com">
-      </div>
-      <div class="field">
-        <label for="password">Password (8+ characters)</label>
-        <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password" placeholder="">
-      </div>
-      <button type="submit" class="primary" id="submitBtn">Create account</button>
-      <button type="button" class="secondary" id="signinToggle">Already have an account? Sign in</button>
-    </form>
-    <div id="msg" class="msg" style="display:none"></div>
   </div>
+</section>
 
-  <section class="donate">
-    <h2>Where the money goes</h2>
-    <p>This is a not-for-profit project. After Stripe processing fees and minimal operating costs, all subscription revenue will be split <strong>50/50</strong> between <strong>Mary Immaculate Annerley</strong> and <strong>St Joseph's Chapel (FSSP)</strong> at Nudgee College — both Latin Mass parishes in Brisbane, Australia.</p>
-    <p>A public transparency ledger of every disbursement will be published when subscriptions go live.</p>
-  </section>
+<section class="feature-band">
+  <span class="eyebrow">What's coming</span>
+  <h2 style="margin-top:8px">A complete deck for the 1962 Missale Romanum</h2>
+  <p class="lede">Renaissance-style imagery, two recorded voices, and the modern FSRS scheduling algorithm — built for the lay learner.</p>
+  <div class="features">
+    <div class="feature">
+      <div class="num">510</div>
+      <div class="label">vocabulary lemmas from the Order of Mass and Propers</div>
+    </div>
+    <div class="feature">
+      <div class="num">83</div>
+      <div class="label">phrase pairs covering every section of the Mass</div>
+    </div>
+    <div class="feature">
+      <div class="num">FSRS</div>
+      <div class="label">spaced-repetition algorithm tuned for memorisation</div>
+    </div>
+    <div class="feature">
+      <div class="num">2</div>
+      <div class="label">recorded voices and curated devotional imagery per card</div>
+    </div>
+  </div>
+</section>
 
-</div>
+<section class="quote-band">
+  <p class="latin">Introibo ad altare Dei.</p>
+  <p class="english">I will go in to the altar of God.</p>
+</section>
+
+<section class="signup-band" id="signup">
+  <div class="signup">
+    <span class="eyebrow">Early access</span>
+    <h2>Sign up to be notified</h2>
+    <p class="lede">The full app launches soon. Create an account now to be among the first.</p>
+    <div class="form-card">
+      <form id="signupForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" required autocomplete="email" placeholder="you@example.com">
+        </div>
+        <div class="field">
+          <label for="password">Password (8+ characters)</label>
+          <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+        </div>
+        <button type="submit" class="primary" id="submitBtn">Create account</button>
+        <button type="button" class="link" id="signinToggle">Already have an account? Sign in</button>
+      </form>
+      <div id="msg" class="msg" style="display:none"></div>
+    </div>
+  </div>
+</section>
+
+<section class="donate-band" id="funding">
+  <span class="eyebrow">Where the money goes</span>
+  <h2>A non-profit project for Brisbane's Latin Mass parishes</h2>
+  <p>After Stripe processing fees and minimal operating costs, all subscription revenue will be split <strong>50/50</strong> between two Brisbane parishes that offer the Traditional Latin Mass.</p>
+  <p>A public transparency ledger of every disbursement will be published when subscriptions go live.</p>
+  <div class="parishes">
+    <span>Mary Immaculate, Annerley</span>
+    <span>St Joseph's Chapel (FSSP), Nudgee College</span>
+  </div>
+</section>
 
 <footer>
   <p>&copy; 2026 thelatinmass.org · Built by a parishioner of Mary Immaculate Annerley</p>
-  <p style="margin-top:0.5rem"><a href="mailto:info@thelatinmass.org">info@thelatinmass.org</a></p>
+  <p style="margin-top:6px"><a href="mailto:info@thelatinmass.org">info@thelatinmass.org</a></p>
 </footer>
 
 <script type="module">
@@ -274,20 +413,18 @@
   const toggleBtn = document.getElementById('signinToggle');
   const msg = document.getElementById('msg');
 
-  let mode = 'signup'; // or 'signin'
+  let mode = 'signup';
 
   function setMode(m) {
     mode = m;
     submitBtn.textContent = m === 'signup' ? 'Create account' : 'Sign in';
     toggleBtn.textContent = m === 'signup' ? 'Already have an account? Sign in' : "Don't have an account? Sign up";
   }
-
   function showMsg(text, kind) {
     msg.textContent = text;
     msg.className = 'msg ' + kind;
     msg.style.display = 'block';
   }
-
   toggleBtn.addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
 
   form.addEventListener('submit', async (e) => {
@@ -298,11 +435,8 @@
     const password = pwEl.value;
     try {
       let res;
-      if (mode === 'signup') {
-        res = await supabase.auth.signUp({ email, password });
-      } else {
-        res = await supabase.auth.signInWithPassword({ email, password });
-      }
+      if (mode === 'signup') res = await supabase.auth.signUp({ email, password });
+      else res = await supabase.auth.signInWithPassword({ email, password });
       if (res.error) {
         showMsg(res.error.message, 'error');
       } else if (mode === 'signup' && res.data?.user && !res.data?.session) {
@@ -319,7 +453,6 @@
     }
   });
 
-  // If already signed in, greet the user.
   supabase.auth.getSession().then(({ data }) => {
     if (data?.session?.user?.email) {
       showMsg(`Signed in as ${data.session.user.email}. We'll email you the moment the full app launches.`, 'info');
