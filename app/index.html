@@ -976,7 +976,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v20-2026-05-10-extra-additive-fix';
+  var APP_BUILD = 'v21-2026-05-10-calendar-commitment-view';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1470,7 +1470,28 @@
         : 100;
     }
 
-    var maxCount = Math.max(1, buckets.reduce(function (m, b) { return Math.max(m, b.count); }, 0), laterBucket.count);
+    // Forward-project the daily new-card target across future buckets so
+    // the calendar reflects your COMMITMENT (target/day) on top of the
+    // scheduled DUE-REVIEW load (from FSRS). Today's already-done is
+    // already represented in the goal bar at top, so today's bucket gets
+    // 0 planned-new (the row's count column shows "X done" instead).
+    var unseenLeft = countUnseenCards();
+    var dailyTargetN = getDailyTarget();
+    var totalDaysWithNew = 0;
+    for (var i = 0; i < buckets.length; i++) {
+      if (i === 0) { buckets[i].newPlanned = 0; continue; }
+      var planned = Math.min(dailyTargetN, unseenLeft);
+      buckets[i].newPlanned = planned;
+      if (planned > 0) totalDaysWithNew++;
+      unseenLeft -= planned;
+    }
+    laterBucket.newPlanned = 0; // overflow shown only for due
+
+    var maxCount = Math.max(
+      1,
+      buckets.reduce(function (m, b) { return Math.max(m, b.count + (b.newPlanned || 0)); }, 0),
+      laterBucket.count
+    );
 
     // Today's goal banner: a fresh user reads this and knows what "enough"
     // looks like today -- N new + all due. Progress bar fills as they review.
@@ -1529,7 +1550,7 @@
     var html = '<div class="view-header">'
              + '<span class="eyebrow">Forecast</span>'
              + '<h2>Next two weeks</h2>'
-             + '<p class="lede">Cards scheduled to come due, day by day. The system caps new cards at ' + getDailyTarget() + ' per day so you don\'t burn out — due reviews are uncapped.</p>'
+             + '<p class="lede">Each day shows reviews FSRS has scheduled (from your past Hard / Good / Easy ratings) plus the ' + getDailyTarget() + ' new cards you\'ve committed to introduce that day. Forecast assumes you keep your current daily target.</p>'
              + '</div>'
              + goalBanner
              + settingsStrip
@@ -1564,13 +1585,21 @@
               + '<span class="count">' + escapeHtml(rightLabel) + '</span>'
               + '</div>';
       } else {
-        var pct = Math.round(100 * b.count / maxCount);
-        html += '<div class="forecast-row' + (b.count === 0 ? ' empty' : '') + '">'
+        var due = b.count;
+        var newP = b.newPlanned || 0;
+        var total = due + newP;
+        var pct = Math.round(100 * total / maxCount);
+        var subParts = [];
+        if (b.sub) subParts.push(b.sub);
+        if (due > 0) subParts.push(due + ' due');
+        if (newP > 0) subParts.push(newP + ' new');
+        var subLabel = subParts.join(' · ');
+        html += '<div class="forecast-row' + (total === 0 ? ' empty' : '') + '">'
               + '<span class="day">' + escapeHtml(b.label)
-                + (b.sub ? '<span class="sub">' + escapeHtml(b.sub) + '</span>' : '')
+                + (subLabel ? '<span class="sub">' + escapeHtml(subLabel) + '</span>' : '')
               + '</span>'
               + '<span class="bar-wrap"><span class="bar" style="width:' + pct + '%"></span></span>'
-              + '<span class="count">' + b.count + '</span>'
+              + '<span class="count">' + total + '</span>'
               + '</div>';
       }
     });
