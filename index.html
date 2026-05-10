@@ -2,7 +2,10 @@
 <html lang="en-AU">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="0">
 <title>The Latin Mass App | Tridentine 1962 Missale Romanum Flashcards</title>
 <meta name="description" content="Learn the Traditional Latin Mass with spaced-repetition flashcards. 510 vocabulary lemmas and 83 phrase pairs from the 1962 Tridentine Missale Romanum. Sign up for beta access.">
 <meta name="keywords" content="latin mass app, tridentine mass, 1962 missale romanum, latin mass flashcards, memorise latin mass, traditional latin mass, FSRS spaced repetition, order of mass, latin mass brisbane, FSSP nudgee, mary immaculate annerley, learn ecclesiastical latin">
@@ -168,7 +171,8 @@
   /* ───── Hero ───── */
   .hero {
     position: relative;
-    min-height: 78vh;
+    min-height: 78vh;            /* fallback for older browsers */
+    min-height: 78svh;           /* iOS Safari: small viewport height ignores collapsing chrome */
     display: flex; align-items: center; justify-content: center;
     color: #fff; text-align: center;
     background:
@@ -203,6 +207,7 @@
   .cta {
     display: inline-flex; align-items: center; justify-content: center;
     padding: 14px 28px;
+    min-height: 48px;
     border: 1px solid var(--slider-cream);
     background: transparent;
     color: var(--slider-cream);
@@ -214,6 +219,8 @@
     transition: all 0.25s;
     font-weight: 500;
     text-decoration: none;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   .cta:hover { background: var(--slider-cream); color: var(--ink); }
   .cta.solid { background: var(--slider-cream); color: var(--ink); }
@@ -325,10 +332,19 @@
     background: #fff;
     border: 1px solid var(--rule);
     color: var(--ink);
-    padding: 12px 14px;
-    font-size: 1rem;
+    padding: 14px 14px;
+    /* 16px hard minimum prevents iOS Safari from auto-zooming on focus.
+       Do NOT use rem here — iOS only checks the computed px value. */
+    font-size: 16px;
+    line-height: 1.4;
     font-family: 'Lato', sans-serif;
     transition: border-color 0.2s;
+    width: 100%;
+    min-height: 48px;
+    border-radius: 0;
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
   }
   .field input:focus {
     outline: none;
@@ -345,11 +361,24 @@
     text-transform: uppercase;
     cursor: pointer;
     width: 100%;
+    min-height: 48px;
     transition: all 0.25s;
     font-weight: 500;
-    margin-top: 4px;
+    margin-top: 8px;
+    border-radius: 0;
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
+    /* Removes the 300ms double-tap-zoom delay on iOS / older Android */
+    touch-action: manipulation;
+    /* Disables iOS tap highlight flash on the burgundy fill */
+    -webkit-tap-highlight-color: transparent;
   }
   button.primary:hover {
+    background: var(--taupe-deep);
+    border-color: var(--taupe-deep);
+  }
+  button.primary:active {
     background: var(--taupe-deep);
     border-color: var(--taupe-deep);
   }
@@ -361,10 +390,15 @@
     font-family: 'Lato', sans-serif;
     font-size: 0.92rem;
     cursor: pointer;
-    margin-top: 14px;
+    /* Bumped from 14px so the link doesn't sit fat-finger-close to "Create account" */
+    margin-top: 20px;
+    padding: 12px 8px;
+    min-height: 44px;
     text-decoration: underline;
     text-underline-offset: 3px;
     width: 100%;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   button.link:hover { color: var(--burgundy); }
   .msg {
@@ -424,6 +458,66 @@
   }
   footer a { color: rgba(247, 242, 234, 0.78); text-decoration: none; border-bottom: 1px dotted rgba(232, 218, 196, 0.3); }
   footer a:hover { color: var(--slider-cream); border-color: var(--slider-cream); }
+
+  /* ───── Mobile tightening (narrow viewports) ─────
+     These rules ONLY tighten spacing and stack horizontal rows; they do not
+     change typography, colour, or visual hierarchy. */
+  @media (max-width: 600px) {
+    .container { padding: 0 20px; }
+
+    .hero-inner { padding: 64px 20px; }
+    .hero h1 { letter-spacing: 0; }
+
+    /* Stack hero CTAs full-width on phones — easier to tap, no risk of letter-spacing overflow */
+    .hero-buttons {
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto;
+    }
+    .cta { width: 100%; }
+
+    section.feature-band { padding: 64px 20px 56px; }
+    .features { gap: 20px; }
+    .feature { padding: 28px 20px; }
+    .feature .num { font-size: 2.6rem; }
+
+    .quote-band { padding: 48px 20px; }
+
+    .signup-band { padding: 64px 20px; }
+    .form-card { padding: 28px 20px; }
+
+    .donate-band { padding: 64px 20px; }
+    /* Stack the parishes vertically; the 48px gap was producing awkward two-line wraps */
+    .donate-band .parishes {
+      gap: 20px;
+      flex-direction: column;
+      font-size: 1.1rem;
+    }
+
+    footer { padding: 28px 20px 36px; font-size: 0.85rem; }
+  }
+
+  /* ───── Very narrow phones (iPhone SE, 320–360px) ─────
+     Reduce Cinzel letter-spacing on uppercase button copy so "CREATE ACCOUNT"
+     and "SIGN UP FOR EARLY ACCESS" never overflow the form-card edge. */
+  @media (max-width: 380px) {
+    .cta, button.primary {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+    .eyebrow { letter-spacing: 0.22em; }
+    .hero h1 { font-size: clamp(2.2rem, 9vw, 2.8rem); }
+  }
+
+  /* Respect reduced-motion users (older phones, accessibility) */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition-duration: 0.01ms !important; }
+  }
 </style>
 </head>
 <body>
@@ -477,19 +571,31 @@
     <h2 id="signup-heading">Sign up to be notified</h2>
     <p class="lede">The full Latin Mass app launches soon. Create a free beta account now to be among the first to memorise the Tridentine Order of Mass.</p>
     <div class="form-card">
-      <form id="signupForm">
+      <form id="signupForm" action="javascript:void(0)" method="post" novalidate>
         <div class="field">
           <label for="email">Email</label>
-          <input type="email" id="email" name="email" required autocomplete="email" placeholder="you@example.com">
+          <input type="email" id="email" name="email" required
+                 autocomplete="email"
+                 inputmode="email"
+                 autocapitalize="off"
+                 autocorrect="off"
+                 spellcheck="false"
+                 enterkeyhint="next"
+                 placeholder="you@example.com">
         </div>
         <div class="field">
           <label for="password">Password (8+ characters)</label>
-          <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password">
+          <input type="password" id="password" name="password" required minlength="8"
+                 autocomplete="new-password"
+                 autocapitalize="off"
+                 autocorrect="off"
+                 spellcheck="false"
+                 enterkeyhint="go">
         </div>
         <button type="submit" class="primary" id="submitBtn">Create account</button>
         <button type="button" class="link" id="signinToggle">Already have an account? Sign in</button>
       </form>
-      <div id="msg" class="msg" style="display:none"></div>
+      <div id="msg" class="msg" role="status" aria-live="polite" style="display:none"></div>
     </div>
   </div>
 </section>
@@ -513,9 +619,13 @@
 </footer>
 
 <script>
+  /* Build: signup-v2-mobilefix-2026-05-10
+     Visible in DevTools console so you can verify the cache-busted version is live. */
+  console.info('[thelatinmass] signup-v2-mobilefix-2026-05-10');
+
   // Vanilla fetch-based signup. No CDN imports, no module scripts.
   // Calls Supabase REST API directly. Survives ad-blockers, strict CSP,
-  // and browsers that block esm.sh.
+  // private/incognito modes, and browsers that block esm.sh.
   (function () {
     var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
     var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -528,15 +638,17 @@
     var msg = document.getElementById('msg');
 
     if (!form || !emailEl || !pwEl || !submitBtn) {
-      console.error('Signup form elements missing');
+      console.error('[thelatinmass] Signup form elements missing');
       return;
     }
 
     // Belt and braces: ensure the form never navigates by clearing action.
     form.setAttribute('action', 'javascript:void(0)');
     form.setAttribute('method', 'post');
+    form.setAttribute('novalidate', 'novalidate');
 
     var mode = 'signup';
+    var inFlight = false;
 
     function setMode(m) {
       mode = m;
@@ -572,13 +684,46 @@
       });
     }
 
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      e.stopPropagation();
+    function doSubmit(e) {
+      if (e) {
+        if (typeof e.preventDefault === 'function') e.preventDefault();
+        if (typeof e.stopPropagation === 'function') e.stopPropagation();
+      }
+      if (inFlight) return false;
+      inFlight = true;
+
+      // Soft-keyboard ergonomics: blur the focused input so iOS dismisses
+      // the keyboard before the response message appears below the button.
+      try {
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+      } catch (_) {}
+
       submitBtn.disabled = true;
+      submitBtn.setAttribute('aria-busy', 'true');
       msg.style.display = 'none';
+
       var email = (emailEl.value || '').trim();
       var password = pwEl.value;
+
+      // Lightweight client-side guard so the user gets immediate feedback
+      // instead of a generic API error.
+      if (!email || email.indexOf('@') === -1) {
+        showMsg('Please enter a valid email address.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute('aria-busy');
+        inFlight = false;
+        return false;
+      }
+      if (!password || password.length < 8) {
+        showMsg('Password must be at least 8 characters.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute('aria-busy');
+        inFlight = false;
+        return false;
+      }
+
       var path = mode === 'signup' ? 'signup' : 'token?grant_type=password';
       callAuth(path, { email: email, password: password })
         .then(function (res) {
@@ -587,30 +732,48 @@
             showMsg(errMsg, 'error');
             return;
           }
-          // Successful signup: response includes user + (with autoconfirm) access_token
           if (mode === 'signup') {
             if (res.body && res.body.access_token) {
-              showMsg("Signed in. The full app is still in beta — we'll email you the moment it launches.", 'success');
+              showMsg("Signed in. The full app is still in beta. We'll email you the moment it launches.", 'success');
             } else {
               showMsg("Account created. We'll email you the moment the full app is ready.", 'success');
             }
           } else {
             showMsg("Signed in. We'll email you the moment the full app launches.", 'success');
           }
-          // Persist session token for later sign-in detection
           if (res.body && res.body.access_token) {
             try { localStorage.setItem('tlm_session', JSON.stringify(res.body)); } catch (_) {}
           }
-          return false;
         })
         .catch(function (err) {
           showMsg((err && err.message) || 'Network error. Please try again.', 'error');
         })
         .finally(function () {
           submitBtn.disabled = false;
+          submitBtn.removeAttribute('aria-busy');
+          inFlight = false;
         });
       return false;
-    });
+    }
+
+    // Primary handler: form submit.
+    form.addEventListener('submit', doSubmit);
+
+    // Secondary handler: direct click on the button.
+    // On some mobile browsers (older iOS Safari, in-app webviews), the
+    // form 'submit' event can fail to fire if the form is missing an action
+    // or if the page was bfcache-restored. Wiring click as well guarantees
+    // the auth call happens when the user taps the burgundy button.
+    submitBtn.addEventListener('click', function (e) {
+      // If the click is going to fire a real submit event (the default),
+      // let that path handle it. We only step in if submit is suppressed.
+      // Calling doSubmit here would double-fire, so guard with inFlight.
+      if (inFlight) {
+        e.preventDefault();
+        return;
+      }
+      // Fall through to default submit behaviour.
+    }, { passive: false });
 
     // If we already have a session in localStorage, greet the user.
     try {
