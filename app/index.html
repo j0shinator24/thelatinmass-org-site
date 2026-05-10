@@ -606,7 +606,7 @@
 </main>
 
 <script>
-  console.info('[thelatinmass] app-v4-2026-05-10-media');
+  console.info('[thelatinmass] app-v5-2026-05-10-inline-reauth');
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -818,15 +818,101 @@
   }
 
   function showSignedOut() {
-    var main = document.getElementById('main');
-    main.innerHTML = '<div class="done">'
-                   + '<h2>Your session expired</h2>'
-                   + '<p>Please sign in again to continue studying.</p>'
-                   + '<a class="reveal-btn" href="../" style="display:inline-block;text-decoration:none">Sign in</a>'
-                   + '</div>';
-    // Also nuke the stale session so the landing shows the signup form, not the
-    // "Continue to study" CTA, on the next visit.
+    // Try to recover the email from the (now-stale) JWT so the form is
+    // pre-filled — saves the user from typing it again.
+    var prefillEmail = '';
+    try {
+      var raw = localStorage.getItem('tlm_session');
+      if (raw) {
+        var s = JSON.parse(raw);
+        if (s && s.user && s.user.email) prefillEmail = s.user.email;
+      }
+    } catch (_) {}
+    // Clear the stale session so landing shows the signup form (not the
+    // "Continue to study" CTA) if the user navigates away.
     try { localStorage.removeItem('tlm_session'); } catch (_) {}
+
+    var main = document.getElementById('main');
+    main.innerHTML = '<div class="done" style="padding:36px 24px;text-align:left;max-width:420px;margin:0 auto">'
+      + '<h2 style="text-align:center;margin-bottom:6px">Your session expired</h2>'
+      + '<p style="text-align:center;margin-bottom:22px">Sign in again to pick up where you left off.</p>'
+      + '<form id="reauthForm" action="javascript:void(0)" method="post" novalidate>'
+        + '<label for="reauthEmail" style="display:block;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--taupe-dark);margin-bottom:6px">Email</label>'
+        + '<input type="email" id="reauthEmail" name="email" required autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" value="' + escapeHtml(prefillEmail) + '" style="width:100%;padding:12px 14px;font-size:16px;font-family:\'Lato\',sans-serif;border:1px solid var(--rule);background:#fff;color:var(--ink);margin-bottom:14px">'
+        + '<label for="reauthPw" style="display:block;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--taupe-dark);margin-bottom:6px">Password</label>'
+        + '<input type="password" id="reauthPw" name="password" required minlength="8" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" style="width:100%;padding:12px 14px;font-size:16px;font-family:\'Lato\',sans-serif;border:1px solid var(--rule);background:#fff;color:var(--ink);margin-bottom:18px">'
+        + '<button type="submit" id="reauthSubmit" class="reveal-btn">Sign in</button>'
+        + '<div id="reauthMsg" role="status" aria-live="polite" style="display:none;margin-top:14px;padding:10px 14px;font-size:0.9rem"></div>'
+      + '</form>'
+      + '<p style="text-align:center;margin-top:18px;font-size:0.85rem;color:var(--taupe-dark)">Or <a href="../" style="color:var(--burgundy)">return to the home page</a> to use a sign-in provider.</p>'
+      + '</div>';
+
+    var form = document.getElementById('reauthForm');
+    var emailEl = document.getElementById('reauthEmail');
+    var pwEl = document.getElementById('reauthPw');
+    var btn = document.getElementById('reauthSubmit');
+    var msg = document.getElementById('reauthMsg');
+    var inFlight = false;
+
+    function showMsg(text, kind) {
+      msg.textContent = text;
+      msg.style.display = 'block';
+      msg.style.background = kind === 'error' ? '#f8e8e8' : '#e6efe9';
+      msg.style.border = '1px solid ' + (kind === 'error' ? '#c08383' : '#7da090');
+      msg.style.color = kind === 'error' ? 'var(--burgundy)' : 'var(--green)';
+    }
+
+    form.addEventListener('submit', function (e) {
+      if (e && typeof e.preventDefault === 'function') e.preventDefault();
+      if (inFlight) return;
+      inFlight = true;
+      try { document.activeElement && document.activeElement.blur(); } catch (_) {}
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+      msg.style.display = 'none';
+
+      var email = (emailEl.value || '').trim();
+      var password = pwEl.value;
+      if (!email || email.indexOf('@') === -1) {
+        showMsg('Please enter a valid email address.', 'error');
+        btn.disabled = false; inFlight = false; return;
+      }
+      if (!password || password.length < 8) {
+        showMsg('Password must be at least 8 characters.', 'error');
+        btn.disabled = false; inFlight = false; return;
+      }
+
+      fetch(AUTH + '/token?grant_type=password', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: email, password: password }),
+      }).then(function (r) {
+        return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; });
+      }).then(function (res) {
+        if (!res.ok) {
+          var em = (res.body && (res.body.msg || res.body.error_description || res.body.error)) || 'Sign-in failed';
+          showMsg(em, 'error');
+          btn.disabled = false; btn.removeAttribute('aria-busy'); inFlight = false;
+          return;
+        }
+        if (res.body && res.body.access_token) {
+          try { localStorage.setItem('tlm_session', JSON.stringify(res.body)); } catch (_) {}
+          showMsg('Signed in. Loading your decks…', 'success');
+          // Reload the page so /app/ boots cleanly with the new session.
+          setTimeout(function () { window.location.reload(); }, 400);
+        } else {
+          showMsg('Sign-in succeeded but no session was returned. Try again.', 'error');
+          btn.disabled = false; btn.removeAttribute('aria-busy'); inFlight = false;
+        }
+      }).catch(function (err) {
+        showMsg((err && err.message) || 'Network error. Try again.', 'error');
+        btn.disabled = false; btn.removeAttribute('aria-busy'); inFlight = false;
+      });
+    });
   }
 
   function fetchStatic() {
