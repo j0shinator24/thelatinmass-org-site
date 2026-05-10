@@ -329,6 +329,205 @@
   .done h2 { font-size: 2rem; color: var(--burgundy); margin-bottom: 8px; }
   .done p { color: var(--ink-soft); margin-bottom: 24px; }
 
+  /* ─── Nav active state ─── */
+  header.app-header nav a.active,
+  header.app-header nav button.active { color: var(--burgundy); border-bottom: 2px solid var(--burgundy); }
+
+  /* ─── Calendar / forecast view ─── */
+  .view-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .view-header h2 { font-size: clamp(1.7rem, 3vw, 2.3rem); margin-bottom: 8px; }
+  .view-header .lede { color: var(--ink-soft); font-size: 0.95rem; }
+
+  .forecast-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .forecast-summary .stat {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 18px 12px;
+    text-align: center;
+  }
+  .forecast-summary .stat .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem;
+    color: var(--burgundy);
+    font-weight: 600;
+    line-height: 1;
+  }
+  .forecast-summary .stat .lbl {
+    margin-top: 6px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--taupe);
+  }
+
+  .forecast-list { display: flex; flex-direction: column; gap: 6px; }
+  .forecast-row {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .forecast-row.today { border-color: var(--burgundy); }
+  .forecast-row .day {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+  }
+  .forecast-row .day .sub {
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    margin-left: 8px;
+  }
+  .forecast-row .bar-wrap {
+    flex: 1;
+    height: 8px;
+    background: var(--cream);
+    margin: 0 14px;
+    position: relative;
+  }
+  .forecast-row .bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: var(--burgundy);
+  }
+  .forecast-row .count {
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    color: var(--burgundy);
+    font-weight: 600;
+    min-width: 32px;
+    text-align: right;
+  }
+  .forecast-row.empty .count { color: var(--taupe); font-weight: 400; }
+
+  /* ─── Stats view + heatmap ─── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .stat-grid .stat {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 16px 10px;
+    text-align: center;
+  }
+  .stat-grid .stat .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    color: var(--burgundy);
+    font-weight: 600;
+    line-height: 1;
+  }
+  .stat-grid .stat .lbl {
+    margin-top: 4px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.56rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--taupe);
+  }
+
+  .heatmap {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 18px 14px;
+    margin-bottom: 18px;
+  }
+  .heatmap h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--taupe-dark);
+    text-align: center;
+    margin-bottom: 16px;
+  }
+  .heatmap-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 1fr);
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(10px, 1fr);
+    gap: 3px;
+    overflow-x: auto;
+  }
+  .heatmap-cell {
+    aspect-ratio: 1 / 1;
+    background: var(--cream);
+    border-radius: 2px;
+  }
+  .heatmap-cell[data-level="0"] { background: var(--cream); }
+  .heatmap-cell[data-level="1"] { background: #ddd0bd; }
+  .heatmap-cell[data-level="2"] { background: #b89a7a; }
+  .heatmap-cell[data-level="3"] { background: #8a6442; }
+  .heatmap-cell[data-level="4"] { background: var(--burgundy); }
+  .heatmap-legend {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 12px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--taupe);
+  }
+  .heatmap-legend .swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+  }
+
+  .rating-breakdown {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .rating-breakdown .rb {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .rating-breakdown .rb .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+  .rating-breakdown .rb .lbl {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    margin-top: 4px;
+  }
+  .rating-breakdown .rb-1 .num { color: var(--burgundy); }
+  .rating-breakdown .rb-2 .num { color: #8a6b22; }
+  .rating-breakdown .rb-3 .num { color: var(--green); }
+  .rating-breakdown .rb-4 .num { color: var(--taupe-deep); }
+
   /* ─── Mobile ─── */
   @media (max-width: 560px) {
     main { padding: 20px 14px 60px; }
@@ -336,9 +535,15 @@
     .rate-row { gap: 6px; }
     .rate-btn { padding: 12px 4px; min-height: 60px; font-size: 0.66rem; letter-spacing: 0.1em; }
     .rate-btn .interval-hint { font-size: 0.6rem; }
-    header.app-header { padding: 10px 14px; }
+    header.app-header { padding: 10px 14px; gap: 8px; }
     header.app-header .brand { font-size: 1.1rem; }
     header.app-header .user { display: none; }
+    header.app-header nav { gap: 10px; font-size: 0.62rem; letter-spacing: 0.1em; }
+    .forecast-summary, .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .rating-breakdown { grid-template-columns: repeat(2, 1fr); }
+    .forecast-row { padding: 10px 12px; flex-wrap: wrap; }
+    .forecast-row .bar-wrap { order: 3; flex-basis: 100%; margin: 8px 0 0; }
+    .heatmap-grid { grid-auto-columns: minmax(8px, 1fr); gap: 2px; }
   }
 </style>
 </head>
@@ -347,6 +552,9 @@
 <header class="app-header">
   <a href="../" class="brand">The <em>Latin Mass</em></a>
   <nav>
+    <button id="navDecks" class="nav-link" data-view="decks">Decks</button>
+    <button id="navCalendar" class="nav-link" data-view="calendar">Calendar</button>
+    <button id="navStats" class="nav-link" data-view="stats">Stats</button>
     <span class="user" id="userEmail"></span>
     <button id="signoutBtn">Sign out</button>
   </nav>
@@ -357,7 +565,7 @@
 </main>
 
 <script>
-  console.info('[thelatinmass] app-v2-2026-05-10-async-refresh');
+  console.info('[thelatinmass] app-v3-2026-05-10-fsrs-calendar-stats');
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -533,6 +741,7 @@
   function boot() {
     console.info('[tlm-app] boot ok, user:', SESSION.user && SESSION.user.email);
     document.getElementById('userEmail').textContent = (SESSION.user && SESSION.user.email) || '';
+    wireNav();
     Promise.all([fetchStatic(), fetchUserState()])
       .then(function () { showDeckPicker(); })
       .catch(function (err) {
@@ -540,6 +749,31 @@
         // inside rest(). If we still get here it's a hard failure — show it.
         showErr('Failed to load: ' + (err.message || err));
       });
+  }
+
+  // Track which top-level view is active so we can highlight the nav link.
+  var ACTIVE_VIEW = 'decks';
+  function setActiveView(v) {
+    ACTIVE_VIEW = v;
+    var ids = { decks: 'navDecks', calendar: 'navCalendar', stats: 'navStats' };
+    Object.keys(ids).forEach(function (k) {
+      var el = document.getElementById(ids[k]);
+      if (!el) return;
+      if (k === v) el.classList.add('active'); else el.classList.remove('active');
+    });
+  }
+
+  function wireNav() {
+    var byView = {
+      decks: showDeckPicker,
+      calendar: function () { showCalendar(); },
+      stats: function () { showStats(); },
+    };
+    Object.keys(byView).forEach(function (k) {
+      var btn = document.querySelector('[data-view="' + k + '"]');
+      if (!btn) return;
+      btn.addEventListener('click', function () { byView[k](); });
+    });
   }
 
   function showSignedOut() {
@@ -591,6 +825,7 @@
 
   // ─── Deck picker ────────────────────────────────────────────────────────
   function showDeckPicker() {
+    setActiveView('decks');
     var main = document.getElementById('main');
     var html = '<div class="deck-picker">'
              + '<span class="eyebrow" style="text-align:center;display:block;margin-bottom:14px">Study</span>'
@@ -625,6 +860,253 @@
         startDeck(parseInt(btn.dataset.deck, 10));
       });
     });
+  }
+
+  // ─── Calendar (next 14 days due forecast) ───────────────────────────────
+  function showCalendar() {
+    setActiveView('calendar');
+    var main = document.getElementById('main');
+    if (!STATIC) { main.innerHTML = '<div class="status-msg">Loading…</div>'; return; }
+
+    var DAY = 86400000;
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var todayMs = today.getTime();
+
+    // Bucket every card-state row by which day it's due (clamped to today
+    // for anything overdue, then the next 14 days, then "later").
+    var buckets = []; // { ms, label, sub, count, isToday }
+    for (var i = 0; i < 14; i++) {
+      var d = new Date(todayMs + i * DAY);
+      buckets.push({
+        ms: d.getTime(),
+        label: weekday(d) + ', ' + monthDay(d),
+        sub: i === 0 ? 'today' : (i === 1 ? 'tomorrow' : ''),
+        count: 0,
+        isToday: i === 0,
+      });
+    }
+    var laterBucket = { ms: todayMs + 14 * DAY, label: '14+ days', sub: '', count: 0, isToday: false };
+    var overdueCount = 0;
+    var newCount = 0;
+    var totalScheduled = 0;
+
+    // Walk every card across both decks
+    var allCards = [];
+    Object.keys(STATIC.cardsByDeck).forEach(function (deckId) {
+      allCards = allCards.concat(STATIC.cardsByDeck[deckId]);
+    });
+
+    allCards.forEach(function (c) {
+      var s = USER_STATE[c.id];
+      if (!s) { newCount++; return; }
+      if (!s.due) { newCount++; return; }
+      var dueMs = new Date(s.due).getTime();
+      if (dueMs < todayMs) { overdueCount++; return; }
+      totalScheduled++;
+      // Find the bucket
+      var idx = Math.floor((dueMs - todayMs) / DAY);
+      if (idx < 0) idx = 0;
+      if (idx < 14) buckets[idx].count++;
+      else laterBucket.count++;
+    });
+
+    // Buckets that count overdue belong to "today" too — overdue is due now
+    if (buckets.length) buckets[0].count += overdueCount;
+
+    var maxCount = Math.max(1, buckets.reduce(function (m, b) { return Math.max(m, b.count); }, 0), laterBucket.count);
+
+    var html = '<div class="view-header">'
+             + '<span class="eyebrow">Forecast</span>'
+             + '<h2>Next two weeks</h2>'
+             + '<p class="lede">Cards scheduled to come due, day by day.</p>'
+             + '</div>'
+             + '<div class="forecast-summary">'
+               + '<div class="stat"><div class="num">' + (overdueCount + buckets[0].count - overdueCount) + '</div><div class="lbl">Due today</div></div>'
+               + '<div class="stat"><div class="num">' + newCount + '</div><div class="lbl">New cards</div></div>'
+               + '<div class="stat"><div class="num">' + (totalScheduled + overdueCount) + '</div><div class="lbl">In rotation</div></div>'
+             + '</div>'
+             + '<div class="forecast-list">';
+    buckets.forEach(function (b) {
+      var pct = Math.round(100 * b.count / maxCount);
+      html += '<div class="forecast-row' + (b.isToday ? ' today' : '') + (b.count === 0 ? ' empty' : '') + '">'
+            + '<span class="day">' + escapeHtml(b.label)
+              + (b.sub ? '<span class="sub">' + escapeHtml(b.sub) + '</span>' : '')
+            + '</span>'
+            + '<span class="bar-wrap"><span class="bar" style="width:' + pct + '%"></span></span>'
+            + '<span class="count">' + b.count + '</span>'
+            + '</div>';
+    });
+    if (laterBucket.count > 0) {
+      var pct2 = Math.round(100 * laterBucket.count / maxCount);
+      html += '<div class="forecast-row empty">'
+            + '<span class="day">' + escapeHtml(laterBucket.label) + '</span>'
+            + '<span class="bar-wrap"><span class="bar" style="width:' + pct2 + '%;background:var(--taupe)"></span></span>'
+            + '<span class="count">' + laterBucket.count + '</span>'
+            + '</div>';
+    }
+    html += '</div>';
+    main.innerHTML = html;
+  }
+
+  // ─── Stats (heatmap, streak, retention, totals) ─────────────────────────
+  function showStats() {
+    setActiveView('stats');
+    var main = document.getElementById('main');
+    main.innerHTML = '<div class="status-msg">Loading stats…</div>';
+
+    // Pull last 90 days of review log for heatmap + streak + retention
+    var sinceISO = new Date(Date.now() - 90 * 86400000).toISOString();
+    var path = '/user_review_log?select=review_time,rating&review_time=gte.' + encodeURIComponent(sinceISO)
+             + '&order=review_time.asc&limit=20000';
+    rest(path, SESSION).then(function (rows) {
+      renderStats(rows || []);
+    }).catch(function (err) {
+      showErr('Failed to load stats: ' + (err.message || err));
+    });
+  }
+
+  function renderStats(rows) {
+    var main = document.getElementById('main');
+    var DAY = 86400000;
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var todayMs = today.getTime();
+
+    // Bucket reviews by local-day key
+    var byDay = {}; // 'YYYY-MM-DD' -> { total, again, hard, good, easy }
+    rows.forEach(function (r) {
+      var d = new Date(r.review_time);
+      var key = isoDate(d);
+      var b = byDay[key];
+      if (!b) b = byDay[key] = { total: 0, again: 0, hard: 0, good: 0, easy: 0 };
+      b.total++;
+      if (r.rating === 1) b.again++;
+      else if (r.rating === 2) b.hard++;
+      else if (r.rating === 3) b.good++;
+      else if (r.rating === 4) b.easy++;
+    });
+
+    // Streak: count consecutive days back from today with at least one review.
+    var streak = 0;
+    for (var i = 0; i < 365; i++) {
+      var d = new Date(todayMs - i * DAY);
+      var k = isoDate(d);
+      if (byDay[k]) streak++;
+      else if (i === 0) {
+        // No review today yet — but if yesterday had reviews we say streak is
+        // still alive, just not extended yet.
+        var y = new Date(todayMs - DAY);
+        if (byDay[isoDate(y)]) continue;
+        else break;
+      } else break;
+    }
+
+    // Retention rate over last 30 days = % rating >= 3 (Good/Easy)
+    var ret_total = 0, ret_pass = 0;
+    var thirtyAgo = todayMs - 30 * DAY;
+    rows.forEach(function (r) {
+      var t = new Date(r.review_time).getTime();
+      if (t < thirtyAgo) return;
+      ret_total++;
+      if (r.rating >= 3) ret_pass++;
+    });
+    var retention = ret_total > 0 ? Math.round(100 * ret_pass / ret_total) : null;
+
+    // Rating breakdown — last 30 days
+    var rb = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    rows.forEach(function (r) {
+      var t = new Date(r.review_time).getTime();
+      if (t < thirtyAgo) return;
+      if (rb[r.rating] !== undefined) rb[r.rating]++;
+    });
+
+    // Heatmap grid: 90 cells, one per day, oldest first so columns advance L→R.
+    // Pad with leading empties so the rightmost column is "today" and rows are
+    // weekdays (Sun=0 at top).
+    var cells = [];
+    for (var j = 89; j >= 0; j--) {
+      var dt = new Date(todayMs - j * DAY);
+      var key = isoDate(dt);
+      var entry = byDay[key];
+      var n = entry ? entry.total : 0;
+      var level = n === 0 ? 0 : (n < 5 ? 1 : n < 15 ? 2 : n < 40 ? 3 : 4);
+      cells.push({ key: key, n: n, level: level, dow: dt.getDay() });
+    }
+    // Pad the start so the first cell aligns to its weekday row
+    var leadPad = cells[0].dow;
+    var pads = [];
+    for (var p = 0; p < leadPad; p++) {
+      pads.push({ key: null, n: 0, level: 0, empty: true });
+    }
+    var allCells = pads.concat(cells);
+
+    var totalLast30 = 0;
+    Object.keys(byDay).forEach(function (k) {
+      var t = new Date(k + 'T12:00:00').getTime();
+      if (t >= thirtyAgo) totalLast30 += byDay[k].total;
+    });
+
+    var html = '<div class="view-header">'
+             + '<span class="eyebrow">Practice</span>'
+             + '<h2>Your last 90 days</h2>'
+             + '<p class="lede">Reviews logged, ratings given, days in a row.</p>'
+             + '</div>'
+             + '<div class="stat-grid">'
+               + '<div class="stat"><div class="num">' + rows.length + '</div><div class="lbl">Total reviews</div></div>'
+               + '<div class="stat"><div class="num">' + totalLast30 + '</div><div class="lbl">Last 30 days</div></div>'
+               + '<div class="stat"><div class="num">' + streak + '</div><div class="lbl">Day streak</div></div>'
+               + '<div class="stat"><div class="num">' + (retention === null ? '—' : retention + '%') + '</div><div class="lbl">Retention</div></div>'
+             + '</div>'
+             + '<div class="heatmap">'
+               + '<h3>Activity heatmap (90 days)</h3>'
+               + '<div class="heatmap-grid">';
+    allCells.forEach(function (c) {
+      if (c.empty) {
+        html += '<div class="heatmap-cell" data-level="0" style="visibility:hidden"></div>';
+      } else {
+        var title = c.key + ': ' + c.n + ' review' + (c.n === 1 ? '' : 's');
+        html += '<div class="heatmap-cell" data-level="' + c.level + '" title="' + escapeHtml(title) + '"></div>';
+      }
+    });
+    html += '</div>'
+            + '<div class="heatmap-legend">'
+              + '<span>Less</span>'
+              + '<span class="swatch" style="background:var(--cream)"></span>'
+              + '<span class="swatch" style="background:#ddd0bd"></span>'
+              + '<span class="swatch" style="background:#b89a7a"></span>'
+              + '<span class="swatch" style="background:#8a6442"></span>'
+              + '<span class="swatch" style="background:var(--burgundy)"></span>'
+              + '<span>More</span>'
+            + '</div>'
+          + '</div>';
+
+    if (ret_total > 0) {
+      html += '<div style="font-family:\'Cinzel\',serif;font-size:0.66rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--taupe-dark);margin:18px 0 10px">Last 30 days · rating breakdown</div>'
+            + '<div class="rating-breakdown">'
+              + '<div class="rb rb-1"><div class="num">' + rb[1] + '</div><div class="lbl">Again</div></div>'
+              + '<div class="rb rb-2"><div class="num">' + rb[2] + '</div><div class="lbl">Hard</div></div>'
+              + '<div class="rb rb-3"><div class="num">' + rb[3] + '</div><div class="lbl">Good</div></div>'
+              + '<div class="rb rb-4"><div class="num">' + rb[4] + '</div><div class="lbl">Easy</div></div>'
+            + '</div>';
+    }
+
+    main.innerHTML = html;
+  }
+
+  // ─── Date utils for calendar/stats ──────────────────────────────────────
+  function isoDate(d) {
+    var yr = d.getFullYear();
+    var mo = String(d.getMonth() + 1).padStart(2, '0');
+    var da = String(d.getDate()).padStart(2, '0');
+    return yr + '-' + mo + '-' + da;
+  }
+  function weekday(d) {
+    return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+  }
+  function monthDay(d) {
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return months[d.getMonth()] + ' ' + d.getDate();
   }
 
   // ─── Review session ─────────────────────────────────────────────────────
@@ -741,56 +1223,117 @@
     renderCard();
   }
 
-  // ─── Scheduling (simple SM-2-ish for v1; will swap to true FSRS later) ──
+  // ─── FSRS-4.5 scheduling ────────────────────────────────────────────────
+  // Default open-source weights from the FSRS reference implementation.
+  // These can be optimised per-user later from accumulated user_review_log.
+  var FSRS_W = [
+    0.4072, 1.1829, 3.1262, 15.4722, 7.2102, 0.5316, 1.0651,
+    0.0234, 1.616, 0.1544, 1.0824, 1.9813, 0.0953, 0.2975,
+    2.2042, 0.2407, 2.9466, 0.5034, 0.6567
+  ];
+  var FSRS_REQUEST_RETENTION = 0.9;
+  var FSRS_DECAY = -0.5;
+  // FACTOR = 19/81 ≈ 0.2346, derived so that R(t=S, S) = 0.9 exactly
+  var FSRS_FACTOR = Math.pow(0.9, 1 / FSRS_DECAY) - 1;
+  var FSRS_MAX_INTERVAL = 365 * 5; // cap at 5 years
+
+  function fsrsClamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function fsrsInitDifficulty(rating) {
+    return fsrsClamp(FSRS_W[4] - (rating - 3) * FSRS_W[5], 1, 10);
+  }
+
+  function fsrsInitStability(rating) {
+    return Math.max(FSRS_W[rating - 1], 0.1);
+  }
+
+  function fsrsNextDifficulty(D, rating) {
+    var next = D - FSRS_W[6] * (rating - 3);
+    var dInit = fsrsInitDifficulty(3);
+    return fsrsClamp(FSRS_W[7] * dInit + (1 - FSRS_W[7]) * next, 1, 10);
+  }
+
+  function fsrsRetrievability(elapsedDays, S) {
+    return Math.pow(1 + FSRS_FACTOR * elapsedDays / Math.max(S, 0.1), FSRS_DECAY);
+  }
+
+  function fsrsNextRecallStability(D, S, R, rating) {
+    var hardPenalty = rating === 2 ? FSRS_W[15] : 1;
+    var easyBonus = rating === 4 ? FSRS_W[16] : 1;
+    return S * (1 + Math.exp(FSRS_W[8])
+                * (11 - D)
+                * Math.pow(S, -FSRS_W[9])
+                * (Math.exp(FSRS_W[10] * (1 - R)) - 1)
+                * hardPenalty
+                * easyBonus);
+  }
+
+  function fsrsNextForgetStability(D, S, R) {
+    return FSRS_W[11]
+      * Math.pow(D, -FSRS_W[12])
+      * (Math.pow(S + 1, FSRS_W[13]) - 1)
+      * Math.exp(FSRS_W[14] * (1 - R));
+  }
+
+  function fsrsNextInterval(S) {
+    var ivl = (S / FSRS_FACTOR) * (Math.pow(FSRS_REQUEST_RETENTION, 1 / FSRS_DECAY) - 1);
+    return fsrsClamp(Math.round(ivl), 1, FSRS_MAX_INTERVAL);
+  }
+
+  // Compute new card state after a review with the given rating (1..4).
+  // Returns the row to upsert into user_card_state.
   function nextSchedule(prev, rating) {
-    // returns { due, scheduled_days, stability, difficulty, reps, lapses, state, last_review }
     var now = new Date();
-    var DAY = 86400 * 1000;
     var prevReps = prev ? (prev.reps || 0) : 0;
     var prevLapses = prev ? (prev.lapses || 0) : 0;
-    var prevDays = prev ? (prev.scheduled_days || 0) : 0;
-    var prevStab = prev ? (prev.stability || 0) : 0;
-    var prevDiff = prev ? (prev.difficulty || 5) : 5;
+    var prevState = prev ? (prev.state || 0) : 0;
+    var prevS = prev ? (prev.stability || 0) : 0;
+    var prevD = prev ? (prev.difficulty || 0) : 0;
+    var prevReview = prev && prev.last_review ? new Date(prev.last_review).getTime() : 0;
+    var elapsedDays = prevReview ? Math.max(0, (now.getTime() - prevReview) / 86400000) : 0;
 
+    var newS, newD, newDays, newDue, newState;
     var newReps = prevReps + 1;
     var newLapses = prevLapses;
-    var newState = 2; // review
-    var newDays;
 
-    if (rating === 1) {
-      newLapses = prevLapses + 1;
-      newDays = 0; // due in ~1 minute
-      newState = 1; // learning
-    } else if (rating === 2) {
-      // Hard
-      newDays = prevReps === 0 ? 0 : Math.max(1, Math.round(prevDays * 1.2));
-    } else if (rating === 3) {
-      // Good
-      if (prevReps === 0) newDays = 1;
-      else newDays = Math.max(1, Math.round(prevDays * 2.5));
+    if (prevReps === 0) {
+      // First-ever review: initialise from rating
+      newD = fsrsInitDifficulty(rating);
+      newS = fsrsInitStability(rating);
+      if (rating === 1) {
+        newState = 1; // learning
+        newDays = 0;
+        newDue = new Date(now.getTime() + 60 * 1000); // 1 minute
+      } else {
+        newState = 2; // review
+        newDays = fsrsNextInterval(newS);
+        newDue = new Date(now.getTime() + newDays * 86400000);
+      }
     } else {
-      // Easy
-      if (prevReps === 0) newDays = 4;
-      else newDays = Math.max(1, Math.round(prevDays * 4));
+      // Subsequent review: update D, S, schedule
+      var R = fsrsRetrievability(elapsedDays, prevS);
+      newD = fsrsNextDifficulty(prevD || fsrsInitDifficulty(3), rating);
+      if (rating === 1) {
+        // Lapse — forget stability formula, short relearn step
+        newS = fsrsNextForgetStability(newD, prevS || 0.1, R);
+        newLapses = prevLapses + 1;
+        newState = 3; // relearning
+        newDays = 0;
+        newDue = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes
+      } else {
+        newS = fsrsNextRecallStability(newD, prevS || 0.1, R, rating);
+        newState = 2; // review
+        newDays = fsrsNextInterval(newS);
+        newDue = new Date(now.getTime() + newDays * 86400000);
+      }
     }
-
-    var newDue;
-    if (rating === 1) newDue = new Date(now.getTime() + 60 * 1000); // 1 min
-    else newDue = new Date(now.getTime() + newDays * DAY);
-
-    // Difficulty drift (SM-2-ish)
-    var newDiff = prevDiff;
-    if (rating === 1) newDiff = Math.min(10, prevDiff + 1.0);
-    else if (rating === 2) newDiff = Math.min(10, prevDiff + 0.3);
-    else if (rating === 4) newDiff = Math.max(1, prevDiff - 0.4);
-
-    var newStab = newDays > 0 ? newDays : 0.001;
 
     return {
       due: newDue.toISOString(),
       scheduled_days: newDays,
-      stability: newStab,
-      difficulty: newDiff,
+      elapsed_days: Math.round(elapsedDays),
+      stability: Number(newS.toFixed(4)),
+      difficulty: Number(newD.toFixed(4)),
       reps: newReps,
       lapses: newLapses,
       state: newState,
@@ -798,15 +1341,18 @@
     };
   }
 
+  // What interval will each rating button produce? Used for the hints under
+  // the rate buttons so the user can see the schedule before they tap.
   function scheduleHints(prev) {
-    var DAY = 1;
-    var prevDays = prev ? (prev.scheduled_days || 0) : 0;
-    var prevReps = prev ? (prev.reps || 0) : 0;
     var hints = {};
-    hints[1] = '<1m';
-    hints[2] = prevReps === 0 ? '<10m' : humanInterval(Math.max(1, Math.round(prevDays * 1.2)));
-    hints[3] = prevReps === 0 ? '1d' : humanInterval(Math.max(1, Math.round(prevDays * 2.5)));
-    hints[4] = prevReps === 0 ? '4d' : humanInterval(Math.max(1, Math.round(prevDays * 4)));
+    for (var rating = 1; rating <= 4; rating++) {
+      var sim = nextSchedule(prev, rating);
+      if (rating === 1) {
+        hints[rating] = prev && prev.reps > 0 ? '10m' : '<1m';
+      } else {
+        hints[rating] = humanInterval(sim.scheduled_days);
+      }
+    }
     return hints;
   }
 

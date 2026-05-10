@@ -401,6 +401,53 @@
     -webkit-tap-highlight-color: transparent;
   }
   button.link:hover { color: var(--burgundy); }
+
+  /* ─── OAuth divider + buttons ─── */
+  .oauth-divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 24px 0 18px;
+    color: var(--taupe);
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .oauth-divider::before, .oauth-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+  }
+  .oauth-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .oauth-btn {
+    background: #fff;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 12px 8px;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    text-decoration: none;
+    transition: border-color 0.15s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .oauth-btn:hover { border-color: var(--taupe); }
+  .oauth-btn:active { transform: scale(0.98); }
+  .oauth-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .oauth-btn-apple { background: #000; color: #fff; border-color: #000; }
+  .oauth-btn-apple:hover { border-color: #444; }
   .msg {
     margin-top: 16px;
     padding: 12px 16px;
@@ -601,6 +648,30 @@
         <button type="submit" class="primary" id="submitBtn">Create account</button>
         <button type="button" class="link" id="signinToggle">Already have an account? Sign in</button>
       </form>
+      <div class="oauth-divider"><span>Or continue with</span></div>
+      <div class="oauth-buttons">
+        <button type="button" class="oauth-btn" data-oauth="google" aria-label="Continue with Google">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#4285F4" d="M44 24c0-1.4-.1-2.8-.4-4.1H24v7.8h11.2c-.5 2.6-2 4.8-4.2 6.3v5.2h6.8C41.7 35.6 44 30.3 44 24z"/>
+            <path fill="#34A853" d="M24 44c5.4 0 9.9-1.8 13.2-4.8l-6.8-5.2c-1.9 1.3-4.3 2-6.4 2-4.9 0-9.1-3.3-10.6-7.8H6.4v5.4C9.7 39.9 16.3 44 24 44z"/>
+            <path fill="#FBBC05" d="M13.4 28.2c-.4-1.3-.6-2.7-.6-4.2s.2-2.9.6-4.2v-5.4H6.4C4.9 17.4 4 20.6 4 24s.9 6.6 2.4 9.6l7-5.4z"/>
+            <path fill="#EA4335" d="M24 11.6c2.9 0 5.5 1 7.6 2.9l5.7-5.7C33.8 5.5 29.3 4 24 4 16.3 4 9.7 8.1 6.4 14.4l7 5.4c1.5-4.5 5.7-7.8 10.6-8.2z"/>
+          </svg>
+          <span>Google</span>
+        </button>
+        <button type="button" class="oauth-btn oauth-btn-apple" data-oauth="apple" aria-label="Continue with Apple">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+            <path d="M17.05 20.28c-.98.95-2.05.86-3.08.4-1.09-.47-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+          </svg>
+          <span>Apple</span>
+        </button>
+        <button type="button" class="oauth-btn" data-oauth="facebook" aria-label="Continue with Facebook">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="#1877F2" d="M24 12c0-6.6-5.4-12-12-12S0 5.4 0 12c0 6 4.4 11 10.1 11.9V15.5h-3v-3.5h3V9.4c0-3 1.8-4.7 4.5-4.7 1.3 0 2.7.2 2.7.2v3h-1.5c-1.5 0-2 .9-2 1.9V12h3.3l-.5 3.5h-2.8v8.4C19.6 23 24 18 24 12z"/>
+          </svg>
+          <span>Facebook</span>
+        </button>
+      </div>
       <div id="msg" class="msg" role="status" aria-live="polite" style="display:none"></div>
     </div>
   </div>
@@ -625,9 +696,54 @@
 </footer>
 
 <script>
-  /* Build: signup-v3-srs-launch-2026-05-10
+  /* Build: signup-v4-oauth-2026-05-10
      Visible in DevTools console so you can verify the cache-busted version is live. */
-  console.info('[thelatinmass] signup-v3-srs-launch-2026-05-10');
+  console.info('[thelatinmass] signup-v4-oauth-2026-05-10');
+
+  // ─── OAuth callback: when Supabase redirects back here after a provider
+  // sign-in, the access/refresh tokens come in the URL hash (RFC 6749 implicit
+  // flow). We parse, store, clean the URL, and bounce to /app/.
+  (function handleOAuthCallback() {
+    if (!window.location.hash || window.location.hash.length < 2) return;
+    var params = new URLSearchParams(window.location.hash.substring(1));
+    var accessToken = params.get('access_token');
+    var refreshToken = params.get('refresh_token');
+    if (!accessToken || !refreshToken) return;
+    var expiresIn = parseInt(params.get('expires_in') || '3600', 10);
+    var expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
+    var session = {
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      token_type: params.get('token_type') || 'bearer',
+      expires_in: expiresIn,
+      expires_at: expiresAt,
+      // We don't have the user object yet, but we can decode it from the JWT
+      // payload so /app/ has something to render before the next refresh.
+      user: decodeJwtUser(accessToken) || { email: '' },
+      provider_token: params.get('provider_token') || null,
+    };
+    try { localStorage.setItem('tlm_session', JSON.stringify(session)); } catch (_) {}
+    // Clean the URL so a refresh doesn't re-process the hash.
+    history.replaceState({}, document.title, window.location.pathname + window.location.search);
+    // Send them straight to study.
+    window.location.href = './app/';
+  })();
+
+  function decodeJwtUser(token) {
+    try {
+      var parts = token.split('.');
+      if (parts.length !== 3) return null;
+      var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return {
+        id: payload.sub,
+        email: payload.email || '',
+        aud: payload.aud,
+        role: payload.role,
+        app_metadata: payload.app_metadata || {},
+        user_metadata: payload.user_metadata || {},
+      };
+    } catch (e) { return null; }
+  }
 
   // Vanilla fetch-based signup. No CDN imports, no module scripts.
   // Calls Supabase REST API directly. Survives ad-blockers, strict CSP,
@@ -794,6 +910,18 @@
         });
       return false;
     }
+
+    // OAuth buttons → Supabase /authorize endpoint, which redirects to the
+    // provider, and then back to https://thelatinmass.org/#access_token=...
+    // The handleOAuthCallback IIFE at the top of this script picks that up.
+    document.querySelectorAll('[data-oauth]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var provider = btn.getAttribute('data-oauth');
+        var redirectTo = encodeURIComponent(window.location.origin + '/');
+        window.location.href = SUPABASE_URL + '/auth/v1/authorize?provider=' + provider
+          + '&redirect_to=' + redirectTo;
+      });
+    });
 
     // Primary handler: form submit.
     form.addEventListener('submit', doSubmit);
