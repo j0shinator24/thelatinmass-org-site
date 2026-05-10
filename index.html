@@ -528,7 +528,8 @@
     <h1>The <em>Latin Mass</em></h1>
     <p class="tagline">Spaced-repetition flashcards for the 1962 Tridentine vocabulary and the Order of Mass.</p>
     <div class="hero-buttons">
-      <a href="#signup" class="cta solid">Sign up for early access</a>
+      <a href="./app/" class="cta solid" id="heroContinueBtn" hidden>Continue to study &rarr;</a>
+      <a href="#signup" class="cta solid" id="heroSignupBtn">Sign up for early access</a>
       <a href="#funding" class="cta">About the project</a>
     </div>
   </div>
@@ -567,10 +568,15 @@
 
 <section class="signup-band" id="signup" aria-labelledby="signup-heading">
   <div class="signup">
-    <span class="eyebrow">Early access</span>
+    <span class="eyebrow" id="signupEyebrow">Early access</span>
     <h2 id="signup-heading">Sign up to be notified</h2>
-    <p class="lede">The full Latin Mass app launches soon. Create a free beta account now to be among the first to memorise the Tridentine Order of Mass.</p>
-    <div class="form-card">
+    <p class="lede" id="signupLede">The full Latin Mass app launches soon. Create a free beta account now to be among the first to memorise the Tridentine Order of Mass.</p>
+    <div class="form-card" id="continueCard" hidden style="text-align:center">
+      <p style="margin-bottom:18px;font-family:'Cormorant Garamond',serif;font-size:1.4rem;color:var(--ink);" id="continueGreeting">You're signed in.</p>
+      <a href="./app/" class="cta solid" style="display:inline-block">Continue to study &rarr;</a>
+      <button type="button" id="signoutBtn" class="link" style="display:block;margin:18px auto 0;background:none;border:0;color:var(--taupe-dark);font:inherit;cursor:pointer;text-decoration:underline;">Sign out</button>
+    </div>
+    <div class="form-card" id="signupCard">
       <form id="signupForm" action="javascript:void(0)" method="post" novalidate>
         <div class="field">
           <label for="email">Email</label>
@@ -619,9 +625,9 @@
 </footer>
 
 <script>
-  /* Build: signup-v2-mobilefix-2026-05-10
+  /* Build: signup-v3-srs-launch-2026-05-10
      Visible in DevTools console so you can verify the cache-busted version is live. */
-  console.info('[thelatinmass] signup-v2-mobilefix-2026-05-10');
+  console.info('[thelatinmass] signup-v3-srs-launch-2026-05-10');
 
   // Vanilla fetch-based signup. No CDN imports, no module scripts.
   // Calls Supabase REST API directly. Survives ad-blockers, strict CSP,
@@ -636,10 +642,44 @@
     var submitBtn = document.getElementById('submitBtn');
     var toggleBtn = document.getElementById('signinToggle');
     var msg = document.getElementById('msg');
+    var signupCard = document.getElementById('signupCard');
+    var continueCard = document.getElementById('continueCard');
+    var continueGreeting = document.getElementById('continueGreeting');
+    var heroContinueBtn = document.getElementById('heroContinueBtn');
+    var heroSignupBtn = document.getElementById('heroSignupBtn');
+    var signupEyebrow = document.getElementById('signupEyebrow');
+    var signupHeading = document.getElementById('signup-heading');
+    var signupLede = document.getElementById('signupLede');
+    var signoutBtn = document.getElementById('signoutBtn');
 
     if (!form || !emailEl || !pwEl || !submitBtn) {
       console.error('[thelatinmass] Signup form elements missing');
       return;
+    }
+
+    function showSignedIn(email) {
+      // Swap the hero CTA from "Sign up" to "Continue to study".
+      if (heroContinueBtn) heroContinueBtn.hidden = false;
+      if (heroSignupBtn) heroSignupBtn.hidden = true;
+
+      // Swap the signup band from form to continue-card.
+      if (signupCard) signupCard.style.display = 'none';
+      if (continueCard) continueCard.hidden = false;
+      if (continueGreeting && email) {
+        continueGreeting.textContent = "You're signed in as " + email + ".";
+      }
+      if (signupEyebrow) signupEyebrow.textContent = 'Welcome back';
+      if (signupHeading) signupHeading.textContent = 'Ready when you are';
+      if (signupLede) {
+        signupLede.textContent = 'The deck is live in beta. Open the study app to start (or continue) memorising the Tridentine Order of Mass.';
+      }
+    }
+
+    if (signoutBtn) {
+      signoutBtn.addEventListener('click', function () {
+        try { localStorage.removeItem('tlm_session'); } catch (_) {}
+        window.location.reload();
+      });
     }
 
     // Belt and braces: ensure the form never navigates by clearing action.
@@ -732,17 +772,16 @@
             showMsg(errMsg, 'error');
             return;
           }
-          if (mode === 'signup') {
-            if (res.body && res.body.access_token) {
-              showMsg("Signed in. The full app is still in beta. We'll email you the moment it launches.", 'success');
-            } else {
-              showMsg("Account created. We'll email you the moment the full app is ready.", 'success');
-            }
-          } else {
-            showMsg("Signed in. We'll email you the moment the full app launches.", 'success');
-          }
           if (res.body && res.body.access_token) {
             try { localStorage.setItem('tlm_session', JSON.stringify(res.body)); } catch (_) {}
+            showMsg('Signed in. Opening the study app...', 'success');
+            // Send them straight to the SRS. A short delay so they see the
+            // confirmation message before the navigation happens.
+            setTimeout(function () { window.location.href = './app/'; }, 600);
+          } else if (mode === 'signup') {
+            showMsg("Account created. Check your inbox to confirm, then return to sign in.", 'success');
+          } else {
+            showMsg("Signed in.", 'success');
           }
         })
         .catch(function (err) {
@@ -775,13 +814,16 @@
       // Fall through to default submit behaviour.
     }, { passive: false });
 
-    // If we already have a session in localStorage, greet the user.
+    // If we already have a session in localStorage, swap the page into the
+    // signed-in state. The signup form is replaced with a "Continue to study"
+    // card and the hero CTA changes to point at the app.
     try {
       var saved = localStorage.getItem('tlm_session');
       if (saved) {
         var parsed = JSON.parse(saved);
-        if (parsed && parsed.user && parsed.user.email) {
-          showMsg('Signed in as ' + parsed.user.email + ". We'll email you the moment the full app launches.", 'info');
+        var emailAddr = parsed && parsed.user && parsed.user.email;
+        if (parsed && parsed.access_token) {
+          showSignedIn(emailAddr || '');
         }
       }
     } catch (_) { /* ignore */ }

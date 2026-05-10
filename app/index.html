@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+<title>The Latin Mass — Study</title>
+<meta name="description" content="Spaced-repetition flashcards for the 1962 Tridentine Latin Mass.">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="../favicon.svg">
+<link rel="apple-touch-icon" href="../apple-touch-icon.svg">
+<link rel="preconnect" href="https://kugcbqfqataxbyjtaume.supabase.co">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Lato:wght@300;400;700&family=Cinzel:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --ink: #2A2520;
+    --ink-soft: #5A5048;
+    --cream: #F7F2EA;
+    --cream-soft: #FBF8F2;
+    --rule: #E2D9CB;
+    --taupe: #987F71;
+    --taupe-dark: #7A6357;
+    --taupe-deep: #5C4A40;
+    --gold: #C8A871;
+    --burgundy: #5E2A2A;
+    --slider-cream: #E8DAC4;
+    --green: #4a6e5a;
+    --green-bright: #5d8a72;
+    --amber: #b8862e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: 'Lato', system-ui, sans-serif;
+    font-weight: 300;
+    color: var(--ink);
+    background: var(--cream-soft);
+    line-height: 1.65;
+    min-height: 100svh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  .eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    font-weight: 500;
+  }
+
+  /* ─── Header ─── */
+  header.app-header {
+    background: #fff;
+    border-bottom: 1px solid var(--rule);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  header.app-header .brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    color: var(--ink);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  header.app-header .brand em { font-style: italic; color: var(--taupe-deep); }
+  header.app-header nav {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  header.app-header nav a, header.app-header nav button {
+    background: transparent;
+    border: 0;
+    color: var(--taupe-dark);
+    cursor: pointer;
+    text-decoration: none;
+    padding: 8px 4px;
+    font: inherit;
+  }
+  header.app-header nav a:hover, header.app-header nav button:hover { color: var(--burgundy); }
+  header.app-header .user { color: var(--taupe); font-family: 'Lato', sans-serif; font-size: 0.78rem; letter-spacing: 0; text-transform: none; }
+
+  /* ─── Layout ─── */
+  main {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  /* ─── Loading / status ─── */
+  .status-msg {
+    text-align: center;
+    padding: 64px 20px;
+    color: var(--taupe-dark);
+    font-style: italic;
+  }
+  .err-msg {
+    color: var(--burgundy);
+    background: #f8e8e8;
+    border: 1px solid var(--burgundy);
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 2px;
+    font-size: 0.95rem;
+  }
+
+  /* ─── Deck picker ─── */
+  .deck-picker { padding: 16px 0; }
+  .deck-picker h2 {
+    font-size: clamp(1.7rem, 3vw, 2.3rem);
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .deck-picker p.lede {
+    text-align: center;
+    color: var(--ink-soft);
+    margin-bottom: 32px;
+  }
+  .deck-list { display: flex; flex-direction: column; gap: 16px; }
+  .deck-card {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 24px 24px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, transform 0.15s;
+    font-family: inherit;
+    width: 100%;
+  }
+  .deck-card:hover { border-color: var(--taupe); }
+  .deck-card:active { transform: scale(0.99); }
+  .deck-card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+    color: var(--ink);
+  }
+  .deck-card p { color: var(--ink-soft); font-size: 0.95rem; }
+  .deck-card .stats {
+    margin-top: 12px;
+    display: flex;
+    gap: 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--taupe);
+  }
+  .deck-card .stats .num { color: var(--burgundy); font-weight: 600; }
+
+  /* ─── Card view ─── */
+  .card-section { display: flex; flex-direction: column; gap: 24px; }
+  .progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--taupe);
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .progress button {
+    background: transparent;
+    border: 0;
+    color: var(--taupe-dark);
+    cursor: pointer;
+    font: inherit;
+    padding: 8px 4px;
+  }
+  .progress button:hover { color: var(--burgundy); }
+  .card {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 56px 32px;
+    min-height: 360px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    gap: 18px;
+  }
+  .card .prompt-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--taupe);
+  }
+  .card .front {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    font-weight: 500;
+    color: var(--burgundy);
+    line-height: 1.15;
+    max-width: 100%;
+    word-wrap: break-word;
+  }
+  .card .back {
+    margin-top: 12px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    width: 100%;
+  }
+  .card .back .english {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .card .back .meta {
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .card .back .meta .pos {
+    font-family: 'Cinzel', serif;
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    margin-right: 8px;
+  }
+  .card .back .forms {
+    margin-top: 10px;
+    font-family: 'Lato', monospace, sans-serif;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    word-spacing: 0.1em;
+  }
+  .card .back .role {
+    font-style: italic;
+    color: var(--taupe);
+    font-size: 0.9rem;
+    margin-top: 8px;
+  }
+
+  /* ─── Buttons ─── */
+  .reveal-btn {
+    background: var(--burgundy);
+    color: #fff;
+    border: 1px solid var(--burgundy);
+    padding: 14px 28px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    width: 100%;
+    min-height: 48px;
+    transition: background 0.2s;
+    appearance: none;
+    border-radius: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .reveal-btn:hover, .reveal-btn:active { background: var(--taupe-deep); border-color: var(--taupe-deep); }
+
+  .rate-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .rate-btn {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 14px 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    min-height: 56px;
+    color: var(--ink);
+    transition: all 0.18s;
+    appearance: none;
+    border-radius: 0;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    line-height: 1.1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+  }
+  .rate-btn:hover, .rate-btn:active { transform: translateY(-1px); }
+  .rate-btn .interval-hint {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--taupe);
+    font-weight: 300;
+  }
+  .rate-btn[data-rating="1"] { border-color: #c08383; color: var(--burgundy); }
+  .rate-btn[data-rating="1"]:hover { background: #f8e8e8; }
+  .rate-btn[data-rating="2"] { border-color: var(--amber); color: #8a6b22; }
+  .rate-btn[data-rating="2"]:hover { background: #f9eed5; }
+  .rate-btn[data-rating="3"] { border-color: var(--green); color: var(--green); }
+  .rate-btn[data-rating="3"]:hover { background: #e6efe9; }
+  .rate-btn[data-rating="4"] { border-color: var(--taupe); color: var(--taupe-deep); }
+  .rate-btn[data-rating="4"]:hover { background: #f3eee5; }
+
+  /* ─── Done ─── */
+  .done {
+    text-align: center;
+    padding: 48px 20px;
+    background: #fff;
+    border: 1px solid var(--rule);
+  }
+  .done h2 { font-size: 2rem; color: var(--burgundy); margin-bottom: 8px; }
+  .done p { color: var(--ink-soft); margin-bottom: 24px; }
+
+  /* ─── Mobile ─── */
+  @media (max-width: 560px) {
+    main { padding: 20px 14px 60px; }
+    .card { padding: 40px 20px; min-height: 300px; }
+    .rate-row { gap: 6px; }
+    .rate-btn { padding: 12px 4px; min-height: 60px; font-size: 0.66rem; letter-spacing: 0.1em; }
+    .rate-btn .interval-hint { font-size: 0.6rem; }
+    header.app-header { padding: 10px 14px; }
+    header.app-header .brand { font-size: 1.1rem; }
+    header.app-header .user { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <a href="../" class="brand">The <em>Latin Mass</em></a>
+  <nav>
+    <span class="user" id="userEmail"></span>
+    <button id="signoutBtn">Sign out</button>
+  </nav>
+</header>
+
+<main id="main">
+  <div class="status-msg" id="loadingMsg">Loading…</div>
+</main>
+
+<script>
+  console.info('[thelatinmass] app-v1-' + Date.now());
+
+  var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
+  var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
+  var REST = SUPABASE_URL + '/rest/v1';
+  var AUTH = SUPABASE_URL + '/auth/v1';
+
+  // ─── Auth bootstrapping ─────────────────────────────────────────────────
+  function loadSession() {
+    try {
+      var raw = localStorage.getItem('tlm_session');
+      if (!raw) return null;
+      var s = JSON.parse(raw);
+      if (!s || !s.access_token || !s.user) return null;
+      // refresh stub: check expiry, fall through to refresh later
+      var expAt = s.expires_at ? s.expires_at * 1000 : 0;
+      if (expAt && Date.now() >= expAt - 60000) {
+        // expired; try to refresh
+        if (s.refresh_token) {
+          fetch(AUTH + '/token?grant_type=refresh_token', {
+            method: 'POST',
+            headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: s.refresh_token }),
+          }).then(function (r) { return r.json(); })
+            .then(function (j) {
+              if (j && j.access_token) {
+                localStorage.setItem('tlm_session', JSON.stringify(j));
+                location.reload();
+              } else {
+                localStorage.removeItem('tlm_session');
+                redirectToLanding();
+              }
+            });
+        }
+      }
+      return s;
+    } catch (e) { return null; }
+  }
+  function redirectToLanding() { location.href = '../'; }
+  function signOut() {
+    var s = loadSession();
+    if (s && s.access_token) {
+      fetch(AUTH + '/logout', {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + s.access_token,
+        },
+      }).catch(function () {});
+    }
+    localStorage.removeItem('tlm_session');
+    redirectToLanding();
+  }
+  document.getElementById('signoutBtn').addEventListener('click', signOut);
+
+  // ─── Supabase REST helpers (with user JWT) ──────────────────────────────
+  function authHeaders(session) {
+    return {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': 'Bearer ' + session.access_token,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation',
+    };
+  }
+  function rest(path, session, opts) {
+    opts = opts || {};
+    return fetch(REST + path, Object.assign({
+      method: opts.method || 'GET',
+      headers: authHeaders(session),
+      body: opts.body ? JSON.stringify(opts.body) : undefined,
+    }, {})).then(function (r) {
+      return r.text().then(function (t) {
+        var j = null;
+        try { j = t ? JSON.parse(t) : null; } catch (_) {}
+        if (!r.ok) {
+          var msg = (j && (j.message || j.error || j.error_description)) || ('HTTP ' + r.status);
+          throw new Error(msg);
+        }
+        return j;
+      });
+    });
+  }
+
+  // ─── State ──────────────────────────────────────────────────────────────
+  var STATIC = null;
+  var SESSION = null;
+  var USER_STATE = {}; // card_id -> { due, stability, difficulty, reps, lapses, state, last_review }
+  var ACTIVE_DECK = null;
+  var QUEUE = [];
+  var CURRENT = null;
+  var CURRENT_FLIPPED = false;
+  var REVIEW_START = 0;
+  var SESSION_REVIEWS = 0;
+
+  // ─── Boot ───────────────────────────────────────────────────────────────
+  SESSION = loadSession();
+  if (!SESSION) { redirectToLanding(); }
+  else { boot(); }
+
+  function boot() {
+    document.getElementById('userEmail').textContent = (SESSION.user && SESSION.user.email) || '';
+    Promise.all([fetchStatic(), fetchUserState()])
+      .then(function () { showDeckPicker(); })
+      .catch(function (err) {
+        showErr('Failed to load: ' + (err.message || err));
+      });
+  }
+
+  function fetchStatic() {
+    return fetch('./static.json').then(function (r) {
+      if (!r.ok) throw new Error('Could not load card data (HTTP ' + r.status + ')');
+      return r.json();
+    }).then(function (data) {
+      STATIC = data;
+      // Index notes and cards by id for fast lookup
+      STATIC.notesById = {};
+      data.notes.forEach(function (n) { STATIC.notesById[n.id] = n; });
+      STATIC.cardsByDeck = {};
+      data.cards.forEach(function (c) {
+        if (!STATIC.cardsByDeck[c.deck_id]) STATIC.cardsByDeck[c.deck_id] = [];
+        STATIC.cardsByDeck[c.deck_id].push(c);
+      });
+      // Sort each deck's cards by note frequency desc (most common first)
+      Object.keys(STATIC.cardsByDeck).forEach(function (deckId) {
+        STATIC.cardsByDeck[deckId].sort(function (a, b) {
+          var na = STATIC.notesById[a.note_id];
+          var nb = STATIC.notesById[b.note_id];
+          var fa = (na && na.frequency) || 0;
+          var fb = (nb && nb.frequency) || 0;
+          if (fb !== fa) return fb - fa;
+          return a.id - b.id;
+        });
+      });
+    });
+  }
+
+  function fetchUserState() {
+    return rest('/user_card_state?select=card_id,due,stability,difficulty,reps,lapses,state,last_review,scheduled_days&limit=10000', SESSION).then(function (rows) {
+      USER_STATE = {};
+      (rows || []).forEach(function (r) { USER_STATE[r.card_id] = r; });
+    });
+  }
+
+  // ─── Deck picker ────────────────────────────────────────────────────────
+  function showDeckPicker() {
+    var main = document.getElementById('main');
+    var html = '<div class="deck-picker">'
+             + '<span class="eyebrow" style="text-align:center;display:block;margin-bottom:14px">Study</span>'
+             + '<h2>Choose a deck</h2>'
+             + '<p class="lede">Spaced-repetition for the 1962 Tridentine Latin Mass.</p>'
+             + '<div class="deck-list">';
+    STATIC.decks.forEach(function (d) {
+      var cards = STATIC.cardsByDeck[d.id] || [];
+      var dueCount = 0, newCount = 0, reviewCount = 0;
+      var now = Date.now();
+      cards.forEach(function (c) {
+        var s = USER_STATE[c.id];
+        if (!s) { newCount++; return; }
+        var dueMs = new Date(s.due || s.last_review || 0).getTime();
+        if (dueMs <= now) dueCount++;
+        if (s.reps > 0) reviewCount++;
+      });
+      html += '<button class="deck-card" data-deck="' + d.id + '">'
+            + '<h3>' + escapeHtml(d.name) + '</h3>'
+            + '<p>' + escapeHtml(d.description || '') + '</p>'
+            + '<div class="stats">'
+              + '<span><span class="num">' + dueCount + '</span> due</span>'
+              + '<span><span class="num">' + newCount + '</span> new</span>'
+              + '<span><span class="num">' + cards.length + '</span> total</span>'
+            + '</div>'
+            + '</button>';
+    });
+    html += '</div></div>';
+    main.innerHTML = html;
+    main.querySelectorAll('.deck-card').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        startDeck(parseInt(btn.dataset.deck, 10));
+      });
+    });
+  }
+
+  // ─── Review session ─────────────────────────────────────────────────────
+  function startDeck(deckId) {
+    ACTIVE_DECK = STATIC.decks.find(function (d) { return d.id === deckId; });
+    SESSION_REVIEWS = 0;
+    buildQueue();
+    nextCard();
+  }
+
+  function buildQueue() {
+    // Queue rule: due review cards first (oldest due first), then new cards
+    // by frequency (most common first), capped at 50 new per session.
+    var now = Date.now();
+    var due = [];
+    var fresh = [];
+    var cards = STATIC.cardsByDeck[ACTIVE_DECK.id] || [];
+    cards.forEach(function (c) {
+      var s = USER_STATE[c.id];
+      if (!s) {
+        fresh.push(c);
+      } else if (s.reps > 0) {
+        var dueMs = new Date(s.due).getTime();
+        if (dueMs <= now) due.push({ card: c, dueMs: dueMs });
+      }
+    });
+    due.sort(function (a, b) { return a.dueMs - b.dueMs; });
+    QUEUE = due.map(function (e) { return e.card; }).concat(fresh.slice(0, 50));
+  }
+
+  function nextCard() {
+    if (QUEUE.length === 0) {
+      showDone();
+      return;
+    }
+    CURRENT = QUEUE.shift();
+    CURRENT_FLIPPED = false;
+    REVIEW_START = Date.now();
+    renderCard();
+  }
+
+  function renderCard() {
+    var note = STATIC.notesById[CURRENT.note_id];
+    var direction = CURRENT.template; // 'lat_to_en' | 'en_to_lat' | 'phrase_to_translation' | etc
+    var promptLatin = direction === 'en_to_lat' ? note.english : note.latin;
+    var promptLabel = direction === 'en_to_lat' ? 'English → Latin' : 'Latin → English';
+    var answer = direction === 'en_to_lat' ? note.latin : note.english;
+
+    var posLine = '';
+    if (note.note_type === 'vocab' && note.pos) {
+      posLine = '<span class="pos">' + escapeHtml(note.pos) + '</span>'
+              + (note.lemma ? escapeHtml(note.lemma) : '');
+    } else if (note.note_type === 'phrase_pair' && note.role) {
+      posLine = '<span class="role">' + escapeHtml(formatRole(note.role)) + '</span>';
+    }
+
+    var formsLine = '';
+    if (note.forms_summary) {
+      formsLine = '<div class="forms">' + escapeHtml(note.forms_summary) + '</div>';
+    }
+
+    var prayerLine = '';
+    if (note.prayer_id) {
+      var prayer = STATIC.prayers.find(function (p) { return p.id === note.prayer_id; });
+      if (prayer) prayerLine = '<div class="role">' + escapeHtml(prayer.name) + '</div>';
+    }
+
+    var dueIdx = STATIC.cardsByDeck[ACTIVE_DECK.id].length - QUEUE.length;
+    var html = '<div class="card-section">'
+            + '<div class="progress">'
+              + '<button id="backBtn">← Back to decks</button>'
+              + '<span>' + ACTIVE_DECK.name + ' &middot; reviewed: ' + SESSION_REVIEWS + '</span>'
+            + '</div>'
+            + '<div class="card" id="cardEl">'
+              + '<span class="prompt-label">' + promptLabel + '</span>'
+              + '<div class="front">' + escapeHtml(promptLatin) + '</div>'
+              + (CURRENT_FLIPPED ?
+                  '<div class="back">'
+                    + '<div class="english">' + escapeHtml(answer) + '</div>'
+                    + (posLine ? '<div class="meta">' + posLine + '</div>' : '')
+                    + formsLine
+                    + prayerLine
+                  + '</div>'
+                : '')
+            + '</div>';
+    if (!CURRENT_FLIPPED) {
+      html += '<button class="reveal-btn" id="revealBtn">Show answer</button>';
+    } else {
+      var prevState = USER_STATE[CURRENT.id];
+      var hint = scheduleHints(prevState);
+      html += '<div class="rate-row">'
+            + '<button class="rate-btn" data-rating="1">Again<span class="interval-hint">' + hint[1] + '</span></button>'
+            + '<button class="rate-btn" data-rating="2">Hard<span class="interval-hint">' + hint[2] + '</span></button>'
+            + '<button class="rate-btn" data-rating="3">Good<span class="interval-hint">' + hint[3] + '</span></button>'
+            + '<button class="rate-btn" data-rating="4">Easy<span class="interval-hint">' + hint[4] + '</span></button>'
+            + '</div>';
+    }
+    html += '</div>';
+    document.getElementById('main').innerHTML = html;
+
+    document.getElementById('backBtn').addEventListener('click', showDeckPicker);
+    if (!CURRENT_FLIPPED) {
+      document.getElementById('revealBtn').addEventListener('click', flip);
+      document.getElementById('cardEl').addEventListener('click', flip);
+    } else {
+      document.querySelectorAll('.rate-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () { rate(parseInt(btn.dataset.rating, 10)); });
+      });
+    }
+  }
+
+  function flip() {
+    CURRENT_FLIPPED = true;
+    renderCard();
+  }
+
+  // ─── Scheduling (simple SM-2-ish for v1; will swap to true FSRS later) ──
+  function nextSchedule(prev, rating) {
+    // returns { due, scheduled_days, stability, difficulty, reps, lapses, state, last_review }
+    var now = new Date();
+    var DAY = 86400 * 1000;
+    var prevReps = prev ? (prev.reps || 0) : 0;
+    var prevLapses = prev ? (prev.lapses || 0) : 0;
+    var prevDays = prev ? (prev.scheduled_days || 0) : 0;
+    var prevStab = prev ? (prev.stability || 0) : 0;
+    var prevDiff = prev ? (prev.difficulty || 5) : 5;
+
+    var newReps = prevReps + 1;
+    var newLapses = prevLapses;
+    var newState = 2; // review
+    var newDays;
+
+    if (rating === 1) {
+      newLapses = prevLapses + 1;
+      newDays = 0; // due in ~1 minute
+      newState = 1; // learning
+    } else if (rating === 2) {
+      // Hard
+      newDays = prevReps === 0 ? 0 : Math.max(1, Math.round(prevDays * 1.2));
+    } else if (rating === 3) {
+      // Good
+      if (prevReps === 0) newDays = 1;
+      else newDays = Math.max(1, Math.round(prevDays * 2.5));
+    } else {
+      // Easy
+      if (prevReps === 0) newDays = 4;
+      else newDays = Math.max(1, Math.round(prevDays * 4));
+    }
+
+    var newDue;
+    if (rating === 1) newDue = new Date(now.getTime() + 60 * 1000); // 1 min
+    else newDue = new Date(now.getTime() + newDays * DAY);
+
+    // Difficulty drift (SM-2-ish)
+    var newDiff = prevDiff;
+    if (rating === 1) newDiff = Math.min(10, prevDiff + 1.0);
+    else if (rating === 2) newDiff = Math.min(10, prevDiff + 0.3);
+    else if (rating === 4) newDiff = Math.max(1, prevDiff - 0.4);
+
+    var newStab = newDays > 0 ? newDays : 0.001;
+
+    return {
+      due: newDue.toISOString(),
+      scheduled_days: newDays,
+      stability: newStab,
+      difficulty: newDiff,
+      reps: newReps,
+      lapses: newLapses,
+      state: newState,
+      last_review: now.toISOString(),
+    };
+  }
+
+  function scheduleHints(prev) {
+    var DAY = 1;
+    var prevDays = prev ? (prev.scheduled_days || 0) : 0;
+    var prevReps = prev ? (prev.reps || 0) : 0;
+    var hints = {};
+    hints[1] = '<1m';
+    hints[2] = prevReps === 0 ? '<10m' : humanInterval(Math.max(1, Math.round(prevDays * 1.2)));
+    hints[3] = prevReps === 0 ? '1d' : humanInterval(Math.max(1, Math.round(prevDays * 2.5)));
+    hints[4] = prevReps === 0 ? '4d' : humanInterval(Math.max(1, Math.round(prevDays * 4)));
+    return hints;
+  }
+
+  function humanInterval(days) {
+    if (days < 1) return '<1d';
+    if (days < 30) return days + 'd';
+    if (days < 365) return Math.round(days / 30) + 'mo';
+    return (days / 365).toFixed(1) + 'y';
+  }
+
+  function rate(rating) {
+    var prev = USER_STATE[CURRENT.id];
+    var nextState = nextSchedule(prev, rating);
+    var elapsedDays = prev && prev.last_review
+      ? Math.max(0, Math.round((Date.now() - new Date(prev.last_review).getTime()) / 86400000))
+      : 0;
+
+    // optimistic local update
+    USER_STATE[CURRENT.id] = {
+      card_id: CURRENT.id,
+      due: nextState.due,
+      stability: nextState.stability,
+      difficulty: nextState.difficulty,
+      reps: nextState.reps,
+      lapses: nextState.lapses,
+      state: nextState.state,
+      last_review: nextState.last_review,
+      scheduled_days: nextState.scheduled_days,
+    };
+
+    var userId = SESSION.user.id;
+    var upsert = Object.assign({ user_id: userId, card_id: CURRENT.id, updated_at: nextState.last_review }, nextState);
+    var logEntry = {
+      user_id: userId,
+      card_id: CURRENT.id,
+      rating: rating,
+      review_time: nextState.last_review,
+      scheduled_days: nextState.scheduled_days,
+      elapsed_days: elapsedDays,
+      state_before: prev ? prev.state : 0,
+      state_after: nextState.state,
+    };
+
+    // Fire-and-forget (don't block UI on round-trip; surface errors silently)
+    fetch(REST + '/user_card_state?on_conflict=user_id,card_id', {
+      method: 'POST',
+      headers: Object.assign(authHeaders(SESSION), { 'Prefer': 'resolution=merge-duplicates,return=minimal' }),
+      body: JSON.stringify(upsert),
+    }).catch(function (e) { console.warn('save state failed', e); });
+
+    fetch(REST + '/user_review_log', {
+      method: 'POST',
+      headers: Object.assign(authHeaders(SESSION), { 'Prefer': 'return=minimal' }),
+      body: JSON.stringify(logEntry),
+    }).catch(function (e) { console.warn('save review failed', e); });
+
+    SESSION_REVIEWS += 1;
+    nextCard();
+  }
+
+  // ─── Done state ─────────────────────────────────────────────────────────
+  function showDone() {
+    var main = document.getElementById('main');
+    main.innerHTML = '<div class="done">'
+                   + '<h2>Session complete</h2>'
+                   + '<p>You reviewed ' + SESSION_REVIEWS + ' card' + (SESSION_REVIEWS === 1 ? '' : 's') + '.</p>'
+                   + '<button class="reveal-btn" id="backBtn">← Back to decks</button>'
+                   + '</div>';
+    document.getElementById('backBtn').addEventListener('click', showDeckPicker);
+  }
+
+  function showErr(msg) {
+    document.getElementById('main').innerHTML = '<div class="err-msg">' + escapeHtml(msg) + '</div>';
+  }
+
+  // ─── Utils ──────────────────────────────────────────────────────────────
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+  function formatRole(r) {
+    if (!r) return '';
+    return r.charAt(0).toUpperCase() + r.slice(1);
+  }
+</script>
+
+</body>
+</html>
