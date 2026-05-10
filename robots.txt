@@ -1,0 +1,7 @@
+# thelatinmass.org
+# A spaced-repetition flashcard app for the 1962 Tridentine Latin Mass.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://thelatinmass.org/sitemap.xml

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  <url>
+    <loc>https://thelatinmass.org/</loc>
+    <lastmod>2026-05-10</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="en-AU" href="https://thelatinmass.org/"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://thelatinmass.org/"/>
+    <image:image>
+      <image:loc>https://thelatinmass.org/hero.jpg</image:loc>
+      <image:title>The Latin Mass App</image:title>
+      <image:caption>Spaced-repetition flashcards for the 1962 Tridentine Latin Mass.</image:caption>
+    </image:image>
+  </url>
+</urlset>

@@ -1,15 +1,125 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-AU">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>The Latin Mass — memorise the Tridentine vocabulary and Order of Mass</title>
-<meta name="description" content="A spaced-repetition flashcard app for the 1962 Latin Mass. Memorise 510 vocabulary lemmas and 83 phrase pairs from the Order of Mass. Beta in progress; sign up for early access.">
+<title>The Latin Mass App | Tridentine 1962 Missale Romanum Flashcards</title>
+<meta name="description" content="Learn the Traditional Latin Mass with spaced-repetition flashcards. 510 vocabulary lemmas and 83 phrase pairs from the 1962 Tridentine Missale Romanum. Sign up for beta access.">
+<meta name="keywords" content="latin mass app, tridentine mass, 1962 missale romanum, latin mass flashcards, memorise latin mass, traditional latin mass, FSRS spaced repetition, order of mass, latin mass brisbane, FSSP nudgee, mary immaculate annerley, learn ecclesiastical latin">
+<meta name="author" content="thelatinmass.org">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="theme-color" content="#5E2A2A">
+<link rel="canonical" href="https://thelatinmass.org/">
+
+<!-- Geo -->
+<meta name="geo.region" content="AU-QLD">
+<meta name="geo.placename" content="Brisbane">
+<meta name="geo.position" content="-27.4698;153.0251">
+<meta name="ICBM" content="-27.4698, 153.0251">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Latin Mass">
+<meta property="og:title" content="The Latin Mass App | Tridentine 1962 Missale Romanum Flashcards">
+<meta property="og:description" content="Learn the Traditional Latin Mass with spaced-repetition flashcards. 510 vocabulary lemmas and 83 phrase pairs from the 1962 Tridentine Missale Romanum. Sign up for beta access.">
+<meta property="og:url" content="https://thelatinmass.org/">
+<meta property="og:image" content="https://thelatinmass.org/hero.jpg">
+<meta property="og:image:secure_url" content="https://thelatinmass.org/hero.jpg">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:width" content="1800">
+<meta property="og:image:height" content="1200">
+<meta property="og:image:alt" content="Renaissance-style imagery for the Traditional Latin Mass flashcard app">
+<meta property="og:locale" content="en_AU">
+
+<!-- Twitter -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The Latin Mass App | Tridentine 1962 Missale Romanum Flashcards">
+<meta name="twitter:description" content="Spaced-repetition flashcards for the 1962 Tridentine Latin Mass. 510 vocabulary lemmas and 83 phrase pairs from the Order of Mass. Beta in progress.">
+<meta name="twitter:image" content="https://thelatinmass.org/hero.jpg">
+<meta name="twitter:image:alt" content="Renaissance-style imagery for the Traditional Latin Mass flashcard app">
+
+<link rel="icon" type="image/svg+xml" href="./favicon.svg">
+<link rel="apple-touch-icon" href="./apple-touch-icon.svg">
+<link rel="mask-icon" href="./favicon.svg" color="#5E2A2A">
 <link rel="preconnect" href="https://kugcbqfqataxbyjtaume.supabase.co">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="image" href="./hero.jpg" fetchpriority="high">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lato:wght@300;400;700&family=Cinzel:wght@400;500;600&display=swap">
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://thelatinmass.org/#website",
+      "name": "The Latin Mass",
+      "alternateName": "thelatinmass.org",
+      "url": "https://thelatinmass.org/",
+      "description": "Spaced-repetition flashcards for the 1962 Tridentine Latin Mass: vocabulary, phrases, and the Order of Mass.",
+      "inLanguage": ["en-AU", "la"],
+      "publisher": { "@id": "https://thelatinmass.org/#organization" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://thelatinmass.org/#organization",
+      "name": "The Latin Mass",
+      "url": "https://thelatinmass.org/",
+      "logo": "https://thelatinmass.org/hero.jpg",
+      "image": "https://thelatinmass.org/hero.jpg",
+      "email": "info@thelatinmass.org",
+      "areaServed": {
+        "@type": "City",
+        "name": "Brisbane",
+        "containedInPlace": { "@type": "AdministrativeArea", "name": "Queensland, Australia" }
+      },
+      "description": "A non-profit project supporting Brisbane's Traditional Latin Mass parishes: Mary Immaculate Annerley and St Joseph's Chapel (FSSP) at Nudgee College. Subscription revenue is split 50/50 between the two parishes.",
+      "knowsAbout": [
+        "Traditional Latin Mass",
+        "Tridentine Mass",
+        "1962 Missale Romanum",
+        "Ecclesiastical Latin",
+        "Order of Mass",
+        "Spaced repetition learning"
+      ]
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://thelatinmass.org/#app",
+      "name": "The Latin Mass",
+      "url": "https://thelatinmass.org/",
+      "image": "https://thelatinmass.org/hero.jpg",
+      "description": "A spaced-repetition flashcard app for memorising the 1962 Tridentine Latin Mass. Includes 510 vocabulary lemmas and 83 phrase pairs from the Order of Mass and Propers, two recorded voices per card, curated devotional imagery, and the modern FSRS scheduling algorithm.",
+      "applicationCategory": "EducationalApplication",
+      "applicationSubCategory": "Language Learning",
+      "operatingSystem": "Web Browser",
+      "inLanguage": ["en-AU", "la"],
+      "audience": {
+        "@type": "Audience",
+        "audienceType": "Traditional Catholics, lay parishioners, clergy, seminarians, choristers, and Latin learners"
+      },
+      "featureList": [
+        "510 vocabulary lemmas from the Order of Mass and Propers",
+        "83 phrase pairs covering every section of the Mass",
+        "FSRS spaced-repetition scheduling",
+        "Two recorded voices per card",
+        "Curated Renaissance-style devotional imagery"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "AUD",
+        "availability": "https://schema.org/PreOrder",
+        "url": "https://thelatinmass.org/#signup",
+        "description": "Free beta access during development. Paid subscriptions launch later; profits split 50/50 between Mary Immaculate Annerley and St Joseph's Chapel (FSSP) at Nudgee College."
+      },
+      "publisher": { "@id": "https://thelatinmass.org/#organization" }
+    }
+  ]
+}
+</script>
 <style>
   :root {
     --ink: #2A2520;
@@ -318,22 +428,24 @@
 </head>
 <body>
 
-<section class="hero">
+<header class="hero" role="banner">
   <div class="hero-inner">
     <span class="eyebrow">Beta in Progress</span>
     <h1>The <em>Latin Mass</em></h1>
-    <p class="tagline">Spaced-repetition study for the Tridentine vocabulary and the Order of Mass.</p>
+    <p class="tagline">Spaced-repetition flashcards for the 1962 Tridentine vocabulary and the Order of Mass.</p>
     <div class="hero-buttons">
       <a href="#signup" class="cta solid">Sign up for early access</a>
       <a href="#funding" class="cta">About the project</a>
     </div>
   </div>
-</section>
+</header>
 
-<section class="feature-band">
+<main>
+
+<section class="feature-band" aria-labelledby="features-heading">
   <span class="eyebrow">What's coming</span>
-  <h2 style="margin-top:8px">A complete deck for the 1962 Missale Romanum</h2>
-  <p class="lede">Renaissance-style imagery, two recorded voices, and the modern FSRS scheduling algorithm — built for the lay learner.</p>
+  <h2 id="features-heading" style="margin-top:8px">A complete deck for the 1962 Missale Romanum</h2>
+  <p class="lede">Memorise the Traditional Latin Mass with Renaissance-style imagery, two recorded voices, and the modern FSRS scheduling algorithm. Built for lay parishioners, choristers, seminarians, and clergy.</p>
   <div class="features">
     <div class="feature">
       <div class="num">510</div>
@@ -354,16 +466,16 @@
   </div>
 </section>
 
-<section class="quote-band">
-  <p class="latin">Introibo ad altare Dei.</p>
+<section class="quote-band" aria-label="Opening prayer of the Tridentine Mass">
+  <p class="latin" lang="la">Introibo ad altare Dei.</p>
   <p class="english">I will go in to the altar of God.</p>
 </section>
 
-<section class="signup-band" id="signup">
+<section class="signup-band" id="signup" aria-labelledby="signup-heading">
   <div class="signup">
     <span class="eyebrow">Early access</span>
-    <h2>Sign up to be notified</h2>
-    <p class="lede">The full app launches soon. Create an account now to be among the first.</p>
+    <h2 id="signup-heading">Sign up to be notified</h2>
+    <p class="lede">The full Latin Mass app launches soon. Create a free beta account now to be among the first to memorise the Tridentine Order of Mass.</p>
     <div class="form-card">
       <form id="signupForm">
         <div class="field">
@@ -382,9 +494,9 @@
   </div>
 </section>
 
-<section class="donate-band" id="funding">
+<section class="donate-band" id="funding" aria-labelledby="funding-heading">
   <span class="eyebrow">Where the money goes</span>
-  <h2>A non-profit project for Brisbane's Latin Mass parishes</h2>
+  <h2 id="funding-heading">A non-profit project for Brisbane's Latin Mass parishes</h2>
   <p>After Stripe processing fees and minimal operating costs, all subscription revenue will be split <strong>50/50</strong> between two Brisbane parishes that offer the Traditional Latin Mass.</p>
   <p>A public transparency ledger of every disbursement will be published when subscriptions go live.</p>
   <div class="parishes">
@@ -393,8 +505,10 @@
   </div>
 </section>
 
-<footer>
-  <p>&copy; 2026 thelatinmass.org · Built by a parishioner of Mary Immaculate Annerley</p>
+</main>
+
+<footer role="contentinfo">
+  <p>&copy; 2026 thelatinmass.org &middot; Built by a parishioner of Mary Immaculate Annerley, Brisbane</p>
   <p style="margin-top:6px"><a href="mailto:info@thelatinmass.org">info@thelatinmass.org</a></p>
 </footer>
 
