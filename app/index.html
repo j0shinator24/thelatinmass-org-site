@@ -798,7 +798,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v12-2026-05-10-daily-target';
+  var APP_BUILD = 'v13-2026-05-10-learning-steps';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1769,6 +1769,69 @@
     return fsrsClamp(Math.round(ivl), 1, FSRS_MAX_INTERVAL);
   }
 
+  // Anki-style learning step result for new cards and same-day re-reviews
+  // of learning/relearning cards. FSRS math correctly says R≈1 means
+  // ~zero stability growth on same-day reviews, but that collapses Hard /
+  // Good / Easy to identical 1-day intervals after the floor clamp, which
+  // is confusing UX. Steps make the four buttons mean four different things:
+  //
+  //   Again -> 1m, stay in learning
+  //   Hard  -> 6m, stay in learning
+  //   Good  -> graduate to review with rating-3 init stability (~3 days)
+  //   Easy  -> graduate to review with rating-4 init stability (~15 days)
+  //
+  // Once a card has graduated AND a real day has elapsed, the FSRS path
+  // takes over (recall stability formula with proper R from elapsed time).
+  function learningStepResult(prev, rating, now) {
+    var prevReps = prev ? (prev.reps || 0) : 0;
+    var prevLapses = prev ? (prev.lapses || 0) : 0;
+    var prevS = prev ? (prev.stability || 0) : 0;
+    var prevD = prev ? (prev.difficulty || 0) : 0;
+
+    var newReps = prevReps + 1;
+    var newLapses = prevLapses;
+    var newS, newD, newDays, newState, newDue;
+
+    if (rating === 1) {
+      newD = prev && prevD > 0 ? fsrsNextDifficulty(prevD, 1) : fsrsInitDifficulty(1);
+      newS = prev && prevS > 0 ? prevS : fsrsInitStability(1);
+      if (prevReps > 0) newLapses = prevLapses + 1;
+      newState = 1;
+      newDays = 0;
+      newDue = new Date(now.getTime() + 60 * 1000);
+    } else if (rating === 2) {
+      newD = prev && prevD > 0 ? fsrsNextDifficulty(prevD, 2) : fsrsInitDifficulty(2);
+      newS = prev && prevS > 0 ? prevS : fsrsInitStability(2);
+      newState = 1;
+      newDays = 0;
+      newDue = new Date(now.getTime() + 6 * 60 * 1000);
+    } else if (rating === 3) {
+      newD = prev && prevD > 0 ? fsrsNextDifficulty(prevD, 3) : fsrsInitDifficulty(3);
+      newS = fsrsInitStability(3);
+      newState = 2;
+      newDays = fsrsNextInterval(newS);
+      newDue = new Date(now.getTime() + newDays * 86400000);
+    } else {
+      newD = prev && prevD > 0 ? fsrsNextDifficulty(prevD, 4) : fsrsInitDifficulty(4);
+      newS = fsrsInitStability(4);
+      newState = 2;
+      newDays = fsrsNextInterval(newS);
+      newDue = new Date(now.getTime() + newDays * 86400000);
+    }
+
+    return {
+      due: newDue.toISOString(),
+      scheduled_days: newDays,
+      elapsed_days: 0,
+      stability: Number(newS.toFixed(4)),
+      difficulty: Number(newD.toFixed(4)),
+      reps: newReps,
+      lapses: newLapses,
+      state: newState,
+      last_review: now.toISOString(),
+    };
+  }
+
   // Compute new card state after a review with the given rating (1..4).
   // Returns the row to upsert into user_card_state.
   function nextSchedule(prev, rating) {
@@ -1780,41 +1843,35 @@
     var prevD = prev ? (prev.difficulty || 0) : 0;
     var prevReview = prev && prev.last_review ? new Date(prev.last_review).getTime() : 0;
     var elapsedDays = prevReview ? Math.max(0, (now.getTime() - prevReview) / 86400000) : 0;
+    var sameDay = prevReview > 0 && elapsedDays < 0.5;
+
+    // Use learning steps for: new cards, same-day re-reviews of learning
+    // (state=1) or relearning (state=3) cards. Graduated cards (state=2)
+    // hit the standard FSRS path even on same-day reviews — but the buildQueue
+    // logic shouldn't normally show them same-day anyway.
+    if (prevReps === 0 || (sameDay && (prevState === 1 || prevState === 3))) {
+      return learningStepResult(prev, rating, now);
+    }
 
     var newS, newD, newDays, newDue, newState;
     var newReps = prevReps + 1;
     var newLapses = prevLapses;
 
-    if (prevReps === 0) {
-      // First-ever review: initialise from rating
-      newD = fsrsInitDifficulty(rating);
-      newS = fsrsInitStability(rating);
-      if (rating === 1) {
-        newState = 1; // learning
-        newDays = 0;
-        newDue = new Date(now.getTime() + 60 * 1000); // 1 minute
-      } else {
-        newState = 2; // review
-        newDays = fsrsNextInterval(newS);
-        newDue = new Date(now.getTime() + newDays * 86400000);
-      }
+    // Subsequent review of a graduated card (or any non-same-day review).
+    var R = fsrsRetrievability(elapsedDays, prevS);
+    newD = fsrsNextDifficulty(prevD || fsrsInitDifficulty(3), rating);
+    if (rating === 1) {
+      // Lapse — back into relearning
+      newS = fsrsNextForgetStability(newD, prevS || 0.1, R);
+      newLapses = prevLapses + 1;
+      newState = 3;
+      newDays = 0;
+      newDue = new Date(now.getTime() + 10 * 60 * 1000);
     } else {
-      // Subsequent review: update D, S, schedule
-      var R = fsrsRetrievability(elapsedDays, prevS);
-      newD = fsrsNextDifficulty(prevD || fsrsInitDifficulty(3), rating);
-      if (rating === 1) {
-        // Lapse — forget stability formula, short relearn step
-        newS = fsrsNextForgetStability(newD, prevS || 0.1, R);
-        newLapses = prevLapses + 1;
-        newState = 3; // relearning
-        newDays = 0;
-        newDue = new Date(now.getTime() + 10 * 60 * 1000); // 10 minutes
-      } else {
-        newS = fsrsNextRecallStability(newD, prevS || 0.1, R, rating);
-        newState = 2; // review
-        newDays = fsrsNextInterval(newS);
-        newDue = new Date(now.getTime() + newDays * 86400000);
-      }
+      newS = fsrsNextRecallStability(newD, prevS || 0.1, R, rating);
+      newState = 2;
+      newDays = fsrsNextInterval(newS);
+      newDue = new Date(now.getTime() + newDays * 86400000);
     }
 
     return {
@@ -1830,16 +1887,22 @@
     };
   }
 
-  // What interval will each rating button produce? Used for the hints under
-  // the rate buttons so the user can see the schedule before they tap.
+  // What interval will each rating button produce? Reads the actual schedule
+  // (so changes to nextSchedule auto-flow into the hints) and formats the
+  // result in minutes / hours / days as appropriate.
   function scheduleHints(prev) {
     var hints = {};
+    var nowMs = Date.now();
     for (var rating = 1; rating <= 4; rating++) {
       var sim = nextSchedule(prev, rating);
-      if (rating === 1) {
-        hints[rating] = prev && prev.reps > 0 ? '10m' : '<1m';
-      } else {
+      if (sim.scheduled_days >= 1) {
         hints[rating] = humanInterval(sim.scheduled_days);
+      } else {
+        // Sub-day interval (learning step). Show minutes/hours from due.
+        var diffMin = Math.max(0, Math.round((new Date(sim.due).getTime() - nowMs) / 60000));
+        if (diffMin < 1) hints[rating] = '<1m';
+        else if (diffMin < 60) hints[rating] = diffMin + 'm';
+        else hints[rating] = Math.round(diffMin / 60) + 'h';
       }
     }
     return hints;
