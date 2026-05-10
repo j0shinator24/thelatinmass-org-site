@@ -308,6 +308,34 @@
   .audio-btn:hover { border-color: var(--burgundy); color: var(--burgundy); }
   .audio-btn svg { display: block; }
 
+  /* Optional pre-flip image hint. Sits between the card and the Show
+     answer button, dim and unobtrusive so it doesn't compete for attention. */
+  .peek-row {
+    display: flex;
+    justify-content: center;
+    margin: 12px 0 0;
+  }
+  .peek-btn {
+    background: transparent;
+    border: 1px dashed var(--rule);
+    color: var(--taupe);
+    padding: 6px 14px 6px 12px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 32px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .peek-btn:hover { border-color: var(--taupe); color: var(--taupe-deep); }
+  .peek-btn svg { display: block; opacity: 0.7; }
+
   /* ─── Buttons ─── */
   .reveal-btn {
     background: var(--burgundy);
@@ -623,7 +651,7 @@
 </main>
 
 <script>
-  console.info('[thelatinmass] app-v7-2026-05-10-image-fit');
+  console.info('[thelatinmass] app-v8-2026-05-10-peek-button');
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -777,6 +805,7 @@
   var QUEUE = [];
   var CURRENT = null;
   var CURRENT_FLIPPED = false;
+  var IMAGE_PEEKED = false;
   var REVIEW_START = 0;
   var SESSION_REVIEWS = 0;
 
@@ -1288,6 +1317,7 @@
     }
     CURRENT = QUEUE.shift();
     CURRENT_FLIPPED = false;
+    IMAGE_PEEKED = false;
     REVIEW_START = Date.now();
     renderCard();
   }
@@ -1318,11 +1348,25 @@
       if (prayer) prayerLine = '<div class="role">' + escapeHtml(prayer.name) + '</div>';
     }
 
-    // Image always shown on the back; audio plays on flip with replay button.
+    // Image is shown either when the user has chosen to peek (pre-flip cue,
+    // their call) or always on the back. When neither, but an image exists,
+    // we render a small "View image" hint button instead so the user can
+    // opt-in to a clue without forcing it.
+    var hasImage = !!note.image_path;
+    var showImage = hasImage && (CURRENT_FLIPPED || IMAGE_PEEKED);
     var imageBlock = '';
-    if (note.image_path && CURRENT_FLIPPED) {
+    if (showImage) {
       imageBlock = '<div class="card-image"><img src="' + escapeHtml(note.image_path)
                  + '" alt="" loading="lazy" decoding="async"></div>';
+    }
+    var peekBlock = '';
+    if (hasImage && !CURRENT_FLIPPED && !IMAGE_PEEKED) {
+      peekBlock = '<button id="peekBtn" class="peek-btn" type="button" aria-label="View image hint">'
+                + '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">'
+                  + '<path fill="currentColor" d="M12 5C7 5 2.7 8.1 1 12c1.7 3.9 6 7 11 7s9.3-3.1 11-7c-1.7-3.9-6-7-11-7zm0 12c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5zm0-8c-1.7 0-3 1.3-3 3s1.3 3 3 3 3-1.3 3-3-1.3-3-3-3z"/>'
+                + '</svg>'
+                + '<span>View image</span>'
+                + '</button>';
     }
     var audioBlock = '';
     if (note.audio_path && CURRENT_FLIPPED) {
@@ -1365,6 +1409,7 @@
                 : '')
             + '</div>';
     if (!CURRENT_FLIPPED) {
+      if (peekBlock) html += '<div class="peek-row">' + peekBlock + '</div>';
       html += '<button class="reveal-btn" id="revealBtn">Show answer</button>';
     } else {
       var prevState = USER_STATE[CURRENT.id];
@@ -1382,7 +1427,17 @@
     document.getElementById('backBtn').addEventListener('click', showDeckPicker);
     if (!CURRENT_FLIPPED) {
       document.getElementById('revealBtn').addEventListener('click', flip);
+      // Tapping the card area flips, but we don't want a tap on the peek
+      // button to also flip — stop propagation in the peek handler below.
       document.getElementById('cardEl').addEventListener('click', flip);
+      var peekBtn = document.getElementById('peekBtn');
+      if (peekBtn) {
+        peekBtn.addEventListener('click', function (e) {
+          if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
+          IMAGE_PEEKED = true;
+          renderCard();
+        });
+      }
     } else {
       document.querySelectorAll('.rate-btn').forEach(function (btn) {
         btn.addEventListener('click', function () { rate(parseInt(btn.dataset.rating, 10)); });
