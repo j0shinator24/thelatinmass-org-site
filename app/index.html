@@ -204,6 +204,18 @@
     text-transform: uppercase;
     color: var(--taupe);
   }
+  /* Interlinear English gloss: red italic sitting just above the Latin,
+     same convention as a hand-missal's bilingual layout. */
+  .card .interlinear {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(0.95rem, 1.8vw, 1.15rem);
+    line-height: 1.35;
+    color: #B33A3A;
+    margin: 4px 0 -4px;
+    max-width: 100%;
+    word-wrap: break-word;
+  }
   .card .front {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(2.2rem, 5vw, 3.4rem);
@@ -606,7 +618,7 @@
 </main>
 
 <script>
-  console.info('[thelatinmass] app-v5-2026-05-10-inline-reauth');
+  console.info('[thelatinmass] app-v6-2026-05-10-interlinear-single-direction');
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -1277,10 +1289,10 @@
 
   function renderCard() {
     var note = STATIC.notesById[CURRENT.note_id];
-    var direction = CURRENT.template; // 'lat_to_en' | 'en_to_lat' | 'phrase_to_translation' | etc
-    var promptLatin = direction === 'en_to_lat' ? note.english : note.latin;
-    var promptLabel = direction === 'en_to_lat' ? 'English → Latin' : 'Latin → English';
-    var answer = direction === 'en_to_lat' ? note.latin : note.english;
+    // We only ship Latin -> English now. Always show Latin as the prompt
+    // and English as the small interlinear gloss revealed on flip.
+    var latin = note.latin;
+    var english = note.english;
 
     var posLine = '';
     if (note.note_type === 'vocab' && note.pos) {
@@ -1301,7 +1313,7 @@
       if (prayer) prayerLine = '<div class="role">' + escapeHtml(prayer.name) + '</div>';
     }
 
-    // Image goes on the back; audio plays on flip and has a replay button.
+    // Image always shown on the back; audio plays on flip with replay button.
     var imageBlock = '';
     if (note.image_path && CURRENT_FLIPPED) {
       imageBlock = '<div class="card-image"><img src="' + escapeHtml(note.image_path)
@@ -1320,19 +1332,23 @@
                  + '</div>';
     }
 
-    var dueIdx = STATIC.cardsByDeck[ACTIVE_DECK.id].length - QUEUE.length;
+    // Interlinear English gloss: small, red, italic, sits ABOVE the Latin
+    // — the same convention as a hand-missal interlinear translation.
+    var interlinearBlock = CURRENT_FLIPPED
+      ? '<div class="interlinear">' + escapeHtml(english) + '</div>'
+      : '';
+
     var html = '<div class="card-section">'
             + '<div class="progress">'
               + '<button id="backBtn">← Back to decks</button>'
               + '<span>' + ACTIVE_DECK.name + ' &middot; reviewed: ' + SESSION_REVIEWS + '</span>'
             + '</div>'
             + '<div class="card" id="cardEl">'
-              + '<span class="prompt-label">' + promptLabel + '</span>'
-              + '<div class="front">' + escapeHtml(promptLatin) + '</div>'
+              + imageBlock
+              + interlinearBlock
+              + '<div class="front">' + escapeHtml(latin) + '</div>'
               + (CURRENT_FLIPPED ?
                   '<div class="back">'
-                    + imageBlock
-                    + '<div class="english">' + escapeHtml(answer) + '</div>'
                     + audioBlock
                     + (posLine ? '<div class="meta">' + posLine + '</div>' : '')
                     + formsLine
