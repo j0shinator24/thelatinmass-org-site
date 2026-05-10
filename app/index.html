@@ -252,6 +252,46 @@
     margin-top: 8px;
   }
 
+  /* ─── Card media (image + audio) ─── */
+  .card .back .card-image {
+    margin: -8px 0 18px;
+    display: flex;
+    justify-content: center;
+  }
+  .card .back .card-image img {
+    max-width: 100%;
+    max-height: 320px;
+    width: auto;
+    height: auto;
+    border: 1px solid var(--rule);
+    background: var(--cream);
+  }
+  .card .back .card-audio {
+    margin: 6px 0 14px;
+    display: flex;
+    justify-content: center;
+  }
+  .audio-btn {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    color: var(--taupe-deep);
+    padding: 6px 14px 6px 12px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 36px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .audio-btn:hover { border-color: var(--burgundy); color: var(--burgundy); }
+  .audio-btn svg { display: block; }
+
   /* ─── Buttons ─── */
   .reveal-btn {
     background: var(--burgundy);
@@ -544,6 +584,7 @@
     .forecast-row { padding: 10px 12px; flex-wrap: wrap; }
     .forecast-row .bar-wrap { order: 3; flex-basis: 100%; margin: 8px 0 0; }
     .heatmap-grid { grid-auto-columns: minmax(8px, 1fr); gap: 2px; }
+    .card .back .card-image img { max-height: 240px; }
   }
 </style>
 </head>
@@ -565,7 +606,7 @@
 </main>
 
 <script>
-  console.info('[thelatinmass] app-v3-2026-05-10-fsrs-calendar-stats');
+  console.info('[thelatinmass] app-v4-2026-05-10-media');
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -1174,6 +1215,25 @@
       if (prayer) prayerLine = '<div class="role">' + escapeHtml(prayer.name) + '</div>';
     }
 
+    // Image goes on the back; audio plays on flip and has a replay button.
+    var imageBlock = '';
+    if (note.image_path && CURRENT_FLIPPED) {
+      imageBlock = '<div class="card-image"><img src="' + escapeHtml(note.image_path)
+                 + '" alt="" loading="lazy" decoding="async"></div>';
+    }
+    var audioBlock = '';
+    if (note.audio_path && CURRENT_FLIPPED) {
+      audioBlock = '<div class="card-audio">'
+                 + '<button id="replayBtn" class="audio-btn" type="button" aria-label="Play Latin audio">'
+                   + '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">'
+                     + '<path fill="currentColor" d="M8 5v14l11-7z"/>'
+                   + '</svg>'
+                   + '<span>Latin</span>'
+                 + '</button>'
+                 + '<audio id="cardAudio" preload="auto" src="' + escapeHtml(note.audio_path) + '"></audio>'
+                 + '</div>';
+    }
+
     var dueIdx = STATIC.cardsByDeck[ACTIVE_DECK.id].length - QUEUE.length;
     var html = '<div class="card-section">'
             + '<div class="progress">'
@@ -1185,7 +1245,9 @@
               + '<div class="front">' + escapeHtml(promptLatin) + '</div>'
               + (CURRENT_FLIPPED ?
                   '<div class="back">'
+                    + imageBlock
                     + '<div class="english">' + escapeHtml(answer) + '</div>'
+                    + audioBlock
                     + (posLine ? '<div class="meta">' + posLine + '</div>' : '')
                     + formsLine
                     + prayerLine
@@ -1215,6 +1277,22 @@
       document.querySelectorAll('.rate-btn').forEach(function (btn) {
         btn.addEventListener('click', function () { rate(parseInt(btn.dataset.rating, 10)); });
       });
+      // Auto-play the Latin audio on flip. The flip itself was a user gesture
+      // (tap on cardEl or revealBtn), so iOS Safari's autoplay block doesn't
+      // bite us. If the user taps the replay button, we restart from zero.
+      var audioEl = document.getElementById('cardAudio');
+      var replayBtn = document.getElementById('replayBtn');
+      if (audioEl) {
+        var p = audioEl.play();
+        if (p && typeof p.catch === 'function') p.catch(function () { /* user can replay */ });
+      }
+      if (replayBtn && audioEl) {
+        replayBtn.addEventListener('click', function () {
+          audioEl.currentTime = 0;
+          var pp = audioEl.play();
+          if (pp && typeof pp.catch === 'function') pp.catch(function () {});
+        });
+      }
     }
   }
 
