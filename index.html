@@ -512,67 +512,123 @@
   <p style="margin-top:6px"><a href="mailto:info@thelatinmass.org">info@thelatinmass.org</a></p>
 </footer>
 
-<script type="module">
-  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+<script>
+  // Vanilla fetch-based signup. No CDN imports, no module scripts.
+  // Calls Supabase REST API directly. Survives ad-blockers, strict CSP,
+  // and browsers that block esm.sh.
+  (function () {
+    var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
+    var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
 
-  const supabase = createClient(
-    'https://kugcbqfqataxbyjtaume.supabase.co',
-    'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi'
-  );
+    var form = document.getElementById('signupForm');
+    var emailEl = document.getElementById('email');
+    var pwEl = document.getElementById('password');
+    var submitBtn = document.getElementById('submitBtn');
+    var toggleBtn = document.getElementById('signinToggle');
+    var msg = document.getElementById('msg');
 
-  const form = document.getElementById('signupForm');
-  const emailEl = document.getElementById('email');
-  const pwEl = document.getElementById('password');
-  const submitBtn = document.getElementById('submitBtn');
-  const toggleBtn = document.getElementById('signinToggle');
-  const msg = document.getElementById('msg');
+    if (!form || !emailEl || !pwEl || !submitBtn) {
+      console.error('Signup form elements missing');
+      return;
+    }
 
-  let mode = 'signup';
+    // Belt and braces: ensure the form never navigates by clearing action.
+    form.setAttribute('action', 'javascript:void(0)');
+    form.setAttribute('method', 'post');
 
-  function setMode(m) {
-    mode = m;
-    submitBtn.textContent = m === 'signup' ? 'Create account' : 'Sign in';
-    toggleBtn.textContent = m === 'signup' ? 'Already have an account? Sign in' : "Don't have an account? Sign up";
-  }
-  function showMsg(text, kind) {
-    msg.textContent = text;
-    msg.className = 'msg ' + kind;
-    msg.style.display = 'block';
-  }
-  toggleBtn.addEventListener('click', () => setMode(mode === 'signup' ? 'signin' : 'signup'));
+    var mode = 'signup';
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    submitBtn.disabled = true;
-    msg.style.display = 'none';
-    const email = emailEl.value.trim();
-    const password = pwEl.value;
+    function setMode(m) {
+      mode = m;
+      submitBtn.textContent = m === 'signup' ? 'Create account' : 'Sign in';
+      toggleBtn.textContent = m === 'signup'
+        ? 'Already have an account? Sign in'
+        : "Don't have an account? Sign up";
+    }
+
+    function showMsg(text, kind) {
+      msg.textContent = text;
+      msg.className = 'msg ' + kind;
+      msg.style.display = 'block';
+    }
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', function () {
+        setMode(mode === 'signup' ? 'signin' : 'signup');
+      });
+    }
+
+    function callAuth(path, body) {
+      return fetch(SUPABASE_URL + '/auth/v1/' + path, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      }).then(function (r) {
+        return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; });
+      });
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      submitBtn.disabled = true;
+      msg.style.display = 'none';
+      var email = (emailEl.value || '').trim();
+      var password = pwEl.value;
+      var path = mode === 'signup' ? 'signup' : 'token?grant_type=password';
+      callAuth(path, { email: email, password: password })
+        .then(function (res) {
+          if (!res.ok) {
+            var errMsg = (res.body && (res.body.msg || res.body.error_description || res.body.error)) || 'Request failed';
+            showMsg(errMsg, 'error');
+            return;
+          }
+          // Successful signup: response includes user + (with autoconfirm) access_token
+          if (mode === 'signup') {
+            if (res.body && res.body.access_token) {
+              showMsg("Signed in. The full app is still in beta — we'll email you the moment it launches.", 'success');
+            } else {
+              showMsg("Account created. We'll email you the moment the full app is ready.", 'success');
+            }
+          } else {
+            showMsg("Signed in. We'll email you the moment the full app launches.", 'success');
+          }
+          // Persist session token for later sign-in detection
+          if (res.body && res.body.access_token) {
+            try { localStorage.setItem('tlm_session', JSON.stringify(res.body)); } catch (_) {}
+          }
+          return false;
+        })
+        .catch(function (err) {
+          showMsg((err && err.message) || 'Network error. Please try again.', 'error');
+        })
+        .finally(function () {
+          submitBtn.disabled = false;
+        });
+      return false;
+    });
+
+    // If we already have a session in localStorage, greet the user.
     try {
-      let res;
-      if (mode === 'signup') res = await supabase.auth.signUp({ email, password });
-      else res = await supabase.auth.signInWithPassword({ email, password });
-      if (res.error) {
-        showMsg(res.error.message, 'error');
-      } else if (mode === 'signup' && res.data?.user && !res.data?.session) {
-        showMsg('Check your email to confirm your account. We\'ll email you when the full app is ready.', 'success');
-      } else if (res.data?.session) {
-        showMsg('Signed in. The full app is still in beta — we\'ll email you the moment it launches.', 'success');
-      } else {
-        showMsg('Account created. We\'ll email you the moment the full app is ready.', 'success');
+      var saved = localStorage.getItem('tlm_session');
+      if (saved) {
+        var parsed = JSON.parse(saved);
+        if (parsed && parsed.user && parsed.user.email) {
+          showMsg('Signed in as ' + parsed.user.email + ". We'll email you the moment the full app launches.", 'info');
+        }
       }
-    } catch (err) {
-      showMsg(err.message || 'Something went wrong. Please try again.', 'error');
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
-
-  supabase.auth.getSession().then(({ data }) => {
-    if (data?.session?.user?.email) {
-      showMsg(`Signed in as ${data.session.user.email}. We'll email you the moment the full app launches.`, 'info');
-    }
-  });
+    } catch (_) { /* ignore */ }
+  })();
 </script>
+<noscript>
+  <p style="background:#5E2A2A;color:#fff;padding:10px 14px;text-align:center;font-family:'Lato',sans-serif;font-size:0.9rem">
+    JavaScript is required to sign up. Please enable it and refresh.
+  </p>
+</noscript>
 
 </body>
 </html>
