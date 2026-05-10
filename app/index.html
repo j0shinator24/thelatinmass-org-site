@@ -292,6 +292,20 @@
     font-size: 0.9rem;
     margin-top: 8px;
   }
+  /* Educational gloss for notes that need a usage explanation
+     (capitalisation, false friends, ecclesiastical vs classical sense). */
+  .card .back .card-note {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-left: 2px solid var(--gold);
+    background: var(--cream);
+    color: var(--ink-soft);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    text-align: left;
+  }
 
   /* ─── Card media (image + audio) ─── */
   /* Image fits inside the card's content area, full width up to a sensible
@@ -684,7 +698,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v10-2026-05-10-image-fit-real';
+  var APP_BUILD = 'v11-2026-05-10-card-notes';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1390,6 +1404,14 @@
       if (prayer) prayerLine = '<div class="role">' + escapeHtml(prayer.name) + '</div>';
     }
 
+    // Per-note teaching gloss. For words where a usage convention matters
+    // (capitalisation, ecclesiastical vs classical sense, false friends, etc.)
+    // we keep a one-paragraph explanation in static.json's notes field.
+    var notesLine = '';
+    if (note.notes && CURRENT_FLIPPED) {
+      notesLine = '<div class="card-note">' + escapeHtml(note.notes) + '</div>';
+    }
+
     // Image is shown either when the user has chosen to peek (pre-flip cue,
     // their call) or always on the back. When neither, but an image exists,
     // we render a small "View image" hint button instead so the user can
@@ -1448,6 +1470,7 @@
                     + audioBlock
                     + (posLine ? '<div class="meta">' + posLine + '</div>' : '')
                     + formsLine
+                    + notesLine
                     + prayerLine
                   + '</div>'
                 : '')
