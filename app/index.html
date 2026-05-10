@@ -836,7 +836,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v15-2026-05-10-calendar-today-row';
+  var APP_BUILD = 'v16-2026-05-10-done-message';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -2108,21 +2108,29 @@
     var stats = getTodayStats();
     var main = document.getElementById('main');
 
-    // Three states:
-    //   (a) opened deck with nothing to study at all       -> "All caught up"
-    //   (b) finished session having reviewed nothing today -> "All caught up"
-    //   (c) reviewed >0 today                              -> "Done for today"
+    // Four flavours of "you're done" depending on what just happened.
+    // Important: SESSION_REVIEWS counts only the current sitting; reviewedToday
+    // counts every review since local midnight. They diverge when the user
+    // opens the deck again after an earlier session.
     var headline, message;
-    if (SESSION_REVIEWS === 0 && stats.reviewedToday === 0) {
+    var n = stats.reviewedToday;
+    var nWord = n + ' card' + (n === 1 ? '' : 's');
+    if (SESSION_REVIEWS === 0 && n === 0) {
       headline = 'All caught up';
       message = "Nothing's due right now. Check the calendar for when your next cards come around.";
-    } else {
+    } else if (SESSION_REVIEWS === 0 && n > 0) {
+      // Returning visit after they already hit their target earlier today.
+      headline = 'Already done for today';
+      message = "You've reviewed " + nWord + " today. Rest now and come back tomorrow for the next batch.";
+    } else if (SESSION_REVIEWS > 0 && n === SESSION_REVIEWS) {
+      // First session of the day, queue cleared cleanly.
       headline = 'Done for today';
-      message = 'You reviewed ' + SESSION_REVIEWS + ' card' + (SESSION_REVIEWS === 1 ? '' : 's')
-              + (stats.reviewedToday > SESSION_REVIEWS
-                  ? ' this session (' + stats.reviewedToday + ' total today)'
-                  : '')
-              + '. Rest now and come back tomorrow.';
+      message = 'You reviewed ' + nWord + '. Rest now and come back tomorrow.';
+    } else {
+      // Mid-day: this session adds onto an earlier one.
+      headline = 'Done for today';
+      message = 'Another ' + SESSION_REVIEWS + ' card' + (SESSION_REVIEWS === 1 ? '' : 's')
+              + ' in this session, ' + nWord + ' total today. Rest now and come back tomorrow.';
     }
 
     main.innerHTML = '<div class="done">'
