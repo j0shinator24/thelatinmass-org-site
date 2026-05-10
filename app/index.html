@@ -453,12 +453,110 @@
   /* ─── Done ─── */
   .done {
     text-align: center;
-    padding: 48px 20px;
+    padding: 48px 24px;
     background: #fff;
     border: 1px solid var(--rule);
   }
   .done h2 { font-size: 2rem; color: var(--burgundy); margin-bottom: 8px; }
-  .done p { color: var(--ink-soft); margin-bottom: 24px; }
+  .done p { color: var(--ink-soft); margin-bottom: 24px; max-width: 420px; margin-left: auto; margin-right: auto; }
+  .done-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 420px;
+    margin: 0 auto 28px;
+  }
+  .done-stats .stat-tile {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    padding: 14px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .done-stats .stat-tile .num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    color: var(--burgundy);
+    font-weight: 600;
+    line-height: 1;
+  }
+  .done-stats .stat-tile .lbl {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    text-align: center;
+  }
+  .done-cta {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 320px;
+    margin: 0 auto;
+  }
+  .link-btn {
+    background: transparent;
+    border: 0;
+    color: var(--taupe-dark);
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 12px;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  .link-btn:hover { color: var(--burgundy); }
+
+  /* ─── Today's goal banner (Calendar view) ─── */
+  .goal-banner {
+    background: #fff;
+    border: 1px solid var(--burgundy);
+    padding: 18px 18px 16px;
+    margin-bottom: 22px;
+  }
+  .goal-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .goal-label {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--burgundy);
+  }
+  .goal-count {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .goal-bar {
+    height: 8px;
+    background: var(--cream);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .goal-bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--burgundy);
+    transition: width 0.3s ease-out;
+  }
+  .goal-sub {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
 
   /* ─── Nav active state ─── */
   header.app-header nav a.active,
@@ -677,6 +775,8 @@
     .heatmap-grid { grid-auto-columns: minmax(8px, 1fr); gap: 2px; }
     .card .card-image { margin: 0 0 12px; }
     .card .card-image img { max-width: 220px; }
+    .done-stats { grid-template-columns: 1fr 1fr; }
+    .done-stats .stat-tile:nth-child(3) { grid-column: 1 / -1; }
   }
 </style>
 </head>
@@ -698,7 +798,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v11-2026-05-10-card-notes';
+  var APP_BUILD = 'v12-2026-05-10-daily-target';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -859,6 +959,10 @@
   // user re-rate (overwrites the prior upsert).
   var HISTORY = [];
   var HISTORY_MAX = 50;
+  // Daily-target settings. Cap on new-card introductions per calendar day,
+  // applied globally across both decks. Due reviews are uncapped — once a
+  // card is in rotation, you owe it as many reviews as scheduling demands.
+  var NEW_PER_DAY = 10;
   var REVIEW_START = 0;
   var SESSION_REVIEWS = 0;
 
@@ -1144,11 +1248,31 @@
 
     var maxCount = Math.max(1, buckets.reduce(function (m, b) { return Math.max(m, b.count); }, 0), laterBucket.count);
 
+    // Today's goal banner: a fresh user reads this and knows what "enough"
+    // looks like today -- N new + all due. Progress bar fills as they review.
+    var ts = getTodayStats();
+    var goalDone = ts.reviewedToday;
+    var goalTotal = goalDone + ts.totalGoal; // already-done + still-to-do
+    var goalPct = goalTotal > 0 ? Math.min(100, Math.round(100 * goalDone / goalTotal)) : 100;
+    var goalSubtitle = goalTotal === 0
+      ? 'Nothing to study right now. Come back when something comes due below.'
+      : 'Aim for ' + ts.newRemaining + ' new + ' + ts.dueNow + ' due review' + (ts.dueNow === 1 ? '' : 's')
+        + (goalDone > 0 ? ' (you have ' + goalDone + ' done already today).' : ' today.');
+    var goalBanner = '<div class="goal-banner">'
+                   + '<div class="goal-row">'
+                     + '<span class="goal-label">Today\'s goal</span>'
+                     + '<span class="goal-count">' + goalDone + ' / ' + goalTotal + '</span>'
+                   + '</div>'
+                   + '<div class="goal-bar"><span class="goal-bar-fill" style="width:' + goalPct + '%"></span></div>'
+                   + '<p class="goal-sub">' + escapeHtml(goalSubtitle) + '</p>'
+                 + '</div>';
+
     var html = '<div class="view-header">'
              + '<span class="eyebrow">Forecast</span>'
              + '<h2>Next two weeks</h2>'
-             + '<p class="lede">Cards scheduled to come due, day by day.</p>'
+             + '<p class="lede">Cards scheduled to come due, day by day. The system caps new cards at ' + NEW_PER_DAY + ' per day so you don\'t burn out — due reviews are uncapped.</p>'
              + '</div>'
+             + goalBanner
              + '<div class="forecast-summary">'
                + '<div class="stat"><div class="num">' + (overdueCount + buckets[0].count - overdueCount) + '</div><div class="lbl">Due today</div></div>'
                + '<div class="stat"><div class="num">' + newCount + '</div><div class="lbl">New cards</div></div>'
@@ -1322,6 +1446,45 @@
     main.innerHTML = html;
   }
 
+  // ─── Daily target stats ─────────────────────────────────────────────────
+  // Computed from local USER_STATE so we don't fire another network round
+  // trip for the showDone celebration / Calendar banner / progress bar.
+  function getTodayStats() {
+    var todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    var todayMs = todayStart.getTime();
+    var nowMs = Date.now();
+    var reviewedToday = 0, newIntroducedToday = 0, dueNow = 0;
+    Object.keys(USER_STATE).forEach(function (cid) {
+      var s = USER_STATE[cid];
+      if (!s.last_review) return;
+      var lr = new Date(s.last_review).getTime();
+      if (lr >= todayMs) {
+        reviewedToday++;
+        // reps==1 with last_review=today is a card that became "in rotation"
+        // today, i.e. introduced. Approximation -- holds unless undo path
+        // walked it back to reps=0 then back up to 1, which is rare.
+        if (s.reps === 1) newIntroducedToday++;
+      }
+    });
+    if (STATIC && STATIC.cards) {
+      STATIC.cards.forEach(function (c) {
+        var s = USER_STATE[c.id];
+        if (!s || !s.due || s.reps <= 0) return;
+        if (new Date(s.due).getTime() <= nowMs) dueNow++;
+      });
+    }
+    var newRemaining = Math.max(0, NEW_PER_DAY - newIntroducedToday);
+    var totalGoal = newRemaining + dueNow;
+    return {
+      reviewedToday: reviewedToday,
+      newIntroducedToday: newIntroducedToday,
+      newRemaining: newRemaining,
+      dueNow: dueNow,
+      totalGoal: totalGoal,
+    };
+  }
+
   // ─── Date utils for calendar/stats ──────────────────────────────────────
   function isoDate(d) {
     var yr = d.getFullYear();
@@ -1347,8 +1510,10 @@
   }
 
   function buildQueue() {
-    // Queue rule: due review cards first (oldest due first), then new cards
-    // by frequency (most common first), capped at 50 new per session.
+    // Queue rule: due reviews (oldest first) + a daily-capped slice of new
+    // cards (most-frequent-in-the-Mass first). The new-card cap is GLOBAL
+    // across both decks — if you've already introduced 7 new today in
+    // Mass Vocabulary, this deck only adds (NEW_PER_DAY - 7) more.
     var now = Date.now();
     var due = [];
     var fresh = [];
@@ -1363,7 +1528,8 @@
       }
     });
     due.sort(function (a, b) { return a.dueMs - b.dueMs; });
-    QUEUE = due.map(function (e) { return e.card; }).concat(fresh.slice(0, 50));
+    var stats = getTodayStats();
+    QUEUE = due.map(function (e) { return e.card; }).concat(fresh.slice(0, stats.newRemaining));
   }
 
   function nextCard() {
@@ -1452,10 +1618,12 @@
       : '';
 
     var canUndo = HISTORY.length > 0;
+    var ts = getTodayStats();
+    var todayProgress = ts.reviewedToday + ' / ' + (ts.reviewedToday + ts.totalGoal) + ' today';
     var html = '<div class="card-section">'
             + '<div class="progress">'
               + '<button id="backBtn">← Back to decks</button>'
-              + '<span class="prog-mid">' + ACTIVE_DECK.name + ' &middot; reviewed: ' + SESSION_REVIEWS + '</span>'
+              + '<span class="prog-mid">' + ACTIVE_DECK.name + ' &middot; ' + todayProgress + '</span>'
               + '<button id="prevBtn" class="prev-btn"' + (canUndo ? '' : ' disabled aria-disabled="true"') + ' title="' + (canUndo ? 'Previous card (undo last rating)' : 'No previous card to go back to') + '">← Previous</button>'
             + '</div>'
             + '<div class="card" id="cardEl">'
@@ -1780,13 +1948,41 @@
 
   // ─── Done state ─────────────────────────────────────────────────────────
   function showDone() {
+    var stats = getTodayStats();
     var main = document.getElementById('main');
+
+    // Three states:
+    //   (a) opened deck with nothing to study at all       -> "All caught up"
+    //   (b) finished session having reviewed nothing today -> "All caught up"
+    //   (c) reviewed >0 today                              -> "Done for today"
+    var headline, message;
+    if (SESSION_REVIEWS === 0 && stats.reviewedToday === 0) {
+      headline = 'All caught up';
+      message = "Nothing's due right now. Check the calendar for when your next cards come around.";
+    } else {
+      headline = 'Done for today';
+      message = 'You reviewed ' + SESSION_REVIEWS + ' card' + (SESSION_REVIEWS === 1 ? '' : 's')
+              + (stats.reviewedToday > SESSION_REVIEWS
+                  ? ' this session (' + stats.reviewedToday + ' total today)'
+                  : '')
+              + '. Rest now and come back tomorrow.';
+    }
+
     main.innerHTML = '<div class="done">'
-                   + '<h2>Session complete</h2>'
-                   + '<p>You reviewed ' + SESSION_REVIEWS + ' card' + (SESSION_REVIEWS === 1 ? '' : 's') + '.</p>'
-                   + '<button class="reveal-btn" id="backBtn">← Back to decks</button>'
+                   + '<h2>' + escapeHtml(headline) + '</h2>'
+                   + '<p>' + escapeHtml(message) + '</p>'
+                   + '<div class="done-stats">'
+                     + '<div class="stat-tile"><span class="num">' + stats.reviewedToday + '</span><span class="lbl">Reviewed today</span></div>'
+                     + '<div class="stat-tile"><span class="num">' + stats.newIntroducedToday + '</span><span class="lbl">New started</span></div>'
+                     + '<div class="stat-tile"><span class="num">' + stats.dueNow + '</span><span class="lbl">Still due</span></div>'
+                   + '</div>'
+                   + '<div class="done-cta">'
+                     + '<button class="reveal-btn" id="goCalBtn">View calendar</button>'
+                     + '<button class="link-btn" id="goDecksBtn">Back to decks</button>'
+                   + '</div>'
                    + '</div>';
-    document.getElementById('backBtn').addEventListener('click', showDeckPicker);
+    document.getElementById('goCalBtn').addEventListener('click', showCalendar);
+    document.getElementById('goDecksBtn').addEventListener('click', showDeckPicker);
   }
 
   function showErr(msg) {
