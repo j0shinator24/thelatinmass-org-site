@@ -265,16 +265,20 @@
   }
 
   /* ─── Card media (image + audio) ─── */
-  .card .back .card-image {
-    margin: -8px 0 18px;
+  .card .card-image {
+    margin: -16px -8px 14px;
     display: flex;
     justify-content: center;
+    width: calc(100% + 16px);
+    max-width: calc(100% + 16px);
   }
-  .card .back .card-image img {
-    max-width: 100%;
-    max-height: 320px;
-    width: auto;
+  .card .card-image img {
+    display: block;
+    width: 100%;
+    max-width: 360px;
     height: auto;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
     border: 1px solid var(--rule);
     background: var(--cream);
   }
@@ -596,7 +600,8 @@
     .forecast-row { padding: 10px 12px; flex-wrap: wrap; }
     .forecast-row .bar-wrap { order: 3; flex-basis: 100%; margin: 8px 0 0; }
     .heatmap-grid { grid-auto-columns: minmax(8px, 1fr); gap: 2px; }
-    .card .back .card-image img { max-height: 240px; }
+    .card .card-image { margin: -8px -4px 12px; width: calc(100% + 8px); max-width: calc(100% + 8px); }
+    .card .card-image img { max-width: 280px; }
   }
 </style>
 </head>
@@ -618,7 +623,7 @@
 </main>
 
 <script>
-  console.info('[thelatinmass] app-v6-2026-05-10-interlinear-single-direction');
+  console.info('[thelatinmass] app-v7-2026-05-10-image-fit');
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
@@ -1344,6 +1349,9 @@
               + '<span>' + ACTIVE_DECK.name + ' &middot; reviewed: ' + SESSION_REVIEWS + '</span>'
             + '</div>'
             + '<div class="card" id="cardEl">'
+              // Pre-flip: just the Latin prompt. Post-flip: image (memory
+              // reinforcement, not a recall hint) above the interlinear English
+              // gloss above the Latin prompt, with audio + meta below.
               + imageBlock
               + interlinearBlock
               + '<div class="front">' + escapeHtml(latin) + '</div>'
