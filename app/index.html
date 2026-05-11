@@ -1032,8 +1032,27 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v23-2026-05-11-forecast-cap-overflow';
+  // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
+  // otherwise users on stale-cached HTML won't auto-reload.
+  var APP_BUILD = 'v24-2026-05-11-auto-reload';
   console.info('[thelatinmass] app-' + APP_BUILD);
+
+  // ─── Stale-cache auto-reload ───────────────────────────────────────────
+  // GitHub Pages serves HTML with Cache-Control: max-age=600, so users can
+  // sit on stale code for up to 10 min after a deploy. We fetch a tiny
+  // version.json (cache-busted) on boot and silently reload with ?cb=...
+  // if the server build is newer than the embedded one.
+  (function () {
+    fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (d && d.build && d.build !== APP_BUILD) {
+          console.info('[thelatinmass] new build available:', d.build, '-- reloading');
+          location.replace(location.pathname + '?cb=' + encodeURIComponent(d.build) + location.hash);
+        }
+      })
+      .catch(function () { /* network blip, ignore */ });
+  })();
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
   var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
