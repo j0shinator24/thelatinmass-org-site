@@ -1710,8 +1710,10 @@
         var pct = Math.round(100 * total / maxCount);
         var subParts = [];
         if (b.sub) subParts.push(b.sub);
-        if (due > 0) subParts.push(due + ' due');
-        if (newP > 0) subParts.push(newP + ' new');
+        if (total > 0) {
+          subParts.push(due + ' due');
+          subParts.push(newP + ' new');
+        }
         var subLabel = subParts.join(' · ');
         var bucketIdx = buckets.indexOf(b);
         html += '<div class="forecast-row' + (total === 0 ? ' empty' : '') + (due > 0 ? ' has-preview' : '') + '" data-bucket="' + bucketIdx + '">'
