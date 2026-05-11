@@ -1081,7 +1081,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v25-2026-05-11-reauth-oauth';
+  var APP_BUILD = 'v26-2026-05-11-today-breakdown';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1795,12 +1795,22 @@
       if (b.isToday) {
         // Today's row mirrors the banner: "X / TODAY_GOAL" using the same
         // denominator everywhere. Bar fills to that goal's progress.
+        // Sub-label matches the other rows: "today · X due · Y new" so the
+        // composition is visible at a glance.
         var done = b.doneToday || 0;
         var goal = b.todayGoal || 0;
         var rightLabel = goal > 0 ? (done + ' / ' + goal) : (done + ' done');
+        var planNew = (ts0.newIntroducedToday || 0) + (ts0.newRemaining || 0);
+        if (planNew > goal) planNew = goal;
+        var planDue = Math.max(0, goal - planNew);
+        var todaySubParts = ['today'];
+        if (goal > 0) {
+          todaySubParts.push(planDue + ' due');
+          todaySubParts.push(planNew + ' new');
+        }
         html += '<div class="forecast-row today' + (done === 0 && goal === 0 ? ' empty' : '') + '" data-bucket="0">'
               + '<span class="day">' + escapeHtml(b.label)
-                + '<span class="sub">today</span>'
+                + '<span class="sub">' + escapeHtml(todaySubParts.join(' · ')) + '</span>'
               + '</span>'
               + '<span class="bar-wrap"><span class="bar" style="width:' + (b.goalPct || 0) + '%"></span></span>'
               + '<span class="count">' + escapeHtml(rightLabel) + '</span>'
