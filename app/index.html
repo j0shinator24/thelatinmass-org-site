@@ -424,7 +424,7 @@
   }
   .oauth-buttons {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
   .oauth-btn {
@@ -448,8 +448,6 @@
   .oauth-btn:hover { border-color: var(--taupe); }
   .oauth-btn:active { transform: scale(0.98); }
   .oauth-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
-  .oauth-btn-apple { background: #000; color: #fff; border-color: #000; }
-  .oauth-btn-apple:hover { border-color: #444; }
 
   .rate-row {
     display: grid;
@@ -1240,7 +1238,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v29-2026-05-11-leaderboard';
+  var APP_BUILD = 'v30-2026-05-11-no-apple';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1677,12 +1675,6 @@
             + '<path fill="#EA4335" d="M24 11.6c2.9 0 5.5 1 7.6 2.9l5.7-5.7C33.8 5.5 29.3 4 24 4 16.3 4 9.7 8.1 6.4 14.4l7 5.4c1.5-4.5 5.7-7.8 10.6-8.2z"/>'
           + '</svg>'
           + '<span>Google</span>'
-        + '</button>'
-        + '<button type="button" class="oauth-btn oauth-btn-apple" data-oauth="apple" aria-label="Continue with Apple">'
-          + '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">'
-            + '<path d="M17.05 20.28c-.98.95-2.05.86-3.08.4-1.09-.47-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>'
-          + '</svg>'
-          + '<span>Apple</span>'
         + '</button>'
         + '<button type="button" class="oauth-btn" data-oauth="facebook" aria-label="Continue with Facebook">'
           + '<svg viewBox="0 0 24 24" aria-hidden="true">'
