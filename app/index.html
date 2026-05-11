@@ -238,13 +238,40 @@
   .card .interlinear {
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    font-size: clamp(0.95rem, 1.8vw, 1.15rem);
-    line-height: 1.35;
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    line-height: 1.25;
     color: #B33A3A;
-    margin: 4px 0 -4px;
+    margin: 4px 0 8px;
     max-width: 100%;
     word-wrap: break-word;
   }
+  /* Subtle help text sitting above the rate buttons. */
+  .rating-help {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: var(--ink-soft);
+    text-align: center;
+    margin: 18px auto 10px;
+    max-width: 520px;
+    padding: 0 16px;
+  }
+  .rating-help strong { color: var(--ink); font-weight: 600; }
+  /* Card state pill — new / learning / review. */
+  .card-state-pill {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+  .card-state-pill.cs-new      { background: #e0ecf5; color: #2b5d8a; }
+  .card-state-pill.cs-learning { background: #f9eed5; color: #8a6b22; }
+  .card-state-pill.cs-review   { background: #e6efe9; color: #2d5d3f; }
   .card .front {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(2.2rem, 5vw, 3.4rem);
@@ -1238,7 +1265,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v30-2026-05-11-no-apple';
+  var APP_BUILD = 'v31-2026-05-12-no-fb';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -2809,10 +2836,17 @@
     } else {
       goalLabel = goalDone + ' / ' + goalTotal + ' today';
     }
+    var cardState = USER_STATE[CURRENT.id];
+    var stateLabel, stateClass;
+    if (!cardState || cardState.state === 0)      { stateLabel = 'new';      stateClass = 'cs-new'; }
+    else if (cardState.state === 1 || cardState.state === 3) { stateLabel = 'learning'; stateClass = 'cs-learning'; }
+    else                                          { stateLabel = 'review';   stateClass = 'cs-review'; }
+    var statePillHtml = '<span class="card-state-pill ' + stateClass + '">' + stateLabel + '</span>';
+
     var html = '<div class="card-section">'
             + '<div class="progress">'
               + '<button id="backBtn">← Back to decks</button>'
-              + '<span class="prog-mid">' + escapeHtml(ACTIVE_DECK.name) + '</span>'
+              + '<span class="prog-mid">' + escapeHtml(ACTIVE_DECK.name) + statePillHtml + '</span>'
               + '<button id="prevBtn" class="prev-btn"' + (canUndo ? '' : ' disabled aria-disabled="true"') + ' title="' + (canUndo ? 'Previous card (undo last rating)' : 'No previous card to go back to') + '">← Previous</button>'
             + '</div>'
             + '<div class="card-goal">'
@@ -2844,7 +2878,12 @@
     } else {
       var prevState = USER_STATE[CURRENT.id];
       var hint = scheduleHints(prevState);
-      html += '<div class="rate-row">'
+      html += '<p class="rating-help">'
+            + 'Rate how easily you recalled it. <strong>Again</strong> repeats in minutes. '
+            + '<strong>Good</strong> and <strong>Easy</strong> schedule days or weeks out based on your history. '
+            + 'The harder it felt, the sooner it comes back.'
+            + '</p>'
+            + '<div class="rate-row">'
             + '<button class="rate-btn" data-rating="1">Again<span class="interval-hint">' + hint[1] + '</span></button>'
             + '<button class="rate-btn" data-rating="2">Hard<span class="interval-hint">' + hint[2] + '</span></button>'
             + '<button class="rate-btn" data-rating="3">Good<span class="interval-hint">' + hint[3] + '</span></button>'
