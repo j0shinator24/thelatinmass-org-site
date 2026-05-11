@@ -821,6 +821,62 @@
     text-align: right;
   }
   .forecast-row.empty .count { color: var(--taupe); font-weight: 400; }
+  .forecast-row[data-bucket] { cursor: pointer; transition: background 0.15s; }
+  .forecast-row[data-bucket]:hover { background: var(--cream-soft); }
+  .forecast-row.expanded { border-color: var(--taupe-deep); }
+
+  /* Calendar day preview: expanded list of Latin terms scheduled */
+  .day-preview {
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    border-top: 0;
+    padding: 14px 18px 16px;
+    margin-top: -6px;
+    margin-bottom: 6px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  .day-preview.empty {
+    color: var(--ink-soft);
+    font-style: italic;
+    text-align: center;
+    padding: 14px 18px;
+  }
+  .day-preview-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 6px 14px;
+  }
+  .day-preview-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 3px 0;
+    border-bottom: 1px dotted var(--rule);
+    font-size: 1rem;
+  }
+  .day-preview-list .dp-lat {
+    color: var(--burgundy);
+    font-weight: 500;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .day-preview-list .dp-pos {
+    font-family: 'Cinzel', serif;
+    font-size: 0.56rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    flex-shrink: 0;
+  }
+  @media (max-width: 560px) {
+    .day-preview-list { grid-template-columns: 1fr 1fr; gap: 4px 10px; }
+    .day-preview-list li { font-size: 0.95rem; }
+  }
 
   /* ─── Stats view + heatmap ─── */
   .stat-grid {
@@ -976,7 +1032,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v21-2026-05-10-calendar-commitment-view';
+  var APP_BUILD = 'v22-2026-05-11-max-cap-fuzz-preview';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1137,12 +1193,17 @@
   // user re-rate (overwrites the prior upsert).
   var HISTORY = [];
   var HISTORY_MAX = 50;
-  // Daily-target settings. Cap on new-card introductions per calendar day,
-  // applied globally across both decks. Due reviews are uncapped — once a
-  // card is in rotation, you owe it as many reviews as scheduling demands.
-  // User-overridable via the Calendar view; persisted in localStorage.
+  // Two daily caps, both user-settable, both persisted to localStorage:
+  //   NEW_PER_DAY = how many BRAND-NEW cards to introduce per day (intake)
+  //   MAX_PER_DAY = total cards per day, INCLUDING due reviews (the goal)
+  //
+  // MAX determines "today's goal" shown everywhere. NEW determines how many
+  // of those slots can be filled with unseen cards (the rest go to due
+  // reviews). MAX is forced to be >= NEW so you can't make it nonsensical.
   var NEW_PER_DAY_DEFAULT = 10;
   var NEW_PER_DAY_KEY = 'tlm_new_per_day';
+  var MAX_PER_DAY_DEFAULT = 30;
+  var MAX_PER_DAY_KEY = 'tlm_max_per_day';
   function getDailyTarget() {
     try {
       var v = parseInt(localStorage.getItem(NEW_PER_DAY_KEY), 10);
@@ -1153,6 +1214,24 @@
   function setDailyTarget(n) {
     n = Math.max(1, Math.min(100, parseInt(n, 10) || NEW_PER_DAY_DEFAULT));
     try { localStorage.setItem(NEW_PER_DAY_KEY, String(n)); } catch (_) {}
+    // Bump MAX too if NEW just exceeded it (always MAX >= NEW)
+    if (getMaxPerDay() < n) setMaxPerDay(n);
+    return n;
+  }
+  function getMaxPerDay() {
+    var raw;
+    try {
+      var v = parseInt(localStorage.getItem(MAX_PER_DAY_KEY), 10);
+      if (isFinite(v) && v >= 1 && v <= 500) raw = v;
+    } catch (_) {}
+    if (!isFinite(raw)) raw = MAX_PER_DAY_DEFAULT;
+    // Floor at NEW so MAX can never be less than the new-card cap.
+    return Math.max(raw, getDailyTarget());
+  }
+  function setMaxPerDay(n) {
+    n = Math.max(1, Math.min(500, parseInt(n, 10) || MAX_PER_DAY_DEFAULT));
+    n = Math.max(n, getDailyTarget());
+    try { localStorage.setItem(MAX_PER_DAY_KEY, String(n)); } catch (_) {}
     return n;
   }
 
@@ -1458,15 +1537,16 @@
     // Buckets that count overdue belong to "today" too — overdue is due now
     if (buckets.length) buckets[0].count += overdueCount;
 
-    // Augment today's bucket with the reviewed-count and a goal-progress
-    // value so the row reads as "you did X today" rather than blank.
+    // Augment today's bucket with reviewed-count + goal-progress info,
+    // sharing the same todayGoal denominator the banner above uses so
+    // the numbers always match.
     var ts0 = getTodayStats();
     if (buckets.length) {
       buckets[0].doneToday = ts0.reviewedToday;
+      buckets[0].todayGoal = ts0.todayGoal;
       buckets[0].dueRemaining = buckets[0].count; // already includes overdue
-      var todayTotal = ts0.reviewedToday + ts0.totalGoal;
-      buckets[0].goalPct = todayTotal > 0
-        ? Math.min(100, Math.round(100 * ts0.reviewedToday / todayTotal))
+      buckets[0].goalPct = ts0.todayGoal > 0
+        ? Math.min(100, Math.round(100 * ts0.reviewedToday / ts0.todayGoal))
         : 100;
     }
 
@@ -1494,15 +1574,28 @@
     );
 
     // Today's goal banner: a fresh user reads this and knows what "enough"
-    // looks like today -- N new + all due. Progress bar fills as they review.
+    // looks like today. The denominator (todayGoal) is the SAME number used
+    // everywhere else (in-card progress strip, calendar today-row), capped
+    // at MAX_PER_DAY. No more "39 vs 25" confusion.
     var ts = getTodayStats();
     var goalDone = ts.reviewedToday;
-    var goalTotal = goalDone + ts.totalGoal; // already-done + still-to-do
+    var goalTotal = ts.todayGoal;
     var goalPct = goalTotal > 0 ? Math.min(100, Math.round(100 * goalDone / goalTotal)) : 100;
-    var goalSubtitle = goalTotal === 0
-      ? 'Nothing to study right now. Come back when something comes due below.'
-      : 'Aim for ' + ts.newRemaining + ' new + ' + ts.dueNow + ' due review' + (ts.dueNow === 1 ? '' : 's')
-        + (goalDone > 0 ? ' (you have ' + goalDone + ' done already today).' : ' today.');
+    // Subtitle breaks down the goal denominator so the user sees where it
+    // comes from: X due + Y new = MAX cap (or whatever's available).
+    var newPart = ts.newRemaining;
+    var duePart = Math.max(0, ts.totalGoal - newPart);
+    var goalSubtitle;
+    if (goalTotal === 0 || ts.totalGoal === 0) {
+      goalSubtitle = goalDone > 0
+        ? "You've reviewed " + goalDone + " today. Come back tomorrow for the next batch."
+        : "Nothing to study right now. Come back when something comes due below.";
+    } else {
+      var parts = [];
+      if (duePart > 0) parts.push(duePart + ' due review' + (duePart === 1 ? '' : 's'));
+      if (newPart > 0) parts.push(newPart + ' new');
+      goalSubtitle = (goalDone > 0 ? (goalDone + ' done, ') : '') + parts.join(' + ') + ' to go today.';
+    }
     var goalBanner = '<div class="goal-banner">'
                    + '<div class="goal-row">'
                      + '<span class="goal-label">Today\'s goal</span>'
@@ -1512,28 +1605,45 @@
                    + '<p class="goal-sub">' + escapeHtml(goalSubtitle) + '</p>'
                  + '</div>';
 
-    // Settings: pick how many new cards/day. Five preset chips + a custom
-    // input. Selected preset highlighted in burgundy.
-    var current = getDailyTarget();
-    var presets = [
+    // Two chip strips: NEW cap (introductions) + MAX cap (total daily goal).
+    // MAX must always be >= NEW; the setter enforces that.
+    var currentNew = getDailyTarget();
+    var currentMax = getMaxPerDay();
+    var newPresets = [
       { n: 5,  label: 'Gentle' },
       { n: 10, label: 'Standard' },
       { n: 15, label: 'Eager' },
       { n: 20, label: 'Intensive' },
       { n: 30, label: 'Power' },
     ];
-    var chips = presets.map(function (p) {
-      return '<button type="button" class="target-chip' + (p.n === current ? ' active' : '') + '" data-target="' + p.n + '">'
-           + '<span class="chip-num">' + p.n + '</span>'
-           + '<span class="chip-lbl">' + escapeHtml(p.label) + '</span>'
-           + '</button>';
-    }).join('');
+    var maxPresets = [
+      { n: 15,  label: 'Light' },
+      { n: 30,  label: 'Standard' },
+      { n: 50,  label: 'Committed' },
+      { n: 80,  label: 'Heavy' },
+      { n: 150, label: 'Intense' },
+    ];
+    function renderChips(presets, current, attr) {
+      return presets.map(function (p) {
+        return '<button type="button" class="target-chip' + (p.n === current ? ' active' : '') + '" data-' + attr + '="' + p.n + '">'
+             + '<span class="chip-num">' + p.n + '</span>'
+             + '<span class="chip-lbl">' + escapeHtml(p.label) + '</span>'
+             + '</button>';
+      }).join('');
+    }
+    var newChips = renderChips(newPresets, currentNew, 'new-target');
+    var maxChips = renderChips(maxPresets, currentMax, 'max-target');
     var settingsStrip = '<div class="goal-settings">'
                       + '<div class="goal-settings-head">'
                         + '<span class="goal-settings-title">New cards per day</span>'
-                        + '<span class="goal-settings-current">' + current + '</span>'
+                        + '<span class="goal-settings-current">' + currentNew + '</span>'
                       + '</div>'
-                      + '<div class="target-chips">' + chips + '</div>'
+                      + '<div class="target-chips">' + newChips + '</div>'
+                      + '<div class="goal-settings-head" style="margin-top:14px">'
+                        + '<span class="goal-settings-title">Max cards per day (incl. reviews)</span>'
+                        + '<span class="goal-settings-current">' + currentMax + '</span>'
+                      + '</div>'
+                      + '<div class="target-chips">' + maxChips + '</div>'
                       + '<p class="goal-settings-hint">Pick a number you can hit <em>every single day</em>. Daily five beats weekly fifty. Below 5 the spacing rhythm starts to break down; above 20 the daily review pile compounds and most learners quit within a fortnight.</p>'
                       + '<details class="goal-science">'
                         + '<summary>Why these numbers matter</summary>'
@@ -1550,7 +1660,7 @@
     var html = '<div class="view-header">'
              + '<span class="eyebrow">Forecast</span>'
              + '<h2>Next two weeks</h2>'
-             + '<p class="lede">Each day shows reviews FSRS has scheduled (from your past Hard / Good / Easy ratings) plus the ' + getDailyTarget() + ' new cards you\'ve committed to introduce that day. Forecast assumes you keep your current daily target.</p>'
+             + '<p class="lede">Each day shows reviews FSRS scheduled (from your Hard / Good / Easy ratings) plus the ' + getDailyTarget() + ' new cards planned that day. Daily goal is capped at <strong>' + getMaxPerDay() + '</strong> total (the rest defer; FSRS staggers intervals so cards don\'t pile up). Tap any row with due reviews to preview the Latin.</p>'
              + '</div>'
              + goalBanner
              + settingsStrip
@@ -1562,22 +1672,12 @@
              + '<div class="forecast-list">';
     buckets.forEach(function (b) {
       if (b.isToday) {
-        // Today's row: show "X done · Y due" and fill the bar to
-        // daily-goal progress so the row reflects activity, not just
-        // forward-looking schedule.
+        // Today's row mirrors the banner: "X / TODAY_GOAL" using the same
+        // denominator everywhere. Bar fills to that goal's progress.
         var done = b.doneToday || 0;
-        var dueR = b.dueRemaining || 0;
-        var rightLabel;
-        if (done === 0 && dueR === 0) {
-          rightLabel = '0';
-        } else if (dueR === 0) {
-          rightLabel = done + ' done';
-        } else if (done === 0) {
-          rightLabel = dueR + ' due';
-        } else {
-          rightLabel = done + ' / ' + dueR + ' due';
-        }
-        html += '<div class="forecast-row today' + (done === 0 && dueR === 0 ? ' empty' : '') + '">'
+        var goal = b.todayGoal || 0;
+        var rightLabel = goal > 0 ? (done + ' / ' + goal) : (done + ' done');
+        html += '<div class="forecast-row today' + (done === 0 && goal === 0 ? ' empty' : '') + '" data-bucket="0">'
               + '<span class="day">' + escapeHtml(b.label)
                 + '<span class="sub">today</span>'
               + '</span>'
@@ -1594,7 +1694,8 @@
         if (due > 0) subParts.push(due + ' due');
         if (newP > 0) subParts.push(newP + ' new');
         var subLabel = subParts.join(' · ');
-        html += '<div class="forecast-row' + (total === 0 ? ' empty' : '') + '">'
+        var bucketIdx = buckets.indexOf(b);
+        html += '<div class="forecast-row' + (total === 0 ? ' empty' : '') + (due > 0 ? ' has-preview' : '') + '" data-bucket="' + bucketIdx + '">'
               + '<span class="day">' + escapeHtml(b.label)
                 + (subLabel ? '<span class="sub">' + escapeHtml(subLabel) + '</span>' : '')
               + '</span>'
@@ -1614,15 +1715,107 @@
     html += '</div>';
     main.innerHTML = html;
 
-    // Wire the daily-target preset chips. Picking one persists to
-    // localStorage and re-renders the calendar with the new value.
-    document.querySelectorAll('.target-chip').forEach(function (btn) {
+    // Wire NEW + MAX preset chips. Each chip carries either data-new-target
+    // or data-max-target; the right setter is called and the view re-renders.
+    document.querySelectorAll('.target-chip[data-new-target]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var n = parseInt(btn.dataset.target, 10);
-        setDailyTarget(n);
+        setDailyTarget(parseInt(btn.dataset.newTarget, 10));
         showCalendar();
       });
     });
+    document.querySelectorAll('.target-chip[data-max-target]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setMaxPerDay(parseInt(btn.dataset.maxTarget, 10));
+        showCalendar();
+      });
+    });
+
+    // Click on any forecast row with due reviews to preview the Latin
+    // terms scheduled for that day (most-frequent first). Click again to
+    // collapse. Latin only -- no English -- so previewing doesn't spoil
+    // upcoming recalls.
+    document.querySelectorAll('.forecast-row[data-bucket]').forEach(function (row) {
+      row.addEventListener('click', function () {
+        toggleDayPreview(row, parseInt(row.dataset.bucket, 10));
+      });
+    });
+  }
+
+  function toggleDayPreview(row, idx) {
+    var existing = row.nextElementSibling;
+    if (existing && existing.classList.contains('day-preview')) {
+      existing.remove();
+      row.classList.remove('expanded');
+      return;
+    }
+    var terms = listLatinForDay(idx);
+    if (!terms.length) {
+      // No revisions on this day; show a friendly note rather than nothing
+      var emptyEl = document.createElement('div');
+      emptyEl.className = 'day-preview empty';
+      emptyEl.textContent = idx === 0
+        ? 'No revisions due today.'
+        : 'Nothing scheduled to revise that day yet.';
+      row.parentNode.insertBefore(emptyEl, row.nextSibling);
+      row.classList.add('expanded');
+      return;
+    }
+    var ul = '<ul class="day-preview-list">';
+    terms.forEach(function (t) {
+      ul += '<li lang="la"><span class="dp-lat">' + escapeHtml(t.latin) + '</span>'
+          + (t.pos ? '<span class="dp-pos">' + escapeHtml(t.pos) + '</span>' : '')
+          + '</li>';
+    });
+    ul += '</ul>';
+    var el = document.createElement('div');
+    el.className = 'day-preview';
+    el.innerHTML = ul;
+    row.parentNode.insertBefore(el, row.nextSibling);
+    row.classList.add('expanded');
+  }
+
+  // Walks USER_STATE to find every card whose due timestamp lands in the
+  // requested day-bucket, returns { latin, pos } sorted by note frequency
+  // descending (most-frequent-in-the-Mass first).
+  function listLatinForDay(bucketIdx) {
+    var DAY_MS = 86400000;
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var todayStartMs = today.getTime();
+    var startMs = todayStartMs + bucketIdx * DAY_MS;
+    var endMs = startMs + DAY_MS;
+    var out = [];
+    Object.keys(USER_STATE).forEach(function (cidStr) {
+      var s = USER_STATE[cidStr];
+      if (!s || !s.due || (s.reps || 0) === 0) return;
+      var dueMs = new Date(s.due).getTime();
+      // Day 0 (today) catches overdue too
+      if (bucketIdx === 0) {
+        if (dueMs >= endMs) return;
+      } else {
+        if (dueMs < startMs || dueMs >= endMs) return;
+      }
+      // Find the card -> note
+      var cid = parseInt(cidStr, 10);
+      var card = null;
+      for (var dId in STATIC.cardsByDeck) {
+        var arr = STATIC.cardsByDeck[dId];
+        for (var i = 0; i < arr.length; i++) {
+          if (arr[i].id === cid) { card = arr[i]; break; }
+        }
+        if (card) break;
+      }
+      if (!card) return;
+      var note = STATIC.notesById[card.note_id];
+      if (!note) return;
+      out.push({
+        latin: note.latin,
+        pos: note.pos || (note.role ? formatRole(note.role) : ''),
+        freq: note.frequency || 0,
+      });
+    });
+    out.sort(function (a, b) { return b.freq - a.freq; });
+    return out;
   }
 
   // ─── Stats (heatmap, streak, retention, totals) ─────────────────────────
@@ -1803,13 +1996,21 @@
     // remainder is 0; extra still grants its full slot count anyway.
     var baseRemaining = Math.max(0, getDailyTarget() - newIntroducedToday);
     var newRemaining = baseRemaining + getExtraToday();
-    var totalGoal = newRemaining + dueNow;
+    var maxCap = getMaxPerDay() + getExtraToday();
+    // todayGoal = the single canonical denominator used by the banner,
+    // the in-card progress strip, and the calendar today-row. Caps at
+    // MAX (plus extra), but never falls below what you've already done.
+    var available = reviewedToday + dueNow + newRemaining;
+    var todayGoal = Math.max(reviewedToday, Math.min(maxCap, available));
+    var totalGoal = Math.max(0, todayGoal - reviewedToday);
     return {
       reviewedToday: reviewedToday,
       newIntroducedToday: newIntroducedToday,
       newRemaining: newRemaining,
       dueNow: dueNow,
       totalGoal: totalGoal,
+      todayGoal: todayGoal,
+      maxCap: maxCap,
     };
   }
 
@@ -1838,10 +2039,10 @@
   }
 
   function buildQueue() {
-    // Queue rule: due reviews (oldest first) + a daily-capped slice of new
-    // cards (most-frequent-in-the-Mass first). The new-card cap is GLOBAL
-    // across both decks — if you've already introduced 7 new today in
-    // Mass Vocabulary, this deck only adds (NEW_PER_DAY - 7) more.
+    // Queue rule: total queue size capped at MAX_PER_DAY (minus what's
+    // already done today). Due reviews take priority (oldest first); new
+    // cards (most-frequent-in-the-Mass first) fill whatever budget remains
+    // up to NEW_PER_DAY. Both caps are global across decks.
     var now = Date.now();
     var due = [];
     var fresh = [];
@@ -1857,7 +2058,11 @@
     });
     due.sort(function (a, b) { return a.dueMs - b.dueMs; });
     var stats = getTodayStats();
-    QUEUE = due.map(function (e) { return e.card; }).concat(fresh.slice(0, stats.newRemaining));
+    var budget = Math.max(0, stats.maxCap - stats.reviewedToday);
+    var dueSlots = Math.min(due.length, budget);
+    var queuedDue = due.slice(0, dueSlots).map(function (e) { return e.card; });
+    var newSlots = Math.max(0, Math.min(stats.newRemaining, budget - dueSlots));
+    QUEUE = queuedDue.concat(fresh.slice(0, newSlots));
   }
 
   function nextCard() {
@@ -1948,10 +2153,7 @@
     var canUndo = HISTORY.length > 0;
     var ts = getTodayStats();
     var goalDone = ts.reviewedToday;
-    // Goal denominator is whichever is bigger: today's full target (done +
-    // remaining) or what you've already done. After you blow past target,
-    // bar stays full at 100% rather than going > 100%.
-    var goalTotal = Math.max(goalDone, goalDone + ts.totalGoal);
+    var goalTotal = ts.todayGoal;
     var goalPct = goalTotal > 0 ? Math.min(100, Math.round(100 * goalDone / goalTotal)) : 0;
     var goalLabel;
     if (goalTotal === 0) {
@@ -2116,6 +2318,24 @@
     return fsrsClamp(Math.round(ivl), 1, FSRS_MAX_INTERVAL);
   }
 
+  // Anki-style fuzz factor. Cards introduced together would collapse onto
+  // the exact same future day without it, producing pile-ups. Spreads
+  // similar-interval cards across a small range so the daily review load
+  // is naturally smooth -- without ever reviewing a card later than
+  // FSRS-optimal by enough to dent retention. Ratios match the open-source
+  // FSRS-Anki Rust implementation.
+  function fsrsFuzzInterval(days) {
+    if (days < 3) return days; // 1-2 day intervals: no fuzz, already minimum
+    var ratio;
+    if (days < 7) ratio = 0.15;
+    else if (days < 30) ratio = 0.08;
+    else if (days < 365) ratio = 0.04;
+    else ratio = 0.02;
+    var min = Math.max(1, Math.round(days * (1 - ratio)));
+    var max = Math.max(min, Math.round(days * (1 + ratio)));
+    return min + Math.floor(Math.random() * (max - min + 1));
+  }
+
   // Anki-style learning step result for new cards and same-day re-reviews
   // of learning/relearning cards. FSRS math correctly says R≈1 means
   // ~zero stability growth on same-day reviews, but that collapses Hard /
@@ -2129,7 +2349,8 @@
   //
   // Once a card has graduated AND a real day has elapsed, the FSRS path
   // takes over (recall stability formula with proper R from elapsed time).
-  function learningStepResult(prev, rating, now) {
+  function learningStepResult(prev, rating, now, applyFuzz) {
+    applyFuzz = applyFuzz !== false;
     var prevReps = prev ? (prev.reps || 0) : 0;
     var prevLapses = prev ? (prev.lapses || 0) : 0;
     var prevS = prev ? (prev.stability || 0) : 0;
@@ -2157,12 +2378,14 @@
       newS = fsrsInitStability(3);
       newState = 2;
       newDays = fsrsNextInterval(newS);
+      if (applyFuzz) newDays = fsrsFuzzInterval(newDays);
       newDue = new Date(now.getTime() + newDays * 86400000);
     } else {
       newD = prev && prevD > 0 ? fsrsNextDifficulty(prevD, 4) : fsrsInitDifficulty(4);
       newS = fsrsInitStability(4);
       newState = 2;
       newDays = fsrsNextInterval(newS);
+      if (applyFuzz) newDays = fsrsFuzzInterval(newDays);
       newDue = new Date(now.getTime() + newDays * 86400000);
     }
 
@@ -2180,8 +2403,12 @@
   }
 
   // Compute new card state after a review with the given rating (1..4).
-  // Returns the row to upsert into user_card_state.
-  function nextSchedule(prev, rating) {
+  // Returns the row to upsert into user_card_state. Pass applyFuzz=false
+  // from scheduleHints() so the preview intervals don't jitter between
+  // renders; pass true (default) from rate() so the actual scheduled day
+  // gets a ±5–15% random adjustment to prevent pile-ups.
+  function nextSchedule(prev, rating, applyFuzz) {
+    applyFuzz = applyFuzz !== false;
     var now = new Date();
     var prevReps = prev ? (prev.reps || 0) : 0;
     var prevLapses = prev ? (prev.lapses || 0) : 0;
@@ -2197,7 +2424,7 @@
     // hit the standard FSRS path even on same-day reviews — but the buildQueue
     // logic shouldn't normally show them same-day anyway.
     if (prevReps === 0 || (sameDay && (prevState === 1 || prevState === 3))) {
-      return learningStepResult(prev, rating, now);
+      return learningStepResult(prev, rating, now, applyFuzz);
     }
 
     var newS, newD, newDays, newDue, newState;
@@ -2218,6 +2445,7 @@
       newS = fsrsNextRecallStability(newD, prevS || 0.1, R, rating);
       newState = 2;
       newDays = fsrsNextInterval(newS);
+      if (applyFuzz) newDays = fsrsFuzzInterval(newDays);
       newDue = new Date(now.getTime() + newDays * 86400000);
     }
 
@@ -2236,12 +2464,14 @@
 
   // What interval will each rating button produce? Reads the actual schedule
   // (so changes to nextSchedule auto-flow into the hints) and formats the
-  // result in minutes / hours / days as appropriate.
+  // result in minutes / hours / days as appropriate. Fuzz is disabled here
+  // so the previewed interval matches what the user expects from FSRS;
+  // the actual rated card gets fuzz applied when rate() commits it.
   function scheduleHints(prev) {
     var hints = {};
     var nowMs = Date.now();
     for (var rating = 1; rating <= 4; rating++) {
-      var sim = nextSchedule(prev, rating);
+      var sim = nextSchedule(prev, rating, false);
       if (sim.scheduled_days >= 1) {
         hints[rating] = humanInterval(sim.scheduled_days);
       } else {
