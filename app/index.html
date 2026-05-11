@@ -273,6 +273,101 @@
   .card-state-pill.cs-new      { background: #e0ecf5; color: #2b5d8a; }
   .card-state-pill.cs-learning { background: #f9eed5; color: #8a6b22; }
   .card-state-pill.cs-review   { background: #e6efe9; color: #2d5d3f; }
+
+  /* ─── Settings page ─────────────────────────────────────────────────── */
+  .settings-page { max-width: 560px; margin: 0 auto; padding: 0 0 60px; }
+  .settings-section {
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 18px 20px;
+    margin-bottom: 18px;
+  }
+  .settings-section h3 {
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--taupe-deep);
+    margin: 0 0 12px;
+  }
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .settings-row:first-of-type { border-top: 0; padding-top: 4px; }
+  .settings-row .label-stack { flex: 1; min-width: 0; }
+  .settings-row .label-stack .lbl {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .settings-row .label-stack .hint {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+  /* Toggle switch */
+  .toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #ccc;
+    border-radius: 24px;
+    transition: background 0.18s;
+  }
+  .toggle .slider::before {
+    position: absolute;
+    content: '';
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.18s;
+  }
+  .toggle input:checked + .slider { background: var(--green); }
+  .toggle input:checked + .slider::before { transform: translateX(20px); }
+  .toggle input:focus-visible + .slider { outline: 2px solid var(--burgundy); outline-offset: 2px; }
+  /* Settings-page secondary buttons. Re-use reveal-btn for the primary. */
+  .settings-btn {
+    appearance: none;
+    background: #fff;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 10px 14px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .settings-btn:hover { border-color: var(--taupe); }
+  .settings-btn.danger { color: var(--burgundy); border-color: #c08383; }
+  .settings-btn.danger:hover { background: #f8e8e8; }
+  .settings-msg {
+    margin-top: 10px;
+    padding: 10px 12px;
+    font-size: 0.85rem;
+    border: 1px solid transparent;
+    display: none;
+  }
+  .settings-msg.ok    { background: #e6efe9; border-color: #7da090; color: var(--green); }
+  .settings-msg.error { background: #f8e8e8; border-color: #c08383; color: var(--burgundy); }
   .card .front {
     font-family: 'Cormorant Garamond', serif;
     font-size: clamp(2.2rem, 5vw, 3.4rem);
@@ -1254,6 +1349,7 @@
     <button id="navCalendar" class="nav-link" data-view="calendar">Calendar</button>
     <button id="navStats" class="nav-link" data-view="stats">Stats</button>
     <button id="navLeaderboard" class="nav-link" data-view="leaderboard">Leaderboard</button>
+    <button id="navSettings" class="nav-link" data-view="settings">Settings</button>
     <span class="user" id="userEmail"></span>
     <button id="signoutBtn">Sign out</button>
   </nav>
@@ -1266,7 +1362,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v32-2026-05-12-sizing';
+  var APP_BUILD = 'v33-2026-05-12-settings';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1491,7 +1587,16 @@
     if (!isFinite(mp) || mp < 1 || mp > 500) mp = MAX_PER_DAY_DEFAULT;
     if (mp < np) mp = np;
     var ex = (s.extra_today && typeof s.extra_today === 'object') ? s.extra_today : {};
-    return { new_per_day: np, max_per_day: mp, extra_today: ex };
+    // Card-render toggles. Default ON so existing users keep current behaviour.
+    var pa = (typeof s.play_audio === 'boolean') ? s.play_audio : true;
+    var si = (typeof s.show_images === 'boolean') ? s.show_images : true;
+    return {
+      new_per_day: np,
+      max_per_day: mp,
+      extra_today: ex,
+      play_audio: pa,
+      show_images: si,
+    };
   }
 
   function persistSettings() {
@@ -1644,7 +1749,7 @@
   var ACTIVE_VIEW = 'decks';
   function setActiveView(v) {
     ACTIVE_VIEW = v;
-    var ids = { decks: 'navDecks', calendar: 'navCalendar', stats: 'navStats', leaderboard: 'navLeaderboard' };
+    var ids = { decks: 'navDecks', calendar: 'navCalendar', stats: 'navStats', leaderboard: 'navLeaderboard', settings: 'navSettings' };
     Object.keys(ids).forEach(function (k) {
       var el = document.getElementById(ids[k]);
       if (!el) return;
@@ -1658,11 +1763,235 @@
       calendar: function () { showCalendar(); },
       stats: function () { showStats(); },
       leaderboard: function () { showLeaderboard(); },
+      settings: function () { showSettings(); },
     };
     Object.keys(byView).forEach(function (k) {
       var btn = document.querySelector('[data-view="' + k + '"]');
       if (!btn) return;
       btn.addEventListener('click', function () { byView[k](); });
+    });
+  }
+
+  // ─── Settings page ─────────────────────────────────────────────────────
+  // Single page (under the "Settings" nav tab) for: card-render toggles,
+  // profile name + archdiocese, daily targets summary, subscription state
+  // (read-only — Stripe portal not wired yet), and a destructive
+  // "delete account" action that defers to email until the backend
+  // edge-function is in place.
+  function showSettings() {
+    setActiveView('settings');
+    var main = document.getElementById('main');
+    var p = PROFILE || {};
+    var ds = ARCHDIOCESES || { countries: [] };
+    var email = (SESSION && SESSION.user && SESSION.user.email) || '';
+
+    var countryOpts = '<option value="">Select country…</option>'
+      + ds.countries.map(function (c) {
+          var sel = (p.country === c.name) ? ' selected' : '';
+          return '<option value="' + escapeHtml(c.name) + '"' + sel + '>' + escapeHtml(c.name) + '</option>';
+        }).join('');
+    var initialArchOpts;
+    if (p.country) {
+      var country = ds.countries.find(function (c) { return c.name === p.country; });
+      initialArchOpts = '<option value="">Select archdiocese…</option>'
+        + (country ? country.archdioceses.map(function (a) {
+            var sel = (p.archdiocese === a) ? ' selected' : '';
+            return '<option value="' + escapeHtml(a) + '"' + sel + '>' + escapeHtml(a) + '</option>';
+          }).join('') : '');
+    } else {
+      initialArchOpts = '<option value="">Pick a country first</option>';
+    }
+
+    var html = '<div class="view-header">'
+             +   '<span class="eyebrow">Account</span>'
+             +   '<h2>Settings</h2>'
+             +   '<p class="lede">Tune your study experience, update your details, manage your account.</p>'
+             + '</div>'
+             + '<div class="settings-page">'
+
+             // ── Card display toggles
+             +   '<div class="settings-section">'
+             +     '<h3>While reviewing</h3>'
+             +     '<div class="settings-row">'
+             +       '<div class="label-stack">'
+             +         '<div class="lbl">Play Latin audio on flip</div>'
+             +         '<div class="hint">When the answer reveals, the recorded Latin plays automatically.</div>'
+             +       '</div>'
+             +       '<label class="toggle"><input type="checkbox" id="setAudio"' + (SETTINGS.play_audio ? ' checked' : '') + '><span class="slider"></span></label>'
+             +     '</div>'
+             +     '<div class="settings-row">'
+             +       '<div class="label-stack">'
+             +         '<div class="lbl">Show illustration images</div>'
+             +         '<div class="hint">Memory-aid imagery shown alongside the Latin. Turn off for a text-only experience.</div>'
+             +       '</div>'
+             +       '<label class="toggle"><input type="checkbox" id="setImages"' + (SETTINGS.show_images ? ' checked' : '') + '><span class="slider"></span></label>'
+             +     '</div>'
+             +   '</div>'
+
+             // ── Your details
+             +   '<form id="setProfileForm" class="settings-section profile-form" action="javascript:void(0)" novalidate>'
+             +     '<h3>Your details</h3>'
+             +     '<div class="row-2">'
+             +       '<div class="field">'
+             +         '<label for="setFirst">First name</label>'
+             +         '<input type="text" id="setFirst" name="first_name" required autocomplete="given-name" value="' + escapeHtml(p.first_name || '') + '">'
+             +       '</div>'
+             +       '<div class="field">'
+             +         '<label for="setLast">Last name</label>'
+             +         '<input type="text" id="setLast" name="last_name" autocomplete="family-name" value="' + escapeHtml(p.last_name || '') + '">'
+             +       '</div>'
+             +     '</div>'
+             +     '<div class="field">'
+             +       '<label for="setCountry">Country</label>'
+             +       '<select id="setCountry" name="country" required>' + countryOpts + '</select>'
+             +     '</div>'
+             +     '<div class="field">'
+             +       '<label for="setArch">Archdiocese</label>'
+             +       '<select id="setArch" name="archdiocese" required ' + (p.country ? '' : 'disabled') + '>' + initialArchOpts + '</select>'
+             +     '</div>'
+             +     '<button type="submit" id="setProfileSubmit" class="reveal-btn">Save changes</button>'
+             +     '<div id="setProfileMsg" class="settings-msg" role="status" aria-live="polite"></div>'
+             +   '</form>'
+
+             // ── Daily targets (link to deck picker which has the chip UI)
+             +   '<div class="settings-section">'
+             +     '<h3>Daily targets</h3>'
+             +     '<p class="goal-settings-hint">New cards per day: <strong>' + escapeHtml(String(SETTINGS.new_per_day)) + '</strong>. Daily cap: <strong>' + escapeHtml(String(SETTINGS.max_per_day)) + '</strong>.</p>'
+             +     '<button class="settings-btn" id="setTargetsBtn">Change targets on deck page</button>'
+             +   '</div>'
+
+             // ── Subscription (read-only — Stripe not wired yet)
+             +   '<div class="settings-section">'
+             +     '<h3>Subscription</h3>'
+             +     '<p class="goal-settings-hint">Currently <strong>free during beta</strong>. Paid subscriptions launch later; all proceeds split 50/50 between Mary Immaculate Annerley and St Joseph\'s Chapel (FSSP) at Nudgee College.</p>'
+             +     '<p class="goal-settings-hint">Signed in as <em>' + escapeHtml(email) + '</em>.</p>'
+             +   '</div>'
+
+             // ── Danger zone
+             +   '<div class="settings-section">'
+             +     '<h3>Account</h3>'
+             +     '<div class="settings-row">'
+             +       '<div class="label-stack">'
+             +         '<div class="lbl">Sign out</div>'
+             +         '<div class="hint">End your session on this device.</div>'
+             +       '</div>'
+             +       '<button class="settings-btn" id="setSignOutBtn">Sign out</button>'
+             +     '</div>'
+             +     '<div class="settings-row">'
+             +       '<div class="label-stack">'
+             +         '<div class="lbl">Delete account</div>'
+             +         '<div class="hint">Permanently remove your account, profile, and review history. This cannot be undone.</div>'
+             +       '</div>'
+             +       '<button class="settings-btn danger" id="setDeleteBtn">Delete…</button>'
+             +     '</div>'
+             +     '<div id="setDangerMsg" class="settings-msg" role="status" aria-live="polite"></div>'
+             +   '</div>'
+
+             + '</div>';
+
+    main.innerHTML = html;
+
+    // ── Wire toggles ──────────────────────────────────────────────────
+    var audioEl = document.getElementById('setAudio');
+    var imagesEl = document.getElementById('setImages');
+    audioEl.addEventListener('change', function () {
+      SETTINGS.play_audio = !!audioEl.checked;
+      persistSettings();
+    });
+    imagesEl.addEventListener('change', function () {
+      SETTINGS.show_images = !!imagesEl.checked;
+      persistSettings();
+    });
+
+    // ── Wire profile form (reuses profile-form CSS + same PATCH pattern) ─
+    var firstEl = document.getElementById('setFirst');
+    var lastEl  = document.getElementById('setLast');
+    var countrySel = document.getElementById('setCountry');
+    var archSel = document.getElementById('setArch');
+    var pfBtn = document.getElementById('setProfileSubmit');
+    var pfMsg = document.getElementById('setProfileMsg');
+
+    function populateArch(countryName, preserve) {
+      var country = ds.countries.find(function (c) { return c.name === countryName; });
+      if (!country) {
+        archSel.innerHTML = '<option value="">Pick a country first</option>';
+        archSel.disabled = true;
+        return;
+      }
+      archSel.disabled = false;
+      archSel.innerHTML = '<option value="">Select archdiocese…</option>'
+        + country.archdioceses.map(function (a) {
+            var sel = (preserve && preserve === a) ? ' selected' : '';
+            return '<option value="' + escapeHtml(a) + '"' + sel + '>' + escapeHtml(a) + '</option>';
+          }).join('');
+    }
+    countrySel.addEventListener('change', function () { populateArch(countrySel.value, null); });
+
+    function setMsg(el, text, kind) {
+      el.textContent = text;
+      el.className = 'settings-msg ' + (kind === 'error' ? 'error' : 'ok');
+      el.style.display = 'block';
+    }
+
+    document.getElementById('setProfileForm').addEventListener('submit', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      pfMsg.style.display = 'none';
+      var payload = {
+        first_name: (firstEl.value || '').trim(),
+        last_name: (lastEl.value || '').trim() || null,
+        country: countrySel.value || null,
+        archdiocese: archSel.value || null,
+      };
+      if (!payload.first_name) { setMsg(pfMsg, 'First name is required.', 'error'); return; }
+      if (!payload.country)    { setMsg(pfMsg, 'Pick your country.', 'error'); return; }
+      if (!payload.archdiocese){ setMsg(pfMsg, 'Pick your archdiocese.', 'error'); return; }
+      pfBtn.disabled = true;
+      pfBtn.setAttribute('aria-busy', 'true');
+      rest('/profiles?user_id=eq.' + SESSION.user.id, SESSION, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: payload,
+      }).then(function (rows) {
+        if (rows && rows[0]) PROFILE = Object.assign({}, PROFILE || {}, rows[0]);
+        else PROFILE = Object.assign({}, PROFILE || {}, payload);
+        setMsg(pfMsg, 'Saved.', 'ok');
+        pfBtn.disabled = false;
+        pfBtn.removeAttribute('aria-busy');
+      }).catch(function (err) {
+        pfBtn.disabled = false;
+        pfBtn.removeAttribute('aria-busy');
+        setMsg(pfMsg, (err && err.message) || 'Could not save. Try again.', 'error');
+      });
+    });
+
+    // ── Daily targets shortcut: deck picker is where the chip UI lives.
+    document.getElementById('setTargetsBtn').addEventListener('click', showDeckPicker);
+
+    // ── Sign out / delete account
+    document.getElementById('setSignOutBtn').addEventListener('click', signOut);
+
+    var dangerMsg = document.getElementById('setDangerMsg');
+    document.getElementById('setDeleteBtn').addEventListener('click', function () {
+      var ok = confirm(
+        'Permanently delete your account?\n\n'
+        + 'This removes your profile, every card you have reviewed, and your sign-in. '
+        + 'It cannot be undone.\n\n'
+        + 'Click OK to send the deletion request now.'
+      );
+      if (!ok) return;
+      // Backend self-delete endpoint not yet wired. Fall back to a mailto so
+      // the user can request it manually; we pre-fill the email so it's one tap.
+      var subj = encodeURIComponent('Delete my account: ' + email);
+      var body = encodeURIComponent(
+        'Please permanently delete the account associated with this email: ' + email + '.\n\n'
+        + '(Sent from the in-app Settings page.)'
+      );
+      window.location.href = 'mailto:hello@thelatinmass.org?subject=' + subj + '&body=' + body;
+      setMsg(dangerMsg,
+        'Opened your email app with a pre-filled request to hello@thelatinmass.org. '
+        + 'Send it and we will delete your account within 48 hours.',
+        'ok'
+      );
     });
   }
 
@@ -2789,7 +3118,7 @@
     // their call) or always on the back. When neither, but an image exists,
     // we render a small "View image" hint button instead so the user can
     // opt-in to a clue without forcing it.
-    var hasImage = !!note.image_path;
+    var hasImage = !!note.image_path && SETTINGS.show_images;
     var showImage = hasImage && (CURRENT_FLIPPED || IMAGE_PEEKED);
     var imageBlock = '';
     if (showImage) {
@@ -2806,7 +3135,7 @@
                 + '</button>';
     }
     var audioBlock = '';
-    if (note.audio_path && CURRENT_FLIPPED) {
+    if (note.audio_path && CURRENT_FLIPPED && SETTINGS.play_audio) {
       audioBlock = '<div class="card-audio">'
                  + '<button id="replayBtn" class="audio-btn" type="button" aria-label="Play Latin audio">'
                    + '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">'

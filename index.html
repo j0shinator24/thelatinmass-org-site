@@ -776,6 +776,7 @@
         </div>
         <button type="submit" class="primary" id="submitBtn">Create account</button>
         <button type="button" class="link" id="signinToggle">Already have an account? Sign in</button>
+        <button type="button" class="link" id="forgotToggle" hidden>Forgot your password?</button>
       </form>
       <div class="oauth-divider"><span>Or continue with</span></div>
       <div class="oauth-buttons">
@@ -826,6 +827,8 @@
     var accessToken = params.get('access_token');
     var refreshToken = params.get('refresh_token');
     if (!accessToken || !refreshToken) return;
+    var type = params.get('type'); // "recovery" when arriving from a reset-password email
+
     var expiresIn = parseInt(params.get('expires_in') || '3600', 10);
     var expiresAt = Math.floor(Date.now() / 1000) + expiresIn;
     var session = {
@@ -834,17 +837,108 @@
       token_type: params.get('token_type') || 'bearer',
       expires_in: expiresIn,
       expires_at: expiresAt,
-      // We don't have the user object yet, but we can decode it from the JWT
-      // payload so /app/ has something to render before the next refresh.
       user: decodeJwtUser(accessToken) || { email: '' },
       provider_token: params.get('provider_token') || null,
     };
-    try { localStorage.setItem('tlm_session', JSON.stringify(session)); } catch (_) {}
-    // Clean the URL so a refresh doesn't re-process the hash.
+    // Clean the URL either way so a refresh doesn't re-process the hash.
     history.replaceState({}, document.title, window.location.pathname + window.location.search);
-    // Send them straight to study.
+
+    if (type === 'recovery') {
+      // Email-reset flow: don't store the session yet and don't bounce.
+      // Show a panel that asks the user to set a new password, using the
+      // recovery access_token as auth to call PUT /auth/v1/user.
+      window.__TLM_RECOVERY__ = session; // picked up by the recovery init below
+      return;
+    }
+
+    try { localStorage.setItem('tlm_session', JSON.stringify(session)); } catch (_) {}
     window.location.href = './app/';
   })();
+
+  // ─── Password-recovery panel ──────────────────────────────────────────
+  // When handleOAuthCallback detects a recovery hash, it stashes the short-
+  // lived session on window.__TLM_RECOVERY__ and bails. We render an overlay
+  // that lets the user choose a new password, then PUT /auth/v1/user with
+  // the recovery token, store the resulting session, and bounce to /app/.
+  document.addEventListener('DOMContentLoaded', function () {
+    var rec = window.__TLM_RECOVERY__;
+    if (!rec) return;
+
+    var overlay = document.createElement('div');
+    overlay.id = 'tlmRecoveryOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(20,20,20,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML = ''
+      + '<div style="background:#fff;max-width:420px;width:100%;padding:28px;border:1px solid var(--rule,#cfc3a8);box-shadow:0 6px 36px rgba(0,0,0,0.18)">'
+      +   '<h3 style="font-family:\'Cormorant Garamond\',serif;font-size:1.6rem;margin:0 0 6px;color:var(--burgundy,#7a1f1f)">Set a new password</h3>'
+      +   '<p style="margin:0 0 16px;font-size:0.92rem;color:#555;line-height:1.45">'
+      +     'You\'re signed in as <strong>' + (rec.user && rec.user.email ? rec.user.email : 'your account') + '</strong>. Pick a new password (8+ characters).'
+      +   '</p>'
+      +   '<form id="tlmRecoveryForm" action="javascript:void(0)" novalidate>'
+      +     '<label for="tlmNewPw" style="display:block;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:#888;margin-bottom:6px">New password</label>'
+      +     '<input type="password" id="tlmNewPw" required minlength="8" autocomplete="new-password" style="width:100%;padding:12px 14px;font-size:16px;border:1px solid #cfc3a8;background:#fff;margin-bottom:18px">'
+      +     '<button type="submit" id="tlmRecoverySubmit" class="primary" style="width:100%">Save new password</button>'
+      +     '<div id="tlmRecoveryMsg" style="display:none;margin-top:12px;padding:10px 12px;font-size:0.88rem"></div>'
+      +   '</form>'
+      + '</div>';
+    document.body.appendChild(overlay);
+
+    var pwIn = document.getElementById('tlmNewPw');
+    var btn = document.getElementById('tlmRecoverySubmit');
+    var msg = document.getElementById('tlmRecoveryMsg');
+    var busy = false;
+    setTimeout(function () { try { pwIn.focus(); } catch (_) {} }, 50);
+
+    function showMsg(text, kind) {
+      msg.textContent = text;
+      msg.style.display = 'block';
+      msg.style.background = kind === 'error' ? '#f8e8e8' : '#e6efe9';
+      msg.style.border = '1px solid ' + (kind === 'error' ? '#c08383' : '#7da090');
+      msg.style.color = kind === 'error' ? '#7a1f1f' : '#2d5d3f';
+    }
+
+    document.getElementById('tlmRecoveryForm').addEventListener('submit', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      if (busy) return;
+      var pw = pwIn.value || '';
+      if (pw.length < 8) { showMsg('Password must be at least 8 characters.', 'error'); return; }
+      busy = true;
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+
+      var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
+      var SUPABASE_ANON_KEY = 'sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi';
+      fetch(SUPABASE_URL + '/auth/v1/user', {
+        method: 'PUT',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + rec.access_token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: pw }),
+      }).then(function (r) {
+        return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; });
+      }).then(function (res) {
+        if (!res.ok) {
+          var em = (res.body && (res.body.msg || res.body.error_description || res.body.error)) || 'Could not update password';
+          showMsg(em, 'error');
+          busy = false;
+          btn.disabled = false;
+          btn.removeAttribute('aria-busy');
+          return;
+        }
+        // Password updated. The recovery session is now a regular session —
+        // persist it and bounce to study.
+        try { localStorage.setItem('tlm_session', JSON.stringify(rec)); } catch (_) {}
+        showMsg('Password updated. Opening the study app…', 'success');
+        setTimeout(function () { window.location.href = './app/'; }, 600);
+      }).catch(function (err) {
+        showMsg((err && err.message) || 'Network error. Try again.', 'error');
+        busy = false;
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+      });
+    });
+  });
 
   function decodeJwtUser(token) {
     try {
@@ -872,8 +966,10 @@
     var form = document.getElementById('signupForm');
     var emailEl = document.getElementById('email');
     var pwEl = document.getElementById('password');
+    var pwField = pwEl ? pwEl.closest('.field') : null;
     var submitBtn = document.getElementById('submitBtn');
     var toggleBtn = document.getElementById('signinToggle');
+    var forgotBtn = document.getElementById('forgotToggle');
     var msg = document.getElementById('msg');
     var signupCard = document.getElementById('signupCard');
     var continueCard = document.getElementById('continueCard');
@@ -931,13 +1027,27 @@
 
     function setMode(m) {
       mode = m;
-      submitBtn.textContent = m === 'signup' ? 'Create account' : 'Sign in';
-      toggleBtn.textContent = m === 'signup'
-        ? 'Already have an account? Sign in'
-        : "Don't have an account? Sign up";
+      if (m === 'forgot') {
+        submitBtn.textContent = 'Send reset link';
+        toggleBtn.textContent = 'Back to sign in';
+      } else {
+        submitBtn.textContent = m === 'signup' ? 'Create account' : 'Sign in';
+        toggleBtn.textContent = m === 'signup'
+          ? 'Already have an account? Sign in'
+          : "Don't have an account? Sign up";
+      }
       if (profileFieldsWrap) {
         profileFieldsWrap.classList.toggle('hidden', m !== 'signup');
       }
+      // Password field is irrelevant in forgot mode — hide it and drop the
+      // required attribute so the form can submit with just an email.
+      if (pwField) pwField.classList.toggle('hidden', m === 'forgot');
+      if (pwEl) {
+        if (m === 'forgot') pwEl.removeAttribute('required');
+        else pwEl.setAttribute('required', 'required');
+      }
+      // "Forgot password?" link only shown in signin mode.
+      if (forgotBtn) forgotBtn.hidden = (m !== 'signin');
     }
 
     function showMsg(text, kind) {
@@ -948,8 +1058,14 @@
 
     if (toggleBtn) {
       toggleBtn.addEventListener('click', function () {
-        setMode(mode === 'signup' ? 'signin' : 'signup');
+        // In forgot mode the toggle button reads "Back to sign in" and goes
+        // back to the signin form. Otherwise it flips signin <-> signup.
+        if (mode === 'forgot') setMode('signin');
+        else setMode(mode === 'signup' ? 'signin' : 'signup');
       });
+    }
+    if (forgotBtn) {
+      forgotBtn.addEventListener('click', function () { setMode('forgot'); });
     }
 
     function callAuth(path, body) {
@@ -996,6 +1112,30 @@
         submitBtn.disabled = false;
         submitBtn.removeAttribute('aria-busy');
         inFlight = false;
+        return false;
+      }
+      // Forgot-password flow: just need the email. POST /auth/v1/recover
+      // and tell Supabase to send the user back to the landing page with
+      // a recovery token in the hash. The hash handler at the top of
+      // this script catches that and shows the "set new password" panel.
+      if (mode === 'forgot') {
+        callAuth('recover', {
+          email: email,
+          options: { redirectTo: window.location.origin + '/' },
+        }).then(function (res) {
+          if (!res.ok) {
+            var em = (res.body && (res.body.msg || res.body.error_description || res.body.error)) || 'Could not send reset email';
+            showMsg(em, 'error');
+            return;
+          }
+          showMsg('If an account exists for ' + email + ', we just sent a password-reset link. Check your inbox (and spam).', 'success');
+        }).catch(function (err) {
+          showMsg((err && err.message) || 'Network error. Please try again.', 'error');
+        }).finally(function () {
+          submitBtn.disabled = false;
+          submitBtn.removeAttribute('aria-busy');
+          inFlight = false;
+        });
         return false;
       }
       if (!password || password.length < 8) {
