@@ -1032,7 +1032,7 @@
 </main>
 
 <script>
-  var APP_BUILD = 'v22-2026-05-11-max-cap-fuzz-preview';
+  var APP_BUILD = 'v23-2026-05-11-forecast-cap-overflow';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   var SUPABASE_URL = 'https://kugcbqfqataxbyjtaume.supabase.co';
@@ -1550,22 +1550,41 @@
         : 100;
     }
 
-    // Forward-project the daily new-card target across future buckets so
-    // the calendar reflects your COMMITMENT (target/day) on top of the
-    // scheduled DUE-REVIEW load (from FSRS). Today's already-done is
-    // already represented in the goal bar at top, so today's bucket gets
-    // 0 planned-new (the row's count column shows "X done" instead).
+    // Forward-project with MAX_PER_DAY cap: simulate day-by-day.
+    // If a day's FSRS-due reviews alone exceed MAX, the excess spills
+    // forward to the next day (they'll be "overdue" by then). New cards
+    // only fill remaining budget after due reviews are accounted for.
     var unseenLeft = countUnseenCards();
     var dailyTargetN = getDailyTarget();
+    var maxPerDay = getMaxPerDay();
     var totalDaysWithNew = 0;
-    for (var i = 0; i < buckets.length; i++) {
-      if (i === 0) { buckets[i].newPlanned = 0; continue; }
-      var planned = Math.min(dailyTargetN, unseenLeft);
+    // Spillover: due cards that couldn't fit today defer to tomorrow
+    var spillover = Math.max(0, buckets[0].count - maxPerDay);
+    buckets[0].newPlanned = 0;
+
+    for (var i = 1; i < buckets.length; i++) {
+      // Raw due = FSRS-scheduled for this day + overflow from prior days
+      var rawDue = buckets[i].count + spillover;
+      spillover = 0;
+
+      // If due alone exceeds MAX, cap it and spill the rest forward
+      if (rawDue > maxPerDay) {
+        spillover = rawDue - maxPerDay;
+        rawDue = maxPerDay;
+      }
+
+      // New cards fill whatever budget remains after due reviews
+      var newBudget = Math.max(0, maxPerDay - rawDue);
+      var planned = Math.min(dailyTargetN, unseenLeft, newBudget);
+
+      buckets[i].count = rawDue;
       buckets[i].newPlanned = planned;
       if (planned > 0) totalDaysWithNew++;
       unseenLeft -= planned;
     }
-    laterBucket.newPlanned = 0; // overflow shown only for due
+    // Any remaining spillover beyond 14 days lands in the overflow bucket
+    if (spillover > 0) laterBucket.count += spillover;
+    laterBucket.newPlanned = 0;
 
     var maxCount = Math.max(
       1,
