@@ -867,7 +867,35 @@
     min-width: 32px;
     text-align: right;
   }
+  .forecast-row .count-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    min-width: 72px;
+  }
+  .forecast-row .count-stack .num {
+    font-family: 'Cinzel', serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    color: var(--burgundy);
+    font-weight: 600;
+    line-height: 1;
+  }
+  .forecast-row .count-stack .breakdown {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--burgundy);
+    opacity: 0.78;
+    font-weight: 500;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
   .forecast-row.empty .count { color: var(--taupe); font-weight: 400; }
+  .forecast-row.empty .count-stack .num { color: var(--taupe); font-weight: 400; }
+  .forecast-row.empty .count-stack .breakdown { color: var(--taupe); }
   .forecast-row[data-bucket] { cursor: pointer; transition: background 0.15s; }
   .forecast-row[data-bucket]:hover { background: var(--cream-soft); }
   .forecast-row.expanded { border-color: var(--taupe-deep); }
@@ -1081,7 +1109,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v26-2026-05-11-today-breakdown';
+  var APP_BUILD = 'v27-2026-05-11-breakdown-right';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1795,25 +1823,24 @@
       if (b.isToday) {
         // Today's row mirrors the banner: "X / TODAY_GOAL" using the same
         // denominator everywhere. Bar fills to that goal's progress.
-        // Sub-label matches the other rows: "today · X due · Y new" so the
-        // composition is visible at a glance.
+        // Right-stack: big "14 / 19" + small "9 DUE · 10 NEW" underneath,
+        // both in burgundy so the breakdown is readable.
         var done = b.doneToday || 0;
         var goal = b.todayGoal || 0;
         var rightLabel = goal > 0 ? (done + ' / ' + goal) : (done + ' done');
         var planNew = (ts0.newIntroducedToday || 0) + (ts0.newRemaining || 0);
         if (planNew > goal) planNew = goal;
         var planDue = Math.max(0, goal - planNew);
-        var todaySubParts = ['today'];
-        if (goal > 0) {
-          todaySubParts.push(planDue + ' due');
-          todaySubParts.push(planNew + ' new');
-        }
+        var todayBreakdown = goal > 0 ? (planDue + ' due · ' + planNew + ' new') : '';
         html += '<div class="forecast-row today' + (done === 0 && goal === 0 ? ' empty' : '') + '" data-bucket="0">'
               + '<span class="day">' + escapeHtml(b.label)
-                + '<span class="sub">' + escapeHtml(todaySubParts.join(' · ')) + '</span>'
+                + '<span class="sub">today</span>'
               + '</span>'
               + '<span class="bar-wrap"><span class="bar" style="width:' + (b.goalPct || 0) + '%"></span></span>'
-              + '<span class="count">' + escapeHtml(rightLabel) + '</span>'
+              + '<span class="count-stack">'
+                + '<span class="num">' + escapeHtml(rightLabel) + '</span>'
+                + (todayBreakdown ? '<span class="breakdown">' + escapeHtml(todayBreakdown) + '</span>' : '')
+              + '</span>'
               + '</div>';
       } else {
         var due = b.count;
@@ -1822,18 +1849,18 @@
         var pct = Math.round(100 * total / maxCount);
         var subParts = [];
         if (b.sub) subParts.push(b.sub);
-        if (total > 0) {
-          subParts.push(due + ' due');
-          subParts.push(newP + ' new');
-        }
         var subLabel = subParts.join(' · ');
+        var breakdown = total > 0 ? (due + ' due · ' + newP + ' new') : '';
         var bucketIdx = buckets.indexOf(b);
         html += '<div class="forecast-row' + (total === 0 ? ' empty' : '') + (due > 0 ? ' has-preview' : '') + '" data-bucket="' + bucketIdx + '">'
               + '<span class="day">' + escapeHtml(b.label)
                 + (subLabel ? '<span class="sub">' + escapeHtml(subLabel) + '</span>' : '')
               + '</span>'
               + '<span class="bar-wrap"><span class="bar" style="width:' + pct + '%"></span></span>'
-              + '<span class="count">' + total + '</span>'
+              + '<span class="count-stack">'
+                + '<span class="num">' + total + '</span>'
+                + (breakdown ? '<span class="breakdown">' + escapeHtml(breakdown) + '</span>' : '')
+              + '</span>'
               + '</div>';
       }
     });
