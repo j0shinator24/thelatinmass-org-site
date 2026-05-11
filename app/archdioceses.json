@@ -1,0 +1,507 @@
+{
+  "countries": [
+    {
+      "code": "AU",
+      "name": "Australia",
+      "archdioceses": [
+        "Adelaide",
+        "Brisbane",
+        "Canberra-Goulburn",
+        "Hobart",
+        "Melbourne",
+        "Perth",
+        "Sydney"
+      ]
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "archdioceses": [
+        "Anchorage-Juneau",
+        "Atlanta",
+        "Baltimore",
+        "Boston",
+        "Chicago",
+        "Cincinnati",
+        "Denver",
+        "Detroit",
+        "Dubuque",
+        "Galveston-Houston",
+        "Hartford",
+        "Indianapolis",
+        "Kansas City in Kansas",
+        "Los Angeles",
+        "Louisville",
+        "Miami",
+        "Military Services USA",
+        "Milwaukee",
+        "Mobile",
+        "New Orleans",
+        "New York",
+        "Newark",
+        "Oklahoma City",
+        "Omaha",
+        "Philadelphia",
+        "Portland in Oregon",
+        "Saint Louis",
+        "Saint Paul and Minneapolis",
+        "San Antonio",
+        "San Francisco",
+        "Santa Fe",
+        "Seattle",
+        "Washington"
+      ]
+    },
+    {
+      "code": "GB",
+      "name": "United Kingdom",
+      "archdioceses": [
+        "Birmingham",
+        "Cardiff (Wales)",
+        "Edinburgh and Saint Andrews (Scotland)",
+        "Glasgow (Scotland)",
+        "Liverpool",
+        "Southwark",
+        "Westminster"
+      ]
+    },
+    {
+      "code": "IE",
+      "name": "Ireland",
+      "archdioceses": [
+        "Armagh",
+        "Cashel and Emly",
+        "Dublin",
+        "Tuam"
+      ]
+    },
+    {
+      "code": "CA",
+      "name": "Canada",
+      "archdioceses": [
+        "Edmonton",
+        "Gatineau",
+        "Grouard-McLennan",
+        "Halifax-Yarmouth",
+        "Keewatin-Le Pas",
+        "Kingston",
+        "Moncton",
+        "Montreal",
+        "Ottawa-Cornwall",
+        "Quebec",
+        "Regina",
+        "Rimouski",
+        "Saint Boniface",
+        "Saint John's",
+        "Sherbrooke",
+        "Toronto",
+        "Vancouver",
+        "Winnipeg"
+      ]
+    },
+    {
+      "code": "NZ",
+      "name": "New Zealand",
+      "archdioceses": [
+        "Wellington"
+      ]
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "archdioceses": [
+        "Aix-en-Provence",
+        "Albi",
+        "Auch",
+        "Avignon",
+        "Besancon",
+        "Bordeaux",
+        "Bourges",
+        "Cambrai",
+        "Chambery",
+        "Clermont",
+        "Dijon",
+        "Lille",
+        "Lyon",
+        "Marseille",
+        "Mont-de-Marsan-Aire",
+        "Montpellier",
+        "Paris",
+        "Poitiers",
+        "Reims",
+        "Rennes",
+        "Rouen",
+        "Sens",
+        "Strasbourg (sui iuris)",
+        "Toulouse",
+        "Tours"
+      ]
+    },
+    {
+      "code": "IT",
+      "name": "Italy",
+      "archdioceses": [
+        "Ancona-Osimo",
+        "Bari-Bitonto",
+        "Bologna",
+        "Cagliari",
+        "Catanzaro-Squillace",
+        "Crotone-Santa Severina",
+        "Florence",
+        "Genoa",
+        "Milan",
+        "Modena-Nonantola",
+        "Naples",
+        "Palermo",
+        "Perugia-Citta della Pieve",
+        "Pescara-Penne",
+        "Reggio Calabria-Bova",
+        "Rome (Diocese of Rome)",
+        "Spoleto-Norcia",
+        "Taranto",
+        "Trento",
+        "Turin",
+        "Udine",
+        "Venice"
+      ]
+    },
+    {
+      "code": "ES",
+      "name": "Spain",
+      "archdioceses": [
+        "Barcelona",
+        "Burgos",
+        "Granada",
+        "Madrid",
+        "Mérida-Badajoz",
+        "Oviedo",
+        "Pamplona-Tudela",
+        "Santiago de Compostela",
+        "Seville",
+        "Tarragona",
+        "Toledo",
+        "Valencia",
+        "Valladolid",
+        "Zaragoza"
+      ]
+    },
+    {
+      "code": "DE",
+      "name": "Germany",
+      "archdioceses": [
+        "Bamberg",
+        "Berlin",
+        "Cologne",
+        "Freiburg",
+        "Hamburg",
+        "Munich and Freising",
+        "Paderborn"
+      ]
+    },
+    {
+      "code": "PL",
+      "name": "Poland",
+      "archdioceses": [
+        "Bialystok",
+        "Czestochowa",
+        "Gdansk",
+        "Gniezno",
+        "Katowice",
+        "Krakow",
+        "Lodz",
+        "Lublin",
+        "Poznan",
+        "Przemysl",
+        "Szczecin-Kamien",
+        "Warmia",
+        "Warsaw",
+        "Wroclaw"
+      ]
+    },
+    {
+      "code": "NL",
+      "name": "Netherlands",
+      "archdioceses": [
+        "Utrecht"
+      ]
+    },
+    {
+      "code": "BE",
+      "name": "Belgium",
+      "archdioceses": [
+        "Mechelen-Brussels"
+      ]
+    },
+    {
+      "code": "AT",
+      "name": "Austria",
+      "archdioceses": [
+        "Salzburg",
+        "Vienna"
+      ]
+    },
+    {
+      "code": "PT",
+      "name": "Portugal",
+      "archdioceses": [
+        "Braga",
+        "Evora",
+        "Lisbon"
+      ]
+    },
+    {
+      "code": "CH",
+      "name": "Switzerland",
+      "archdioceses": [
+        "Vaduz"
+      ]
+    },
+    {
+      "code": "MX",
+      "name": "Mexico",
+      "archdioceses": [
+        "Acapulco",
+        "Antequera",
+        "Chihuahua",
+        "Durango",
+        "Guadalajara",
+        "Hermosillo",
+        "Jalapa",
+        "Leon",
+        "Merida (Yucatan)",
+        "Mexico (Federal District)",
+        "Monterrey",
+        "Morelia",
+        "Puebla de los Angeles",
+        "San Luis Potosi",
+        "Tijuana",
+        "Tlalnepantla",
+        "Tulancingo",
+        "Yucatan"
+      ]
+    },
+    {
+      "code": "BR",
+      "name": "Brazil",
+      "archdioceses": [
+        "Aparecida",
+        "Belem do Para",
+        "Belo Horizonte",
+        "Botucatu",
+        "Brasilia",
+        "Campinas",
+        "Campo Grande",
+        "Cascavel",
+        "Cuiaba",
+        "Curitiba",
+        "Diamantina",
+        "Florianopolis",
+        "Fortaleza",
+        "Goiania",
+        "Juiz de Fora",
+        "Londrina",
+        "Maceio",
+        "Manaus",
+        "Maringa",
+        "Mariana",
+        "Montes Claros",
+        "Natal",
+        "Niteroi",
+        "Olinda and Recife",
+        "Palmas",
+        "Paraiba",
+        "Porto Alegre",
+        "Porto Velho",
+        "Pouso Alegre",
+        "Ribeirao Preto",
+        "Rio de Janeiro",
+        "Salvador da Bahia",
+        "Santarem",
+        "Sao Luiz do Maranhao",
+        "Sao Paulo",
+        "Sao Salvador da Bahia",
+        "Sao Sebastiao do Rio de Janeiro",
+        "Sorocaba",
+        "Teresina",
+        "Uberaba",
+        "Vitoria",
+        "Vitoria da Conquista"
+      ]
+    },
+    {
+      "code": "AR",
+      "name": "Argentina",
+      "archdioceses": [
+        "Bahia Blanca",
+        "Buenos Aires",
+        "Cordoba",
+        "Corrientes",
+        "La Plata",
+        "Mendoza",
+        "Mercedes-Lujan",
+        "Parana",
+        "Resistencia",
+        "Rosario",
+        "Salta",
+        "San Juan de Cuyo",
+        "Santa Fe de la Vera Cruz",
+        "Tucuman"
+      ]
+    },
+    {
+      "code": "CL",
+      "name": "Chile",
+      "archdioceses": [
+        "Antofagasta",
+        "Concepcion",
+        "La Serena",
+        "Puerto Montt",
+        "Santiago de Chile"
+      ]
+    },
+    {
+      "code": "CO",
+      "name": "Colombia",
+      "archdioceses": [
+        "Barranquilla",
+        "Bogota",
+        "Bucaramanga",
+        "Cali",
+        "Cartagena",
+        "Ibague",
+        "Manizales",
+        "Medellin",
+        "Nueva Pamplona",
+        "Popayan",
+        "Santa Fe de Antioquia",
+        "Tunja",
+        "Villavicencio"
+      ]
+    },
+    {
+      "code": "PH",
+      "name": "Philippines",
+      "archdioceses": [
+        "Caceres",
+        "Cagayan de Oro",
+        "Capiz",
+        "Cebu",
+        "Cotabato",
+        "Davao",
+        "Jaro",
+        "Lingayen-Dagupan",
+        "Lipa",
+        "Manila",
+        "Nueva Segovia",
+        "Ozamis",
+        "Palo",
+        "San Fernando",
+        "Tuguegarao",
+        "Zamboanga"
+      ]
+    },
+    {
+      "code": "IN",
+      "name": "India",
+      "archdioceses": [
+        "Agra",
+        "Bangalore",
+        "Bhopal",
+        "Bombay",
+        "Calcutta",
+        "Changanacherry",
+        "Cuttack-Bhubaneswar",
+        "Delhi",
+        "Ernakulam-Angamaly",
+        "Gandhinagar",
+        "Goa and Daman",
+        "Guwahati",
+        "Hyderabad",
+        "Imphal",
+        "Kottayam",
+        "Madras and Mylapore",
+        "Madurai",
+        "Nagpur",
+        "Patna",
+        "Pondicherry and Cuddalore",
+        "Ranchi",
+        "Shillong",
+        "Tellicherry",
+        "Thiruvananthapuram (Trivandrum)",
+        "Trichur",
+        "Verapoly",
+        "Visakhapatnam"
+      ]
+    },
+    {
+      "code": "VN",
+      "name": "Vietnam",
+      "archdioceses": [
+        "Hanoi",
+        "Hue",
+        "Ho Chi Minh City"
+      ]
+    },
+    {
+      "code": "KR",
+      "name": "South Korea",
+      "archdioceses": [
+        "Daegu",
+        "Gwangju",
+        "Seoul"
+      ]
+    },
+    {
+      "code": "JP",
+      "name": "Japan",
+      "archdioceses": [
+        "Nagasaki",
+        "Osaka",
+        "Tokyo"
+      ]
+    },
+    {
+      "code": "ZA",
+      "name": "South Africa",
+      "archdioceses": [
+        "Bloemfontein",
+        "Cape Town",
+        "Durban",
+        "Johannesburg",
+        "Pretoria"
+      ]
+    },
+    {
+      "code": "NG",
+      "name": "Nigeria",
+      "archdioceses": [
+        "Abuja",
+        "Benin City",
+        "Calabar",
+        "Ibadan",
+        "Jos",
+        "Kaduna",
+        "Lagos",
+        "Onitsha",
+        "Owerri"
+      ]
+    },
+    {
+      "code": "KE",
+      "name": "Kenya",
+      "archdioceses": [
+        "Kisumu",
+        "Mombasa",
+        "Nairobi",
+        "Nyeri"
+      ]
+    },
+    {
+      "code": "ZZ",
+      "name": "Other / Prefer not to say",
+      "archdioceses": [
+        "Other"
+      ]
+    }
+  ]
+}

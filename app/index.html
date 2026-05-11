@@ -1063,6 +1063,136 @@
   .rating-breakdown .rb-3 .num { color: var(--green); }
   .rating-breakdown .rb-4 .num { color: var(--taupe-deep); }
 
+  /* ─── Profile setup + Leaderboard ─── */
+  .profile-form { max-width: 480px; margin: 0 auto; }
+  .profile-form .field { margin-bottom: 16px; }
+  .profile-form label {
+    display: block;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--taupe-dark);
+    margin-bottom: 6px;
+  }
+  .profile-form input,
+  .profile-form select {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 16px;
+    font-family: 'Lato', sans-serif;
+    border: 1px solid var(--rule);
+    background: #fff;
+    color: var(--ink);
+    appearance: none;
+    border-radius: 0;
+  }
+  .profile-form select:disabled { background: var(--cream); color: var(--taupe); }
+  .profile-form .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .profile-form .help {
+    margin-top: -6px;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+    color: var(--taupe-dark);
+    line-height: 1.5;
+  }
+  .profile-msg {
+    margin-top: 14px;
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    display: none;
+  }
+
+  .leaderboard-list { display: flex; flex-direction: column; gap: 6px; max-width: 720px; margin: 16px auto 0; }
+  .lb-row {
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    background: #fff;
+    border: 1px solid var(--rule);
+    padding: 14px 18px;
+  }
+  .lb-row.you { border-color: var(--burgundy); background: var(--cream-soft); }
+  .lb-rank {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--burgundy);
+    text-align: center;
+  }
+  .lb-row.you .lb-rank { color: var(--burgundy); }
+  .lb-rank-medal { font-size: 1.3rem; line-height: 1; }
+  .lb-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .lb-name .you-tag {
+    margin-left: 8px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--burgundy);
+    background: var(--cream);
+    padding: 2px 6px;
+  }
+  .lb-sub {
+    font-family: 'Cinzel', serif;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    margin-top: 3px;
+  }
+  .lb-metric {
+    text-align: right;
+  }
+  .lb-metric .num {
+    font-family: 'Cinzel', serif;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--burgundy);
+    line-height: 1;
+  }
+  .lb-metric .lbl {
+    font-family: 'Cinzel', serif;
+    font-size: 0.55rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    margin-top: 3px;
+  }
+  .lb-empty {
+    text-align: center;
+    padding: 32px 20px;
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    font-size: 0.95rem;
+    color: var(--taupe-dark);
+    line-height: 1.6;
+  }
+  .lb-tabs {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin: 18px 0 8px;
+  }
+  .lb-tab {
+    background: transparent;
+    border: 1px solid var(--rule);
+    color: var(--taupe-dark);
+    padding: 8px 16px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .lb-tab.active { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
+
   /* ─── Mobile ─── */
   @media (max-width: 560px) {
     main { padding: 20px 14px 60px; }
@@ -1097,6 +1227,7 @@
     <button id="navDecks" class="nav-link" data-view="decks">Decks</button>
     <button id="navCalendar" class="nav-link" data-view="calendar">Calendar</button>
     <button id="navStats" class="nav-link" data-view="stats">Stats</button>
+    <button id="navLeaderboard" class="nav-link" data-view="leaderboard">Leaderboard</button>
     <span class="user" id="userEmail"></span>
     <button id="signoutBtn">Sign out</button>
   </nav>
@@ -1109,7 +1240,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v28-2026-05-11-cross-device-sync';
+  var APP_BUILD = 'v29-2026-05-11-leaderboard';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1276,6 +1407,8 @@
   // ─── State ──────────────────────────────────────────────────────────────
   var STATIC = null;
   var SESSION = null;
+  var PROFILE = null;          // row from public.profiles for the signed-in user
+  var ARCHDIOCESES = null;     // { countries: [{ code, name, archdioceses: [...] }] }
   var USER_STATE = {}; // card_id -> { due, stability, difficulty, reps, lapses, state, last_review }
   var ACTIVE_DECK = null;
   var QUEUE = [];
@@ -1441,7 +1574,7 @@
     console.info('[tlm-app] boot ok, user:', SESSION.user && SESSION.user.email);
     document.getElementById('userEmail').textContent = (SESSION.user && SESSION.user.email) || '';
     wireNav();
-    Promise.all([fetchStatic(), fetchUserState(), fetchSettingsRemote()])
+    Promise.all([fetchStatic(), fetchUserState(), fetchSettingsRemote(), fetchProfile(), fetchArchdioceses()])
       .then(function () { showDeckPicker(); })
       .catch(function (err) {
         // 401 from fetchUserState would already have triggered a refresh+retry
@@ -1485,7 +1618,7 @@
   var ACTIVE_VIEW = 'decks';
   function setActiveView(v) {
     ACTIVE_VIEW = v;
-    var ids = { decks: 'navDecks', calendar: 'navCalendar', stats: 'navStats' };
+    var ids = { decks: 'navDecks', calendar: 'navCalendar', stats: 'navStats', leaderboard: 'navLeaderboard' };
     Object.keys(ids).forEach(function (k) {
       var el = document.getElementById(ids[k]);
       if (!el) return;
@@ -1498,6 +1631,7 @@
       decks: showDeckPicker,
       calendar: function () { showCalendar(); },
       stats: function () { showStats(); },
+      leaderboard: function () { showLeaderboard(); },
     };
     Object.keys(byView).forEach(function (k) {
       var btn = document.querySelector('[data-view="' + k + '"]');
@@ -1675,6 +1809,39 @@
       USER_STATE = {};
       (rows || []).forEach(function (r) { USER_STATE[r.card_id] = r; });
     });
+  }
+
+  // ─── Profile + archdiocese dataset ─────────────────────────────────────
+  // PROFILE holds the row from public.profiles for the signed-in user.
+  // We need first_name / last_name / country / archdiocese before showing
+  // the leaderboard — if any are missing, we route through showProfileSetup.
+
+  function fetchProfile() {
+    if (!SESSION || !SESSION.user || !SESSION.user.id) return Promise.resolve();
+    return rest('/profiles?select=first_name,last_name,country,archdiocese,settings&user_id=eq.' + SESSION.user.id, SESSION)
+      .then(function (rows) {
+        PROFILE = (rows && rows[0]) || null;
+      })
+      .catch(function (err) {
+        console.warn('[tlm-app] profile fetch failed:', err && err.message);
+      });
+  }
+
+  function fetchArchdioceses() {
+    if (ARCHDIOCESES) return Promise.resolve(ARCHDIOCESES);
+    return fetch('archdioceses.json?v=' + APP_BUILD)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (data && data.countries) ARCHDIOCESES = data;
+        return ARCHDIOCESES;
+      })
+      .catch(function (err) { console.warn('[tlm-app] archdioceses fetch failed:', err); return null; });
+  }
+
+  function profileIsComplete(p) {
+    return !!(p && p.first_name && p.first_name.trim()
+              && p.country && p.country.trim()
+              && p.archdiocese && p.archdiocese.trim());
   }
 
   // ─── Deck picker ────────────────────────────────────────────────────────
@@ -2289,6 +2456,238 @@
     var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return months[d.getMonth()] + ' ' + d.getDate();
   }
+
+  // ─── Profile setup ──────────────────────────────────────────────────────
+  // First-time signed-in users (and anyone who pre-dated the leaderboard
+  // feature) hit this when they tap Leaderboard. Once first_name + country
+  // + archdiocese are filled in, they get routed straight to the rankings.
+
+  function showProfileSetup(opts) {
+    setActiveView('leaderboard'); // keep the leaderboard tab highlighted
+    var main = document.getElementById('main');
+    var p = PROFILE || {};
+    var ds = ARCHDIOCESES || { countries: [] };
+
+    var countryOpts = '<option value="">Select country…</option>'
+      + ds.countries.map(function (c) {
+          var sel = (p.country === c.name) ? ' selected' : '';
+          return '<option value="' + escapeHtml(c.name) + '"' + sel + '>' + escapeHtml(c.name) + '</option>';
+        }).join('');
+
+    var initialArchOpts;
+    if (p.country) {
+      var country = ds.countries.find(function (c) { return c.name === p.country; });
+      initialArchOpts = '<option value="">Select archdiocese…</option>'
+        + (country ? country.archdioceses.map(function (a) {
+            var sel = (p.archdiocese === a) ? ' selected' : '';
+            return '<option value="' + escapeHtml(a) + '"' + sel + '>' + escapeHtml(a) + '</option>';
+          }).join('') : '');
+    } else {
+      initialArchOpts = '<option value="">Pick a country first</option>';
+    }
+
+    var headline = (opts && opts.reason === 'leaderboard')
+      ? 'Tell us where you worship'
+      : 'Complete your profile';
+    var lede = (opts && opts.reason === 'leaderboard')
+      ? 'The leaderboard groups users by archdiocese. Add yours and you\'ll see how the local faithful are tracking.'
+      : 'Just a few details so the leaderboard can place you with your local archdiocese.';
+
+    main.innerHTML = '<div class="view-header">'
+                   + '<span class="eyebrow">Profile</span>'
+                   + '<h2>' + escapeHtml(headline) + '</h2>'
+                   + '<p class="lede">' + escapeHtml(lede) + '</p>'
+                   + '</div>'
+                   + '<form id="profileForm" class="profile-form" action="javascript:void(0)" novalidate>'
+                     + '<div class="row-2">'
+                       + '<div class="field">'
+                         + '<label for="pfFirst">First name</label>'
+                         + '<input type="text" id="pfFirst" name="first_name" required autocomplete="given-name" value="' + escapeHtml(p.first_name || '') + '">'
+                       + '</div>'
+                       + '<div class="field">'
+                         + '<label for="pfLast">Last name</label>'
+                         + '<input type="text" id="pfLast" name="last_name" autocomplete="family-name" value="' + escapeHtml(p.last_name || '') + '">'
+                       + '</div>'
+                     + '</div>'
+                     + '<p class="help">Shown on the leaderboard as <em>First L.</em> (first name + last initial). Full name is never displayed publicly.</p>'
+                     + '<div class="field">'
+                       + '<label for="pfCountry">Country</label>'
+                       + '<select id="pfCountry" name="country" required>' + countryOpts + '</select>'
+                     + '</div>'
+                     + '<div class="field">'
+                       + '<label for="pfArch">Archdiocese</label>'
+                       + '<select id="pfArch" name="archdiocese" required ' + (p.country ? '' : 'disabled') + '>' + initialArchOpts + '</select>'
+                     + '</div>'
+                     + '<button type="submit" id="pfSubmit" class="reveal-btn">Save profile</button>'
+                     + '<div id="pfMsg" class="profile-msg" role="status" aria-live="polite"></div>'
+                   + '</form>';
+
+    var countrySel = document.getElementById('pfCountry');
+    var archSel = document.getElementById('pfArch');
+    var firstEl = document.getElementById('pfFirst');
+    var lastEl = document.getElementById('pfLast');
+    var btn = document.getElementById('pfSubmit');
+    var msg = document.getElementById('pfMsg');
+
+    function populateArch(countryName, preserve) {
+      var country = ds.countries.find(function (c) { return c.name === countryName; });
+      if (!country) {
+        archSel.innerHTML = '<option value="">Pick a country first</option>';
+        archSel.disabled = true;
+        return;
+      }
+      archSel.disabled = false;
+      archSel.innerHTML = '<option value="">Select archdiocese…</option>'
+        + country.archdioceses.map(function (a) {
+            var sel = (preserve && preserve === a) ? ' selected' : '';
+            return '<option value="' + escapeHtml(a) + '"' + sel + '>' + escapeHtml(a) + '</option>';
+          }).join('');
+    }
+    countrySel.addEventListener('change', function () { populateArch(countrySel.value, null); });
+
+    document.getElementById('profileForm').addEventListener('submit', function (e) {
+      if (e && e.preventDefault) e.preventDefault();
+      msg.style.display = 'none';
+      var payload = {
+        first_name: (firstEl.value || '').trim(),
+        last_name: (lastEl.value || '').trim() || null,
+        country: countrySel.value || null,
+        archdiocese: archSel.value || null,
+      };
+      if (!payload.first_name) {
+        showProfileMsg(msg, 'First name is required.', 'error');
+        return;
+      }
+      if (!payload.country) {
+        showProfileMsg(msg, 'Pick your country.', 'error');
+        return;
+      }
+      if (!payload.archdiocese) {
+        showProfileMsg(msg, 'Pick your archdiocese.', 'error');
+        return;
+      }
+      btn.disabled = true;
+      btn.setAttribute('aria-busy', 'true');
+      rest('/profiles?user_id=eq.' + SESSION.user.id, SESSION, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: payload,
+      }).then(function (rows) {
+        if (rows && rows[0]) {
+          PROFILE = Object.assign({}, PROFILE || {}, rows[0]);
+        } else {
+          PROFILE = Object.assign({}, PROFILE || {}, payload);
+        }
+        showProfileMsg(msg, 'Saved. Loading leaderboard…', 'success');
+        setTimeout(showLeaderboard, 400);
+      }).catch(function (err) {
+        btn.disabled = false;
+        btn.removeAttribute('aria-busy');
+        showProfileMsg(msg, (err && err.message) || 'Could not save profile. Try again.', 'error');
+      });
+    });
+  }
+
+  function showProfileMsg(el, text, kind) {
+    el.textContent = text;
+    el.style.display = 'block';
+    el.style.background = kind === 'error' ? '#f8e8e8' : '#e6efe9';
+    el.style.border = '1px solid ' + (kind === 'error' ? '#c08383' : '#7da090');
+    el.style.color = kind === 'error' ? 'var(--burgundy)' : 'var(--green)';
+  }
+
+  // ─── Leaderboard view ───────────────────────────────────────────────────
+  // Shows every user in the signed-in user's archdiocese, ranked by the
+  // active metric (cards seen by default, switchable to total reviews or
+  // mature cards). Privacy: display_name is computed server-side as
+  // 'First L.' so we never ship full names over the wire.
+
+  var LB_METRIC = 'cards_seen'; // cards_seen | total_reviews | cards_mature
+
+  function showLeaderboard() {
+    setActiveView('leaderboard');
+    if (!profileIsComplete(PROFILE)) {
+      showProfileSetup({ reason: 'leaderboard' });
+      return;
+    }
+    var main = document.getElementById('main');
+    main.innerHTML = '<div class="status-msg">Loading leaderboard…</div>';
+    rest('/leaderboard?select=user_id,display_name,country,archdiocese,cards_seen,cards_mature,total_reviews,total_lapses,last_review_at&archdiocese=eq.' + encodeURIComponent(PROFILE.archdiocese) + '&order=' + LB_METRIC + '.desc&limit=200', SESSION)
+      .then(function (rows) {
+        renderLeaderboard(rows || []);
+      })
+      .catch(function (err) {
+        showErr('Failed to load leaderboard: ' + (err.message || err));
+      });
+  }
+
+  function renderLeaderboard(rows) {
+    var main = document.getElementById('main');
+    var metricLabels = {
+      cards_seen: 'Cards Studied',
+      total_reviews: 'Total Reviews',
+      cards_mature: 'Cards Mature',
+    };
+    var metric = LB_METRIC;
+    var myIdx = -1;
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i].user_id === SESSION.user.id) { myIdx = i; break; }
+    }
+
+    var header = '<div class="view-header">'
+               + '<span class="eyebrow">Leaderboard</span>'
+               + '<h2>' + escapeHtml(PROFILE.archdiocese) + '</h2>'
+               + '<p class="lede">' + rows.length + (rows.length === 1 ? ' faithful' : ' faithful') + ' from the Archdiocese of ' + escapeHtml(PROFILE.archdiocese) + '. Rankings refresh as people study.</p>'
+               + '</div>';
+
+    var tabs = '<div class="lb-tabs">'
+             + '<button type="button" class="lb-tab' + (metric === 'cards_seen' ? ' active' : '') + '" data-metric="cards_seen">Studied</button>'
+             + '<button type="button" class="lb-tab' + (metric === 'total_reviews' ? ' active' : '') + '" data-metric="total_reviews">Reviews</button>'
+             + '<button type="button" class="lb-tab' + (metric === 'cards_mature' ? ' active' : '') + '" data-metric="cards_mature">Mature</button>'
+             + '</div>';
+
+    if (rows.length === 0) {
+      main.innerHTML = header + tabs
+        + '<div class="lb-empty">No one from your archdiocese has started studying yet. Share the app with your parish to fill out the board.</div>';
+      wireLbTabs();
+      return;
+    }
+
+    var medals = ['', '\u{1F947}', '\u{1F948}', '\u{1F949}'];
+    var listHtml = rows.map(function (r, idx) {
+      var rank = idx + 1;
+      var rankDisplay = rank <= 3 ? '<span class="lb-rank-medal">' + medals[rank] + '</span>' : '#' + rank;
+      var isMe = r.user_id === SESSION.user.id;
+      var num = r[metric] || 0;
+      var subBits = [];
+      if (r.cards_mature) subBits.push(r.cards_mature + ' mature');
+      if (r.total_reviews) subBits.push(r.total_reviews + ' reviews');
+      return '<div class="lb-row' + (isMe ? ' you' : '') + '">'
+           + '<div class="lb-rank">' + rankDisplay + '</div>'
+           + '<div>'
+             + '<div class="lb-name">' + escapeHtml(r.display_name || 'Anonymous') + (isMe ? '<span class="you-tag">you</span>' : '') + '</div>'
+             + (subBits.length ? '<div class="lb-sub">' + escapeHtml(subBits.join(' · ')) + '</div>' : '')
+           + '</div>'
+           + '<div class="lb-metric">'
+             + '<div class="num">' + num + '</div>'
+             + '<div class="lbl">' + escapeHtml(metricLabels[metric]) + '</div>'
+           + '</div>'
+           + '</div>';
+    }).join('');
+
+    main.innerHTML = header + tabs + '<div class="leaderboard-list">' + listHtml + '</div>';
+    wireLbTabs();
+  }
+
+  function wireLbTabs() {
+    document.querySelectorAll('.lb-tab[data-metric]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        LB_METRIC = btn.dataset.metric;
+        showLeaderboard();
+      });
+    });
+  }
+
 
   // ─── Review session ─────────────────────────────────────────────────────
   function startDeck(deckId) {
