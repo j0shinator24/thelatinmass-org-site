@@ -350,6 +350,41 @@
     outline: none;
     border-color: var(--taupe);
   }
+  .field select {
+    background: #fff;
+    border: 1px solid var(--rule);
+    color: var(--ink);
+    padding: 14px 14px;
+    font-size: 16px;
+    line-height: 1.4;
+    font-family: 'Lato', sans-serif;
+    transition: border-color 0.2s;
+    width: 100%;
+    min-height: 48px;
+    border-radius: 0;
+    -webkit-appearance: none;
+       -moz-appearance: none;
+            appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1.5l5 5 5-5' stroke='%235A5048' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+  }
+  .field select:focus {
+    outline: none;
+    border-color: var(--taupe);
+  }
+  .field select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .name-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .name-row .field { margin-bottom: 18px; }
+  .profile-fields-wrap.hidden { display: none; }
   button.primary {
     background: var(--burgundy);
     color: #fff;
@@ -534,6 +569,7 @@
 
     .signup-band { padding: 64px 20px; }
     .form-card { padding: 28px 20px; }
+    .name-row { grid-template-columns: 1fr; gap: 0; }
 
     .donate-band { padding: 64px 20px; }
     /* Stack the parishes vertically; the 48px gap was producing awkward two-line wraps */
@@ -625,6 +661,38 @@
     </div>
     <div class="form-card" id="signupCard">
       <form id="signupForm" action="javascript:void(0)" method="post" novalidate>
+        <div class="profile-fields-wrap" id="profileFields">
+          <div class="name-row">
+            <div class="field">
+              <label for="firstName">First name</label>
+              <input type="text" id="firstName" name="first_name"
+                     autocomplete="given-name"
+                     autocapitalize="words"
+                     enterkeyhint="next"
+                     placeholder="e.g. Joshua">
+            </div>
+            <div class="field">
+              <label for="lastName">Last name</label>
+              <input type="text" id="lastName" name="last_name"
+                     autocomplete="family-name"
+                     autocapitalize="words"
+                     enterkeyhint="next"
+                     placeholder="e.g. Mowat">
+            </div>
+          </div>
+          <div class="field">
+            <label for="country">Country</label>
+            <select id="country" name="country">
+              <option value="">Select country...</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="archdiocese">Archdiocese</label>
+            <select id="archdiocese" name="archdiocese" disabled>
+              <option value="">Select country first...</option>
+            </select>
+          </div>
+        </div>
         <div class="field">
           <label for="email">Email</label>
           <input type="email" id="email" name="email" required
@@ -696,9 +764,9 @@
 </footer>
 
 <script>
-  /* Build: signup-v4-oauth-2026-05-10
+  /* Build: signup-v5-profile-2026-05-11
      Visible in DevTools console so you can verify the cache-busted version is live. */
-  console.info('[thelatinmass] signup-v4-oauth-2026-05-10');
+  console.info('[thelatinmass] signup-v5-profile-2026-05-11');
 
   // ─── OAuth callback: when Supabase redirects back here after a provider
   // sign-in, the access/refresh tokens come in the URL hash (RFC 6749 implicit
@@ -767,6 +835,12 @@
     var signupHeading = document.getElementById('signup-heading');
     var signupLede = document.getElementById('signupLede');
     var signoutBtn = document.getElementById('signoutBtn');
+    var firstNameEl = document.getElementById('firstName');
+    var lastNameEl = document.getElementById('lastName');
+    var countryEl = document.getElementById('country');
+    var archdiocEl = document.getElementById('archdiocese');
+    var profileFieldsWrap = document.getElementById('profileFields');
+    var archdiocData = [];
 
     if (!form || !emailEl || !pwEl || !submitBtn) {
       console.error('[thelatinmass] Signup form elements missing');
@@ -812,6 +886,9 @@
       toggleBtn.textContent = m === 'signup'
         ? 'Already have an account? Sign in'
         : "Don't have an account? Sign up";
+      if (profileFieldsWrap) {
+        profileFieldsWrap.classList.toggle('hidden', m !== 'signup');
+      }
     }
 
     function showMsg(text, kind) {
@@ -880,8 +957,41 @@
         return false;
       }
 
+      // Profile fields (signup only)
+      var profileData = null;
+      if (mode === 'signup') {
+        var fn = (firstNameEl ? firstNameEl.value : '').trim();
+        var ln = (lastNameEl ? lastNameEl.value : '').trim();
+        var co = (countryEl ? countryEl.value : '').trim();
+        var ad = (archdiocEl ? archdiocEl.value : '').trim();
+        if (!fn) {
+          showMsg('Please enter your first name.', 'error');
+          submitBtn.disabled = false;
+          submitBtn.removeAttribute('aria-busy');
+          inFlight = false;
+          return false;
+        }
+        if (!co) {
+          showMsg('Please select your country.', 'error');
+          submitBtn.disabled = false;
+          submitBtn.removeAttribute('aria-busy');
+          inFlight = false;
+          return false;
+        }
+        if (!ad) {
+          showMsg('Please select your archdiocese.', 'error');
+          submitBtn.disabled = false;
+          submitBtn.removeAttribute('aria-busy');
+          inFlight = false;
+          return false;
+        }
+        profileData = { first_name: fn, last_name: ln, country: co, archdiocese: ad };
+      }
+
       var path = mode === 'signup' ? 'signup' : 'token?grant_type=password';
-      callAuth(path, { email: email, password: password })
+      var authBody = { email: email, password: password };
+      if (profileData) authBody.data = profileData;
+      callAuth(path, authBody)
         .then(function (res) {
           if (!res.ok) {
             var errMsg = (res.body && (res.body.msg || res.body.error_description || res.body.error)) || 'Request failed';
@@ -890,6 +1000,19 @@
           }
           if (res.body && res.body.access_token) {
             try { localStorage.setItem('tlm_session', JSON.stringify(res.body)); } catch (_) {}
+            // Write profile fields to profiles table on signup
+            if (mode === 'signup' && profileData && res.body.user && res.body.user.id) {
+              fetch(SUPABASE_URL + '/rest/v1/profiles?user_id=eq.' + res.body.user.id, {
+                method: 'PATCH',
+                headers: {
+                  'apikey': SUPABASE_ANON_KEY,
+                  'Authorization': 'Bearer ' + res.body.access_token,
+                  'Content-Type': 'application/json',
+                  'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(profileData)
+              }).catch(function () {});
+            }
             showMsg('Signed in. Opening the study app...', 'success');
             // Send them straight to the SRS. A short delay so they see the
             // confirmation message before the navigation happens.
@@ -941,6 +1064,53 @@
       }
       // Fall through to default submit behaviour.
     }, { passive: false });
+
+    // ─── Archdiocese cascading dropdowns ───
+    fetch('./app/archdioceses.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.countries || !countryEl) return;
+        archdiocData = d.countries;
+        archdiocData.forEach(function (c) {
+          var opt = document.createElement('option');
+          opt.value = c.name;
+          opt.textContent = c.name;
+          countryEl.appendChild(opt);
+        });
+      })
+      .catch(function () { console.warn('[thelatinmass] Could not load archdiocese data'); });
+
+    if (countryEl) {
+      countryEl.addEventListener('change', function () {
+        var val = countryEl.value;
+        archdiocEl.innerHTML = '';
+        if (!val) {
+          archdiocEl.disabled = true;
+          var d = document.createElement('option');
+          d.value = '';
+          d.textContent = 'Select country first...';
+          archdiocEl.appendChild(d);
+          return;
+        }
+        archdiocEl.disabled = false;
+        var ph = document.createElement('option');
+        ph.value = '';
+        ph.textContent = 'Select archdiocese...';
+        archdiocEl.appendChild(ph);
+        var match = null;
+        for (var i = 0; i < archdiocData.length; i++) {
+          if (archdiocData[i].name === val) { match = archdiocData[i]; break; }
+        }
+        if (match) {
+          match.archdioceses.forEach(function (a) {
+            var opt = document.createElement('option');
+            opt.value = a;
+            opt.textContent = a;
+            archdiocEl.appendChild(opt);
+          });
+        }
+      });
+    }
 
     // If we already have a session in localStorage, swap the page into the
     // signed-in state. The signup form is replaced with a "Continue to study"
