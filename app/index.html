@@ -1109,7 +1109,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v27-2026-05-11-breakdown-right';
+  var APP_BUILD = 'v28-2026-05-11-cross-device-sync';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1287,65 +1287,135 @@
   // user re-rate (overwrites the prior upsert).
   var HISTORY = [];
   var HISTORY_MAX = 50;
-  // Two daily caps, both user-settable, both persisted to localStorage:
+  // Two daily caps + today-only override, all kept in a single SETTINGS
+  // object that mirrors profiles.settings JSONB in Supabase. localStorage
+  // is just a cache so getters never block. Cross-device sync: on boot
+  // we fetch from Supabase and overwrite the cache; setters write to both
+  // cache (instant) and Supabase (debounced).
+  //
   //   NEW_PER_DAY = how many BRAND-NEW cards to introduce per day (intake)
   //   MAX_PER_DAY = total cards per day, INCLUDING due reviews (the goal)
+  //   extra_today = today-only override, per-date map; auto-clears at midnight
   //
-  // MAX determines "today's goal" shown everywhere. NEW determines how many
-  // of those slots can be filled with unseen cards (the rest go to due
-  // reviews). MAX is forced to be >= NEW so you can't make it nonsensical.
+  // MAX is always forced >= NEW so it can't be nonsensical.
   var NEW_PER_DAY_DEFAULT = 10;
-  var NEW_PER_DAY_KEY = 'tlm_new_per_day';
   var MAX_PER_DAY_DEFAULT = 30;
-  var MAX_PER_DAY_KEY = 'tlm_max_per_day';
-  function getDailyTarget() {
+  var SETTINGS_CACHE_KEY = 'tlm_settings';
+  var SETTINGS = readSettingsFromCache();
+  var _settingsSaveTimer = null;
+  var _settingsSyncInFlight = false;
+
+  function readSettingsFromCache() {
     try {
-      var v = parseInt(localStorage.getItem(NEW_PER_DAY_KEY), 10);
-      if (isFinite(v) && v >= 1 && v <= 100) return v;
+      var raw = localStorage.getItem(SETTINGS_CACHE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return normaliseSettings(parsed);
+      }
     } catch (_) {}
-    return NEW_PER_DAY_DEFAULT;
+    // Legacy localStorage keys (pre-sync) — migrate them on first run.
+    var legacy = {};
+    try {
+      var lnpd = parseInt(localStorage.getItem('tlm_new_per_day'), 10);
+      if (isFinite(lnpd)) legacy.new_per_day = lnpd;
+      var lmpd = parseInt(localStorage.getItem('tlm_max_per_day'), 10);
+      if (isFinite(lmpd)) legacy.max_per_day = lmpd;
+    } catch (_) {}
+    return normaliseSettings(legacy);
   }
+
+  function normaliseSettings(s) {
+    s = s || {};
+    var np = parseInt(s.new_per_day, 10);
+    if (!isFinite(np) || np < 1 || np > 100) np = NEW_PER_DAY_DEFAULT;
+    var mp = parseInt(s.max_per_day, 10);
+    if (!isFinite(mp) || mp < 1 || mp > 500) mp = MAX_PER_DAY_DEFAULT;
+    if (mp < np) mp = np;
+    var ex = (s.extra_today && typeof s.extra_today === 'object') ? s.extra_today : {};
+    return { new_per_day: np, max_per_day: mp, extra_today: ex };
+  }
+
+  function persistSettings() {
+    try { localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(SETTINGS)); } catch (_) {}
+    // Debounce remote writes so a flurry of chip clicks coalesces into one
+    // PATCH instead of N. 400ms is short enough to be invisible.
+    if (_settingsSaveTimer) clearTimeout(_settingsSaveTimer);
+    _settingsSaveTimer = setTimeout(saveSettingsRemote, 400);
+  }
+
+  function saveSettingsRemote() {
+    if (!SESSION || !SESSION.user || !SESSION.user.id) return;
+    if (_settingsSyncInFlight) {
+      // Another save was in flight; reschedule.
+      _settingsSaveTimer = setTimeout(saveSettingsRemote, 400);
+      return;
+    }
+    _settingsSyncInFlight = true;
+    rest('/profiles?user_id=eq.' + SESSION.user.id, SESSION, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: { settings: SETTINGS },
+    }).catch(function (err) {
+      console.warn('[tlm-app] settings sync failed (will retry on next change):', err && err.message);
+    }).then(function () {
+      _settingsSyncInFlight = false;
+    });
+  }
+
+  function fetchSettingsRemote() {
+    if (!SESSION || !SESSION.user || !SESSION.user.id) return Promise.resolve();
+    return rest('/profiles?select=settings&user_id=eq.' + SESSION.user.id, SESSION)
+      .then(function (rows) {
+        if (rows && rows.length && rows[0] && rows[0].settings && typeof rows[0].settings === 'object') {
+          // If remote is non-empty, it wins. If empty, push local cache up so
+          // a fresh signup on device B picks up the choices made on device A.
+          var keys = Object.keys(rows[0].settings || {});
+          if (keys.length > 0) {
+            SETTINGS = normaliseSettings(rows[0].settings);
+            try { localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify(SETTINGS)); } catch (_) {}
+          } else {
+            saveSettingsRemote();
+          }
+        }
+      })
+      .catch(function (err) { console.warn('[tlm-app] settings fetch failed:', err && err.message); });
+  }
+
+  function getDailyTarget() { return SETTINGS.new_per_day; }
   function setDailyTarget(n) {
     n = Math.max(1, Math.min(100, parseInt(n, 10) || NEW_PER_DAY_DEFAULT));
-    try { localStorage.setItem(NEW_PER_DAY_KEY, String(n)); } catch (_) {}
-    // Bump MAX too if NEW just exceeded it (always MAX >= NEW)
-    if (getMaxPerDay() < n) setMaxPerDay(n);
+    SETTINGS.new_per_day = n;
+    if (SETTINGS.max_per_day < n) SETTINGS.max_per_day = n;
+    persistSettings();
     return n;
   }
   function getMaxPerDay() {
-    var raw;
-    try {
-      var v = parseInt(localStorage.getItem(MAX_PER_DAY_KEY), 10);
-      if (isFinite(v) && v >= 1 && v <= 500) raw = v;
-    } catch (_) {}
-    if (!isFinite(raw)) raw = MAX_PER_DAY_DEFAULT;
-    // Floor at NEW so MAX can never be less than the new-card cap.
-    return Math.max(raw, getDailyTarget());
+    var mp = SETTINGS.max_per_day;
+    return Math.max(mp, SETTINGS.new_per_day);
   }
   function setMaxPerDay(n) {
     n = Math.max(1, Math.min(500, parseInt(n, 10) || MAX_PER_DAY_DEFAULT));
-    n = Math.max(n, getDailyTarget());
-    try { localStorage.setItem(MAX_PER_DAY_KEY, String(n)); } catch (_) {}
+    if (n < SETTINGS.new_per_day) n = SETTINGS.new_per_day;
+    SETTINGS.max_per_day = n;
+    persistSettings();
     return n;
   }
 
-  // Today-only override: lets the user grab extra new cards beyond the daily
-  // cap without changing the long-term setting. Stored per-date in
-  // localStorage so it auto-clears at midnight.
+  // Today-only override is keyed per-date inside SETTINGS.extra_today.
+  // Old dates linger but never affect any computation.
   function todayKey() {
     var d = new Date();
-    return 'tlm_extra_' + d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
   }
   function getExtraToday() {
-    try {
-      var v = parseInt(localStorage.getItem(todayKey()), 10);
-      if (isFinite(v) && v >= 0) return v;
-    } catch (_) {}
-    return 0;
+    var v = SETTINGS.extra_today && SETTINGS.extra_today[todayKey()];
+    return (typeof v === 'number' && isFinite(v) && v >= 0) ? v : 0;
   }
   function addExtraToday(n) {
     var next = getExtraToday() + Math.max(0, parseInt(n, 10) || 0);
-    try { localStorage.setItem(todayKey(), String(next)); } catch (_) {}
+    if (!SETTINGS.extra_today) SETTINGS.extra_today = {};
+    SETTINGS.extra_today[todayKey()] = next;
+    persistSettings();
     return next;
   }
   var REVIEW_START = 0;
@@ -1371,13 +1441,44 @@
     console.info('[tlm-app] boot ok, user:', SESSION.user && SESSION.user.email);
     document.getElementById('userEmail').textContent = (SESSION.user && SESSION.user.email) || '';
     wireNav();
-    Promise.all([fetchStatic(), fetchUserState()])
+    Promise.all([fetchStatic(), fetchUserState(), fetchSettingsRemote()])
       .then(function () { showDeckPicker(); })
       .catch(function (err) {
         // 401 from fetchUserState would already have triggered a refresh+retry
         // inside rest(). If we still get here it's a hard failure — show it.
         showErr('Failed to load: ' + (err.message || err));
       });
+    wireVisibilityRefresh();
+  }
+
+  // When the tab comes back to the foreground after being hidden for >60s,
+  // resync card state + settings so the user doesn't see stale numbers from
+  // a study session that happened on a different device. The threshold
+  // avoids hammering the API on quick app-switches.
+  var _lastHiddenAt = 0;
+  function wireVisibilityRefresh() {
+    if (typeof document.addEventListener !== 'function') return;
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        _lastHiddenAt = Date.now();
+        return;
+      }
+      if (!SESSION) return;
+      var awayMs = Date.now() - _lastHiddenAt;
+      if (_lastHiddenAt === 0 || awayMs < 60000) return; // skip short blips
+      console.info('[tlm-app] tab back after', Math.round(awayMs/1000) + 's away, resyncing');
+      Promise.all([fetchUserState(), fetchSettingsRemote()]).then(function () {
+        // Re-render the current view so updated numbers land immediately.
+        var rerender = ({
+          decks: showDeckPicker,
+          calendar: function () { showCalendar(); },
+          stats: function () { showStats(); },
+        })[ACTIVE_VIEW];
+        if (rerender) rerender();
+      }).catch(function (err) {
+        console.warn('[tlm-app] resync failed:', err && err.message);
+      });
+    });
   }
 
   // Track which top-level view is active so we can highlight the nav link.
