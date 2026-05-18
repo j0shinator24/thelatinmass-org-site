@@ -163,6 +163,19 @@
     color: var(--taupe);
   }
   .deck-card .stats .num { color: var(--burgundy); font-weight: 600; }
+  /* Plain-language legend used under the deck list and stat grid so the
+     short labels (Due/New/Total, Retention) never need prior knowledge. */
+  .mini-legend {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--taupe);
+    text-align: center;
+    margin: 14px auto 0;
+    max-width: 540px;
+    padding: 0 16px;
+  }
+  .mini-legend strong { color: var(--ink-soft); font-weight: 600; }
 
   /* ─── Card view ─── */
   .card-section { display: flex; flex-direction: column; gap: 24px; }
@@ -1426,7 +1439,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v39-2026-05-18-rating-help-size';
+  var APP_BUILD = 'v40-2026-05-18-plain-terms';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -2270,8 +2283,8 @@
     var main = document.getElementById('main');
     var html = '<div class="deck-picker">'
              + '<span class="eyebrow" style="text-align:center;display:block;margin-bottom:14px">Study</span>'
-             + '<h2>Choose a deck</h2>'
-             + '<p class="lede">Spaced-repetition for the 1962 Tridentine Latin Mass.</p>'
+             + '<h2>Choose what to practice</h2>'
+             + '<p class="lede">Short daily practice that brings each word back right before you would forget it. Built for the 1962 Latin Mass.</p>'
              + '<div class="deck-list">';
     STATIC.decks.forEach(function (d) {
       var cards = STATIC.cardsByDeck[d.id] || [];
@@ -2294,7 +2307,11 @@
             + '</div>'
             + '</button>';
     });
-    html += '</div></div>';
+    html += '</div>'
+          + '<p class="mini-legend"><strong>Due</strong> = ready to practice now &middot; '
+          + '<strong>New</strong> = not started yet &middot; '
+          + '<strong>Total</strong> = every card in the set</p>'
+          + '</div>';
     main.innerHTML = html;
     main.querySelectorAll('.deck-card').forEach(function (btn) {
       btn.addEventListener('click', function () {
@@ -2602,7 +2619,7 @@
       var emptyEl = document.createElement('div');
       emptyEl.className = 'day-preview empty';
       emptyEl.textContent = idx === 0
-        ? 'No revisions due today.'
+        ? 'Nothing to practice today.'
         : 'Nothing scheduled to revise that day yet.';
       row.parentNode.insertBefore(emptyEl, row.nextSibling);
       row.classList.add('expanded');
@@ -2775,6 +2792,7 @@
                + '<div class="stat"><div class="num">' + streak + '</div><div class="lbl">Day streak</div></div>'
                + '<div class="stat"><div class="num">' + (retention === null ? '—' : retention + '%') + '</div><div class="lbl">Retention</div></div>'
              + '</div>'
+             + '<p class="mini-legend"><strong>Retention</strong> = how often you recalled a card correctly when it came back. <strong>Day streak</strong> = days in a row you have practiced.</p>'
              + '<div class="heatmap">'
                + '<h3>Activity heatmap (90 days)</h3>'
                + '<div class="heatmap-grid">';
