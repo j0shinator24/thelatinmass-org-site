@@ -245,11 +245,11 @@
     max-width: 100%;
     word-wrap: break-word;
   }
-  /* Subtle help text sitting above the rate buttons. Sized to match the
-     rate-btn label so the row reads as one piece. */
+  /* Help text sitting above the rate buttons. Kept readable on small
+     phone screens (was 0.7rem, too small to scan mid-review). */
   .rating-help {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 0.7rem;
+    font-size: 1rem;
     line-height: 1.55;
     color: var(--ink-soft);
     text-align: center;
@@ -1426,7 +1426,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v38-2026-05-18-plain-vocab';
+  var APP_BUILD = 'v39-2026-05-18-rating-help-size';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
