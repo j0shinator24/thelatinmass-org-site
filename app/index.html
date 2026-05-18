@@ -1426,7 +1426,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v37-2026-05-18-lb-labels';
+  var APP_BUILD = 'v38-2026-05-18-plain-vocab';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1888,7 +1888,7 @@
 
              // ── Card display toggles
              +   '<div class="settings-section">'
-             +     '<h3>While reviewing</h3>'
+             +     '<h3>While practicing</h3>'
              +     '<div class="settings-row">'
              +       '<div class="label-stack">'
              +         '<div class="lbl">Play Latin audio on flip</div>'
@@ -1957,7 +1957,7 @@
              +     '<div class="settings-row">'
              +       '<div class="label-stack">'
              +         '<div class="lbl">Delete account</div>'
-             +         '<div class="hint">Permanently remove your account, profile, and review history. This cannot be undone.</div>'
+             +         '<div class="hint">Permanently remove your account, profile, and practice history. This cannot be undone.</div>'
              +       '</div>'
              +       '<button class="settings-btn danger" id="setDeleteBtn">Delete…</button>'
              +     '</div>'
@@ -2051,7 +2051,7 @@
     document.getElementById('setDeleteBtn').addEventListener('click', function () {
       var ok = confirm(
         'Permanently delete your account?\n\n'
-        + 'This removes your profile, every card you have reviewed, and your sign-in. '
+        + 'This removes your profile, every card you have practiced, and your sign-in. '
         + 'It cannot be undone.\n\n'
         + 'Click OK to send the deletion request now.'
       );
@@ -2425,11 +2425,11 @@
     var goalSubtitle;
     if (goalTotal === 0 || ts.totalGoal === 0) {
       goalSubtitle = goalDone > 0
-        ? "You've reviewed " + goalDone + " today. Come back tomorrow for the next batch."
+        ? "You've practiced " + goalDone + " today. Come back tomorrow for the next batch."
         : "Nothing to study right now. Come back when something comes due below.";
     } else {
       var parts = [];
-      if (duePart > 0) parts.push(duePart + ' due review' + (duePart === 1 ? '' : 's'));
+      if (duePart > 0) parts.push(duePart + ' due');
       if (newPart > 0) parts.push(newPart + ' new');
       goalSubtitle = (goalDone > 0 ? (goalDone + ' done, ') : '') + parts.join(' + ') + ' to go today.';
     }
@@ -2477,11 +2477,11 @@
                       + '</div>'
                       + '<div class="target-chips">' + newChips + '</div>'
                       + '<div class="goal-settings-head" style="margin-top:14px">'
-                        + '<span class="goal-settings-title">Max cards per day (incl. reviews)</span>'
+                        + '<span class="goal-settings-title">Max cards per day (incl. practice)</span>'
                         + '<span class="goal-settings-current">' + currentMax + '</span>'
                       + '</div>'
                       + '<div class="target-chips">' + maxChips + '</div>'
-                      + '<p class="goal-settings-hint">Pick a number you can hit <em>every single day</em>. Daily five beats weekly fifty. Below 5 the spacing rhythm starts to break down; above 20 the daily review pile compounds and most learners quit within a fortnight.</p>'
+                      + '<p class="goal-settings-hint">Pick a number you can hit <em>every single day</em>. Daily five beats weekly fifty. Below 5 the spacing rhythm starts to break down; above 20 the daily practice pile compounds and most learners quit within a fortnight.</p>'
                       + '<details class="goal-science">'
                         + '<summary>Why these numbers matter</summary>'
                         + '<div class="goal-science-body">'
@@ -2497,7 +2497,7 @@
     var html = '<div class="view-header">'
              + '<span class="eyebrow">Forecast</span>'
              + '<h2>Next two weeks</h2>'
-             + '<p class="lede">Each day shows reviews FSRS scheduled (from your Hard / Good / Easy ratings) plus the ' + getDailyTarget() + ' new cards planned that day. Daily goal is capped at <strong>' + getMaxPerDay() + '</strong> total (the rest defer; FSRS staggers intervals so cards don\'t pile up). Tap any row with due reviews to preview the Latin.</p>'
+             + '<p class="lede">Each day shows the practice FSRS scheduled (from your Hard / Good / Easy ratings) plus the ' + getDailyTarget() + ' new cards planned that day. Daily goal is capped at <strong>' + getMaxPerDay() + '</strong> total (the rest defer; FSRS staggers intervals so cards don\'t pile up). Tap any row with cards due to preview the Latin.</p>'
              + '</div>'
              + goalBanner
              + settingsStrip
@@ -2767,10 +2767,10 @@
     var html = '<div class="view-header">'
              + '<span class="eyebrow">Practice</span>'
              + '<h2>Your last 90 days</h2>'
-             + '<p class="lede">Reviews logged, ratings given, days in a row.</p>'
+             + '<p class="lede">Practice logged, ratings given, days in a row.</p>'
              + '</div>'
              + '<div class="stat-grid">'
-               + '<div class="stat"><div class="num">' + rows.length + '</div><div class="lbl">Total reviews</div></div>'
+               + '<div class="stat"><div class="num">' + rows.length + '</div><div class="lbl">Times Practiced</div></div>'
                + '<div class="stat"><div class="num">' + totalLast30 + '</div><div class="lbl">Last 30 days</div></div>'
                + '<div class="stat"><div class="num">' + streak + '</div><div class="lbl">Day streak</div></div>'
                + '<div class="stat"><div class="num">' + (retention === null ? '—' : retention + '%') + '</div><div class="lbl">Retention</div></div>'
@@ -2782,7 +2782,7 @@
       if (c.empty) {
         html += '<div class="heatmap-cell" data-level="0" style="visibility:hidden"></div>';
       } else {
-        var title = c.key + ': ' + c.n + ' review' + (c.n === 1 ? '' : 's');
+        var title = c.key + ': ' + c.n + ' practiced';
         html += '<div class="heatmap-cell" data-level="' + c.level + '" title="' + escapeHtml(title) + '"></div>';
       }
     });
