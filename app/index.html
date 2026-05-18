@@ -1426,7 +1426,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v36-2026-05-18-form-glosses';
+  var APP_BUILD = 'v37-2026-05-18-lb-labels';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -3044,9 +3044,9 @@
   function renderLeaderboard(rows) {
     var main = document.getElementById('main');
     var metricLabels = {
-      cards_seen: 'Cards Studied',
-      total_reviews: 'Total Reviews',
-      cards_mature: 'Cards Mature',
+      cards_seen: 'Words Seen',
+      total_reviews: 'Times Practiced',
+      cards_mature: 'Words Mastered',
     };
     var metric = LB_METRIC;
     var myIdx = -1;
@@ -3061,9 +3061,9 @@
                + '</div>';
 
     var tabs = '<div class="lb-tabs">'
-             + '<button type="button" class="lb-tab' + (metric === 'cards_seen' ? ' active' : '') + '" data-metric="cards_seen">Studied</button>'
-             + '<button type="button" class="lb-tab' + (metric === 'total_reviews' ? ' active' : '') + '" data-metric="total_reviews">Reviews</button>'
-             + '<button type="button" class="lb-tab' + (metric === 'cards_mature' ? ' active' : '') + '" data-metric="cards_mature">Mature</button>'
+             + '<button type="button" class="lb-tab' + (metric === 'cards_seen' ? ' active' : '') + '" data-metric="cards_seen">Seen</button>'
+             + '<button type="button" class="lb-tab' + (metric === 'total_reviews' ? ' active' : '') + '" data-metric="total_reviews">Practiced</button>'
+             + '<button type="button" class="lb-tab' + (metric === 'cards_mature' ? ' active' : '') + '" data-metric="cards_mature">Mastered</button>'
              + '</div>';
 
     if (rows.length === 0) {
@@ -3080,8 +3080,8 @@
       var isMe = r.user_id === SESSION.user.id;
       var num = r[metric] || 0;
       var subBits = [];
-      if (r.cards_mature) subBits.push(r.cards_mature + ' mature');
-      if (r.total_reviews) subBits.push(r.total_reviews + ' reviews');
+      if (r.cards_mature) subBits.push(r.cards_mature + ' mastered');
+      if (r.total_reviews) subBits.push(r.total_reviews + ' practiced');
       return '<div class="lb-row' + (isMe ? ' you' : '') + '">'
            + '<div class="lb-rank">' + rankDisplay + '</div>'
            + '<div>'
