@@ -1426,7 +1426,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v34-2026-05-12-admin-email';
+  var APP_BUILD = 'v36-2026-05-18-form-glosses';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1434,14 +1434,27 @@
   // sit on stale code for up to 10 min after a deploy. We fetch a tiny
   // version.json (cache-busted) on boot and silently reload with ?cb=...
   // if the server build is newer than the embedded one.
+  //
+  // LOOP GUARD: if APP_BUILD is ever forgotten on a version.json bump, a
+  // naive "reload on mismatch" would loop forever (served HTML keeps the
+  // old APP_BUILD, so it never matches). So: if the URL already carries
+  // ?cb=<that exact build>, we have already reloaded once for it -- bail
+  // and warn instead of reloading again. Legit deploys still bust once.
   (function () {
     fetch('version.json?t=' + Date.now(), { cache: 'no-store' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
-        if (d && d.build && d.build !== APP_BUILD) {
-          console.info('[thelatinmass] new build available:', d.build, '-- reloading');
-          location.replace(location.pathname + '?cb=' + encodeURIComponent(d.build) + location.hash);
+        if (!d || !d.build || d.build === APP_BUILD) return;
+        var m = location.search.match(/[?&]cb=([^&]*)/);
+        var cb = m ? decodeURIComponent(m[1]) : null;
+        if (cb === d.build) {
+          console.warn('[thelatinmass] APP_BUILD (' + APP_BUILD +
+            ') is stale vs version.json (' + d.build +
+            '); skipping reload to avoid a loop. Bump APP_BUILD to match.');
+          return;
         }
+        console.info('[thelatinmass] new build available:', d.build, '-- reloading');
+        location.replace(location.pathname + '?cb=' + encodeURIComponent(d.build) + location.hash);
       })
       .catch(function () { /* network blip, ignore */ });
   })();
