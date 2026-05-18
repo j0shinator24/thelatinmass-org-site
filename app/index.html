@@ -403,11 +403,50 @@
     margin-right: 8px;
   }
   .card .back .forms {
-    margin-top: 10px;
-    font-family: 'Lato', monospace, sans-serif;
-    font-size: 0.85rem;
-    color: var(--ink-soft);
-    word-spacing: 0.1em;
+    margin-top: 14px;
+  }
+  .card .back .forms-label {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.62rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--taupe);
+    margin-bottom: 8px;
+  }
+  .card .back .forms-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .card .back .form-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--cream);
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    padding: 5px 12px 6px;
+    min-width: 58px;
+  }
+  .card .back .form-en {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 0.82rem;
+    color: #B33A3A;
+    line-height: 1.2;
+    margin-bottom: 3px;
+  }
+  .card .back .form-lat {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.93rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .card .back .form-ct {
+    font-weight: 400;
+    font-size: 0.78rem;
+    color: var(--taupe);
   }
   .card .back .role {
     font-style: italic;
@@ -3097,7 +3136,21 @@
 
     var formsLine = '';
     if (note.forms_summary) {
-      formsLine = '<div class="forms">' + escapeHtml(note.forms_summary) + '</div>';
+      var formChips = note.forms_summary.split(' | ').map(function (f) {
+        var m = f.match(/^(.+?)\((\d+)\)$/);
+        var formText = m ? m[1] : f;
+        var countText = m ? '(' + m[2] + ')' : '';
+        return '<div class="form-chip">'
+          + '<span class="form-en">' + escapeHtml(note.english || '') + '</span>'
+          + '<span class="form-lat">' + escapeHtml(formText)
+            + (countText ? '<span class="form-ct">' + escapeHtml(countText) + '</span>' : '')
+          + '</span>'
+          + '</div>';
+      }).join('');
+      formsLine = '<div class="forms">'
+        + '<div class="forms-label">times each form appears in the Mass</div>'
+        + '<div class="forms-chips">' + formChips + '</div>'
+        + '</div>';
     }
 
     var prayerLine = '';
