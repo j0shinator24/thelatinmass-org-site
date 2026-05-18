@@ -448,6 +448,31 @@
     font-size: 0.78rem;
     color: var(--taupe);
   }
+  .card .back .forms-primer-toggle {
+    margin-top: 10px;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-bottom: 1px dotted var(--taupe);
+    color: var(--taupe-dark);
+    font-family: 'Lato', sans-serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    line-height: 1.4;
+  }
+  .card .back .forms-primer-toggle:hover { color: var(--burgundy); }
+  .card .back .forms-primer {
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: var(--cream);
+    border-left: 2px solid var(--gold);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+  }
+  .card .back .forms-primer[hidden] { display: none; }
   .card .back .role {
     font-style: italic;
     color: var(--taupe);
@@ -3134,9 +3159,40 @@
       posLine = '<span class="role">' + escapeHtml(formatRole(note.role)) + '</span>';
     }
 
+    // Forms block. Multi-form notes carry an authored forms_detail array
+    // (one plain-English gloss per inflected form, because "manibus" does
+    // NOT mean the same as "manus"). Single-form notes fall back to the
+    // dictionary English, which is correct for the lemma form.
     var formsLine = '';
-    if (note.forms_summary) {
-      var formChips = note.forms_summary.split(' | ').map(function (f) {
+    var fdetail = note.forms_detail;
+    if (fdetail && fdetail.length) {
+      var formChips = fdetail.map(function (f) {
+        return '<div class="form-chip">'
+          + '<span class="form-en">' + escapeHtml(f.g || '') + '</span>'
+          + '<span class="form-lat">' + escapeHtml(f.f)
+            + (f.n != null ? '<span class="form-ct">(' + escapeHtml(String(f.n)) + ')</span>' : '')
+          + '</span>'
+          + '</div>';
+      }).join('');
+      var primerOpen = false;
+      try { primerOpen = localStorage.getItem('tlm_forms_primer') === 'open'; } catch (_) {}
+      formsLine = '<div class="forms">'
+        + '<div class="forms-label">how each form is used · (count) = times in the Mass</div>'
+        + '<div class="forms-chips">' + formChips + '</div>'
+        + '<button type="button" class="forms-primer-toggle" id="formsPrimerBtn" aria-expanded="'
+          + (primerOpen ? 'true' : 'false') + '">'
+          + (primerOpen ? 'Hide explanation' : 'Why do the spellings change?')
+        + '</button>'
+        + '<div class="forms-primer" id="formsPrimer"' + (primerOpen ? '' : ' hidden') + '>'
+          + 'Latin changes a word’s ending to show its job in the sentence: '
+          + 'whether it is the subject or the object, whether it means '
+          + '“of”, “to/for” or “by/with” something, and whether '
+          + 'it is one or many. The red line above each form is what that exact '
+          + 'spelling means in English.'
+        + '</div>'
+        + '</div>';
+    } else if (note.forms_summary) {
+      var formChips2 = note.forms_summary.split(' | ').map(function (f) {
         var m = f.match(/^(.+?)\((\d+)\)$/);
         var formText = m ? m[1] : f;
         var countText = m ? '(' + m[2] + ')' : '';
@@ -3148,8 +3204,8 @@
           + '</div>';
       }).join('');
       formsLine = '<div class="forms">'
-        + '<div class="forms-label">times each form appears in the Mass</div>'
-        + '<div class="forms-chips">' + formChips + '</div>'
+        + '<div class="forms-label">times this word appears in the Mass</div>'
+        + '<div class="forms-chips">' + formChips2 + '</div>'
         + '</div>';
     }
 
@@ -3319,6 +3375,25 @@
           audioEl.currentTime = 0;
           var pp = audioEl.play();
           if (pp && typeof pp.catch === 'function') pp.catch(function () {});
+        });
+      }
+      // Forms primer: toggle the "why do spellings change?" explainer and
+      // remember the choice so it neither nags nor resets every card.
+      var primerBtn = document.getElementById('formsPrimerBtn');
+      var primerBox = document.getElementById('formsPrimer');
+      if (primerBtn && primerBox) {
+        primerBtn.addEventListener('click', function () {
+          var open = primerBox.hasAttribute('hidden');
+          if (open) {
+            primerBox.removeAttribute('hidden');
+            primerBtn.textContent = 'Hide explanation';
+            primerBtn.setAttribute('aria-expanded', 'true');
+          } else {
+            primerBox.setAttribute('hidden', '');
+            primerBtn.textContent = 'Why do the spellings change?';
+            primerBtn.setAttribute('aria-expanded', 'false');
+          }
+          try { localStorage.setItem('tlm_forms_primer', open ? 'open' : 'closed'); } catch (_) {}
         });
       }
     }
