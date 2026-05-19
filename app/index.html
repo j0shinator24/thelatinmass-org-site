@@ -9,6 +9,29 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
 <link rel="apple-touch-icon" href="../apple-touch-icon.svg">
+<link rel="manifest" href="../manifest.json">
+<script>
+  // Dark/light theme init before paint (avoids FOUC). Reads tlm_theme;
+  // if absent, the CSS @media (prefers-color-scheme: dark) takes over.
+  (function () {
+    try {
+      var t = localStorage.getItem('tlm_theme');
+      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    } catch (_) {}
+  })();
+</script>
+<!-- Privacy-respecting analytics (Plausible). No cookies, GDPR-friendly.
+     Inert until you sign up at plausible.io and add thelatinmass.org as
+     a site -- the script loads either way but only records once the
+     domain is recognised. Safe to ship before that step. -->
+<script defer data-domain="thelatinmass.org" src="https://plausible.io/js/script.js"></script>
+<script>
+  window.plausible = window.plausible || function () { (window.plausible.q = window.plausible.q || []).push(arguments); };
+  // Thin helper for custom events. Use: tlmTrack('demo_flipped', {card:1});
+  window.tlmTrack = function (name, props) {
+    try { window.plausible(name, props ? { props: props } : undefined); } catch (_) {}
+  };
+</script>
 <link rel="preconnect" href="https://kugcbqfqataxbyjtaume.supabase.co">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +39,7 @@
 <style>
   :root {
     --ink: #2A2520;
-    --ink-soft: #5A5048;
+    --ink-soft: #4D4238;
     --cream: #F7F2EA;
     --cream-soft: #FBF8F2;
     --rule: #E2D9CB;
@@ -1396,8 +1419,8 @@
     main { padding: 20px 14px 60px; }
     .card { padding: 40px 20px; min-height: 300px; }
     .rate-row { gap: 6px; }
-    .rate-btn { padding: 12px 4px; min-height: 60px; font-size: 0.66rem; letter-spacing: 0.1em; }
-    .rate-btn .interval-hint { font-size: 0.6rem; }
+    .rate-btn { padding: 12px 4px; min-height: 60px; font-size: 0.72rem; letter-spacing: 0.1em; }
+    .rate-btn .interval-hint { font-size: 0.72rem; margin-top: 4px; }
     header.app-header { padding: 10px 14px; gap: 8px; }
     header.app-header .brand { font-size: 1.1rem; }
     header.app-header .user { display: none; }
@@ -1414,6 +1437,227 @@
     .target-chip { padding: 8px 2px; }
     .target-chip .chip-num { font-size: 1.2rem; }
     .target-chip .chip-lbl { font-size: 0.5rem; letter-spacing: 0.1em; }
+  }
+
+  /* ─── Narrow-phone density pass (iPhone SE, small Androids) ───────── */
+  @media (max-width: 380px) {
+    main { padding: 14px 10px 50px; }
+    .card { padding: 28px 14px; min-height: 260px; }
+    .card .card-image img { max-width: 170px; }
+    .card .interlinear { font-size: clamp(1.6rem, 4.8vw, 2.4rem); margin: 2px 0 8px; }
+    .card .front { font-size: clamp(1.9rem, 5.6vw, 2.4rem); }
+    .card .back { font-size: clamp(1.9rem, 5.6vw, 2.4rem); }
+    .rating-help { font-size: 0.92rem; margin: 12px auto 8px; padding: 0 8px; }
+    .rate-row { gap: 5px; }
+    .rate-btn { padding: 10px 2px; min-height: 56px; font-size: 0.7rem; }
+    .rate-btn .interval-hint { font-size: 0.68rem; margin-top: 3px; }
+    .card .back .forms { margin-top: 10px; }
+    .card .back .form-chip { padding: 4px 8px 5px; min-width: 50px; }
+    .card .back .form-en { font-size: 0.74rem; }
+    .card .back .form-lat { font-size: 0.86rem; }
+    .card .back .form-ct { font-size: 0.72rem; }
+  }
+
+  /* ─── Dark / sepia-night mode ────────────────────────────────────────
+     Mirrors the landing page; candlelit-nave warm dark, not pure black.
+     System preference applies unless tlm_theme localStorage forces it. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #EAD9BC;
+      --ink-soft: #C8B498;
+      --cream: #211814;
+      --cream-soft: #1A130F;
+      --rule: #3D2F25;
+      --taupe: #BFA388;
+      --taupe-dark: #D9C2A4;
+      --taupe-deep: #EAD9BC;
+      --gold: #D4B57E;
+      --burgundy: #C68888;
+    }
+    :root:not([data-theme="light"]) body { background: #0F0B08; }
+    :root:not([data-theme="light"]) .card,
+    :root:not([data-theme="light"]) .deck-card,
+    :root:not([data-theme="light"]) .forecast-row,
+    :root:not([data-theme="light"]) .day-preview,
+    :root:not([data-theme="light"]) .stat,
+    :root:not([data-theme="light"]) .lb-row,
+    :root:not([data-theme="light"]) .lb-tabs { background: #1A130F; }
+    :root:not([data-theme="light"]) .lb-tab.active { background: #6B3535; border-color: #6B3535; color: #EAD9BC; }
+    :root:not([data-theme="light"]) .rate-btn { background: #211814; }
+    :root:not([data-theme="light"]) .card-state-pill.cs-new { background: #2E2A22; color: #D9C2A4; }
+    :root:not([data-theme="light"]) .card-state-pill.cs-learning { background: #2E2A1E; color: #E0C988; }
+    :root:not([data-theme="light"]) .card-state-pill.cs-review { background: #1F2E22; color: #B3D4BC; }
+    :root:not([data-theme="light"]) .card-note { background: #221912; }
+    :root:not([data-theme="light"]) .form-chip { background: #221912; }
+    :root:not([data-theme="light"]) .forms-primer { background: #221912; }
+  }
+  :root[data-theme="dark"] {
+    --ink: #EAD9BC;
+    --ink-soft: #C8B498;
+    --cream: #211814;
+    --cream-soft: #1A130F;
+    --rule: #3D2F25;
+    --taupe: #BFA388;
+    --taupe-dark: #D9C2A4;
+    --taupe-deep: #EAD9BC;
+    --gold: #D4B57E;
+    --burgundy: #C68888;
+  }
+  :root[data-theme="dark"] body { background: #0F0B08; }
+  :root[data-theme="dark"] .card,
+  :root[data-theme="dark"] .deck-card,
+  :root[data-theme="dark"] .forecast-row,
+  :root[data-theme="dark"] .day-preview,
+  :root[data-theme="dark"] .stat,
+  :root[data-theme="dark"] .lb-row,
+  :root[data-theme="dark"] .lb-tabs { background: #1A130F; }
+  :root[data-theme="dark"] .lb-tab.active { background: #6B3535; border-color: #6B3535; color: #EAD9BC; }
+  :root[data-theme="dark"] .rate-btn { background: #211814; }
+  :root[data-theme="dark"] .card-state-pill.cs-new { background: #2E2A22; color: #D9C2A4; }
+  :root[data-theme="dark"] .card-state-pill.cs-learning { background: #2E2A1E; color: #E0C988; }
+  :root[data-theme="dark"] .card-state-pill.cs-review { background: #1F2E22; color: #B3D4BC; }
+  :root[data-theme="dark"] .card-note { background: #221912; }
+  :root[data-theme="dark"] .form-chip { background: #221912; }
+  :root[data-theme="dark"] .forms-primer { background: #221912; }
+
+  /* ─── Theme picker (settings tile) ──────────────────────────────── */
+  .theme-row { display: flex; gap: 8px; margin-top: 8px; }
+  .theme-row button {
+    flex: 1;
+    background: none;
+    border: 1px solid var(--rule);
+    color: var(--taupe-dark);
+    padding: 8px 10px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .theme-row button.active { background: var(--burgundy); color: #fff; border-color: var(--burgundy); }
+
+  /* ─── First-time onboarding tour ─────────────────────────────────── */
+  .tour-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 11, 8, 0.62);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    animation: tour-fade-in 0.22s ease-out;
+  }
+  @keyframes tour-fade-in { from { opacity: 0; } to { opacity: 1; } }
+  .tour-card {
+    background: var(--cream-soft);
+    border: 1px solid var(--gold);
+    border-radius: 6px;
+    padding: 22px 22px 18px;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+  }
+  .tour-card .eyebrow { color: var(--taupe); margin-bottom: 10px; }
+  .tour-card h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem;
+    color: var(--ink);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .tour-card p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.02rem;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+  }
+  .tour-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .tour-actions button {
+    background: var(--burgundy);
+    color: #fff;
+    border: 0;
+    padding: 10px 22px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .tour-actions button.tour-skip {
+    background: none;
+    color: var(--taupe-dark);
+    border: 1px solid var(--rule);
+  }
+  .tour-actions button:hover { opacity: 0.92; }
+  .tour-progress {
+    margin-top: 12px;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    color: var(--taupe);
+    text-transform: uppercase;
+  }
+
+  /* ─── Streak-freeze affordance on Stats page ─────────────────────── */
+  .freeze-card {
+    margin-top: 14px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 14px 16px;
+    background: var(--cream-soft);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .freeze-card .freeze-text {
+    flex: 1 1 220px;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--ink-soft);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .freeze-card .freeze-text strong { color: var(--ink); font-weight: 600; }
+  .freeze-card button {
+    background: var(--burgundy);
+    color: #fff;
+    border: 0;
+    padding: 9px 18px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .freeze-card button:disabled { opacity: 0.4; cursor: default; }
+
+  /* ─── Candle loading affordance (replaces plain "Loading...") ────── */
+  .candle-load {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 40px 16px;
+    color: var(--taupe);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1rem;
+  }
+  .candle-load svg { width: 28px; height: 56px; }
+  .candle-load .flame { animation: flicker 1.4s ease-in-out infinite; transform-origin: center bottom; }
+  @keyframes flicker {
+    0%, 100% { transform: scaleY(1) rotate(-1deg); opacity: 0.95; }
+    50%      { transform: scaleY(1.08) rotate(1.5deg); opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .candle-load .flame { animation: none; }
   }
 </style>
 </head>
@@ -1433,13 +1677,21 @@
 </header>
 
 <main id="main">
-  <div class="status-msg" id="loadingMsg">Loading…</div>
+  <div class="candle-load" id="loadingMsg">
+    <svg viewBox="0 0 24 48" aria-hidden="true">
+      <ellipse class="flame" cx="12" cy="9" rx="3.6" ry="6" fill="#D4B57E"/>
+      <ellipse class="flame" cx="12" cy="10" rx="2" ry="3.4" fill="#8B4747"/>
+      <rect x="9" y="15" width="6" height="2" fill="#4A3528"/>
+      <rect x="8.5" y="17" width="7" height="28" rx="0.5" fill="#F0E6D2" stroke="#C8A871" stroke-width="0.5"/>
+    </svg>
+    <span>Lighting the candles&hellip;</span>
+  </div>
 </main>
 
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v40-2026-05-18-plain-terms';
+  var APP_BUILD = 'v41-2026-05-18-aesthetics-ux-pass';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1918,6 +2170,25 @@
              +     '</div>'
              +   '</div>'
 
+             // ── Appearance / theme picker
+             +   '<div class="settings-section">'
+             +     '<h3>Appearance</h3>'
+             +     '<div class="settings-row">'
+             +       '<div class="label-stack">'
+             +         '<div class="lbl">Theme</div>'
+             +         '<div class="hint">Sepia by day, warm dark by night. <strong>System</strong> follows your phone or browser setting; <strong>Light</strong> and <strong>Dark</strong> override it.</div>'
+             +       '</div>'
+             +     '</div>'
+             +     (function () {
+                     var cur = (function () { try { return localStorage.getItem("tlm_theme") || "system"; } catch (_) { return "system"; } })();
+                     return '<div class="theme-row" role="tablist" aria-label="Theme">'
+                          + '<button type="button" class="theme-btn' + (cur === "system" ? " active" : "") + '" data-theme="system">System</button>'
+                          + '<button type="button" class="theme-btn' + (cur === "light"  ? " active" : "") + '" data-theme="light">Light</button>'
+                          + '<button type="button" class="theme-btn' + (cur === "dark"   ? " active" : "") + '" data-theme="dark">Dark</button>'
+                          + '</div>';
+                   })()
+             +   '</div>'
+
              // ── Your details
              +   '<form id="setProfileForm" class="settings-section profile-form" action="javascript:void(0)" novalidate>'
              +     '<h3>Your details</h3>'
@@ -1987,6 +2258,21 @@
     audioEl.addEventListener('change', function () {
       SETTINGS.play_audio = !!audioEl.checked;
       persistSettings();
+    });
+    // Theme picker (System / Light / Dark)
+    document.querySelectorAll('.theme-btn[data-theme]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var v = b.getAttribute('data-theme');
+        try {
+          if (v === 'system') localStorage.removeItem('tlm_theme');
+          else localStorage.setItem('tlm_theme', v);
+        } catch (_) {}
+        if (v === 'system') document.documentElement.removeAttribute('data-theme');
+        else document.documentElement.setAttribute('data-theme', v);
+        document.querySelectorAll('.theme-btn[data-theme]').forEach(function (x) {
+          x.classList.toggle('active', x === b);
+        });
+      });
     });
     imagesEl.addEventListener('change', function () {
       SETTINGS.show_images = !!imagesEl.checked;
@@ -2721,20 +3007,36 @@
       else if (r.rating === 4) b.easy++;
     });
 
-    // Streak: count consecutive days back from today with at least one review.
+    // Streak: count consecutive days back from today with at least one
+    // review OR a freeze applied (see tlm_freezes_used). A freeze is a
+    // user-deployed "skip day" that preserves the streak without faking
+    // an actual practice; see the freeze-card UI below.
+    var freezesUsed = (function () {
+      try { return JSON.parse(localStorage.getItem('tlm_freezes_used') || '[]'); } catch (_) { return []; }
+    })();
+    var freezeSet = {};
+    freezesUsed.forEach(function (k) { freezeSet[k] = true; });
     var streak = 0;
     for (var i = 0; i < 365; i++) {
       var d = new Date(todayMs - i * DAY);
       var k = isoDate(d);
-      if (byDay[k]) streak++;
+      if (byDay[k] || freezeSet[k]) streak++;
       else if (i === 0) {
-        // No review today yet — but if yesterday had reviews we say streak is
-        // still alive, just not extended yet.
+        // No review today yet -- but if yesterday had reviews (or a freeze
+        // applied), the streak is still alive, just not extended yet.
         var y = new Date(todayMs - DAY);
-        if (byDay[isoDate(y)]) continue;
+        var yk = isoDate(y);
+        if (byDay[yk] || freezeSet[yk]) continue;
         else break;
       } else break;
     }
+    // Freeze availability: 1 per 7 days from last use. Cooldown gating only.
+    var lastFreezeAt = 0;
+    try { lastFreezeAt = parseInt(localStorage.getItem('tlm_last_freeze_at') || '0', 10) || 0; } catch (_) {}
+    var freezeReadyAt = lastFreezeAt + 7 * DAY;
+    var freezeAvailable = Date.now() >= freezeReadyAt;
+    var todayKey = isoDate(new Date());
+    var freezeAlreadyAppliedToday = !!freezeSet[todayKey];
 
     // Retention rate over last 30 days = % rating >= 3 (Good/Easy)
     var ret_total = 0, ret_pass = 0;
@@ -2793,6 +3095,28 @@
                + '<div class="stat"><div class="num">' + (retention === null ? '—' : retention + '%') + '</div><div class="lbl">Retention</div></div>'
              + '</div>'
              + '<p class="mini-legend"><strong>Retention</strong> = how often you recalled a card correctly when it came back. <strong>Day streak</strong> = days in a row you have practiced.</p>'
+             + (function () {
+                 // Freeze card: if you cannot practice today (sick, travel),
+                 // burn a freeze to preserve the streak. One per 7 days.
+                 var label, disabled;
+                 if (freezeAlreadyAppliedToday) {
+                   label = 'Freeze active today';
+                   disabled = true;
+                 } else if (freezeAvailable) {
+                   label = 'Use a freeze';
+                   disabled = false;
+                 } else {
+                   var daysLeft = Math.max(1, Math.ceil((freezeReadyAt - Date.now()) / DAY));
+                   label = 'Next freeze in ' + daysLeft + ' day' + (daysLeft === 1 ? '' : 's');
+                   disabled = true;
+                 }
+                 return '<div class="freeze-card">'
+                      + '<div class="freeze-text">'
+                      + '<strong>Streak freeze.</strong> If you cannot practice today (sick, travelling), use a freeze to keep your streak alive. One available every 7 days.'
+                      + '</div>'
+                      + '<button type="button" id="useFreezeBtn"' + (disabled ? ' disabled' : '') + '>' + escapeHtml(label) + '</button>'
+                      + '</div>';
+               })()
              + '<div class="heatmap">'
                + '<h3>Activity heatmap (90 days)</h3>'
                + '<div class="heatmap-grid">';
@@ -2827,6 +3151,21 @@
     }
 
     main.innerHTML = html;
+
+    // Wire the freeze button if present and enabled.
+    var freezeBtn = document.getElementById('useFreezeBtn');
+    if (freezeBtn && !freezeBtn.disabled) {
+      freezeBtn.addEventListener('click', function () {
+        try {
+          var arr = JSON.parse(localStorage.getItem('tlm_freezes_used') || '[]');
+          if (arr.indexOf(todayKey) === -1) arr.push(todayKey);
+          localStorage.setItem('tlm_freezes_used', JSON.stringify(arr));
+          localStorage.setItem('tlm_last_freeze_at', String(Date.now()));
+        } catch (_) {}
+        // Re-render so the streak count, button state, and label refresh.
+        showStats();
+      });
+    }
   }
 
   // ─── Daily target stats ─────────────────────────────────────────────────
@@ -3428,6 +3767,71 @@
         });
       }
     }
+    // First-time visitor: show a 3-step explainer overlay, once.
+    maybeShowOnboardingTour();
+  }
+
+  // ─── First-time onboarding tour ─────────────────────────────────────
+  // Three-step overlay shown on the very first card a new user sees.
+  // Marker in localStorage prevents re-showing. Stays out of the way of
+  // returning users entirely. Tour content is plain-language and matches
+  // the post-v40 vocab (practice, root words, spaced practice).
+  var TOUR_STEPS = [
+    {
+      eyebrow: 'Welcome',
+      title: 'Tap the card to reveal the English',
+      body: 'The Latin is on the front. Tap anywhere on the card, or press the Reveal button, and the English translation appears above it in red italic, the way a hand-missal lays out a bilingual translation.'
+    },
+    {
+      eyebrow: 'Step 2',
+      title: 'Rate how easily you recalled it',
+      body: 'After the reveal, four buttons appear: Again, Hard, Good, Easy. The small number under each shows when the card will come back if you tap that button. The harder it felt, the sooner it comes back.'
+    },
+    {
+      eyebrow: 'Step 3',
+      title: 'Come back daily. Five to ten minutes is enough',
+      body: 'Each word is scheduled to come back just before you would forget it. Skip a day and it bunches up; keep a short daily rhythm and it sticks for the long term. That is the entire method.'
+    }
+  ];
+  function maybeShowOnboardingTour() {
+    try {
+      if (localStorage.getItem('tlm_onboarded') === '1') return;
+    } catch (_) { /* private mode etc: just skip */ return; }
+    if (document.querySelector('.tour-overlay')) return; // already showing
+    showOnboardingStep(0);
+  }
+  function showOnboardingStep(i) {
+    var step = TOUR_STEPS[i];
+    if (!step) return finishOnboardingTour();
+    var existing = document.querySelector('.tour-overlay');
+    if (existing) existing.remove();
+    var ov = document.createElement('div');
+    ov.className = 'tour-overlay';
+    ov.setAttribute('role', 'dialog');
+    ov.setAttribute('aria-modal', 'true');
+    ov.setAttribute('aria-labelledby', 'tourTitle');
+    var last = i === TOUR_STEPS.length - 1;
+    ov.innerHTML =
+        '<div class="tour-card">'
+      +   '<span class="eyebrow">' + escapeHtml(step.eyebrow) + '</span>'
+      +   '<h3 id="tourTitle">' + escapeHtml(step.title) + '</h3>'
+      +   '<p>' + escapeHtml(step.body) + '</p>'
+      +   '<div class="tour-actions">'
+      +     '<button type="button" class="tour-skip" id="tourSkip">Skip</button>'
+      +     '<button type="button" id="tourNext">' + (last ? 'Start studying' : 'Next') + '</button>'
+      +   '</div>'
+      +   '<div class="tour-progress">' + (i + 1) + ' of ' + TOUR_STEPS.length + '</div>'
+      + '</div>';
+    document.body.appendChild(ov);
+    document.getElementById('tourNext').addEventListener('click', function () {
+      if (last) finishOnboardingTour(); else showOnboardingStep(i + 1);
+    });
+    document.getElementById('tourSkip').addEventListener('click', finishOnboardingTour);
+  }
+  function finishOnboardingTour() {
+    var ov = document.querySelector('.tour-overlay');
+    if (ov) ov.remove();
+    try { localStorage.setItem('tlm_onboarded', '1'); } catch (_) {}
   }
 
   function flip() {

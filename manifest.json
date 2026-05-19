@@ -1,0 +1,27 @@
+{
+  "name": "The Latin Mass App",
+  "short_name": "Latin Mass",
+  "description": "Spaced-repetition flashcards for the 1962 Tridentine Latin Mass. Root words, phrases, native audio.",
+  "start_url": "/app/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F2EA",
+  "theme_color": "#5E2A2A",
+  "lang": "en-AU",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "books", "lifestyle"]
+}

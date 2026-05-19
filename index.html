@@ -44,7 +44,28 @@
 
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" href="./apple-touch-icon.svg">
+<link rel="manifest" href="./manifest.json">
 <link rel="mask-icon" href="./favicon.svg" color="#5E2A2A">
+<script>
+  // Dark/light theme init -- runs before paint to avoid FOUC. Reads
+  // tlm_theme from localStorage; if absent, prefers-color-scheme decides
+  // via the CSS @media query. Values: "dark" | "light" | (absent = system).
+  (function () {
+    try {
+      var t = localStorage.getItem('tlm_theme');
+      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    } catch (_) {}
+  })();
+</script>
+<!-- Privacy-respecting analytics (Plausible). No cookies, GDPR-friendly.
+     Inert until you sign up at plausible.io and add thelatinmass.org. -->
+<script defer data-domain="thelatinmass.org" src="https://plausible.io/js/script.js"></script>
+<script>
+  window.plausible = window.plausible || function () { (window.plausible.q = window.plausible.q || []).push(arguments); };
+  window.tlmTrack = function (name, props) {
+    try { window.plausible(name, props ? { props: props } : undefined); } catch (_) {}
+  };
+</script>
 <link rel="preconnect" href="https://kugcbqfqataxbyjtaume.supabase.co">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -189,7 +210,7 @@
 <style>
   :root {
     --ink: #2A2520;
-    --ink-soft: #5A5048;
+    --ink-soft: #4D4238;
     --cream: #F7F2EA;
     --cream-soft: #FBF8F2;
     --rule: #E2D9CB;
@@ -662,6 +683,377 @@
     html { scroll-behavior: auto; }
     *, *::before, *::after { transition-duration: 0.01ms !important; }
   }
+
+  /* ───── Try-a-card demo band ─────────────────────────────────────────
+     A playable 5-card preview. No signup, no scheduling, just lets a
+     visitor feel the flip + audio + interlinear convention before
+     committing an email. Conversion lever. */
+  .demo-band {
+    background: var(--cream);
+    padding: 64px 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    text-align: center;
+  }
+  .demo-band h2 { margin-top: 8px; }
+  .demo-band .lede { color: var(--ink-soft); max-width: 600px; margin: 12px auto 0; }
+  .demo-wrap {
+    max-width: 520px;
+    margin: 32px auto 0;
+    padding: 0 16px;
+    text-align: left;
+  }
+  .demo-card {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 28px 22px;
+    box-shadow: 0 1px 0 var(--rule);
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+    cursor: pointer;
+  }
+  .demo-card.is-phrase { min-height: 320px; }
+  .demo-card-front {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 18px 8px;
+  }
+  .demo-card-front .latin {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    color: var(--ink);
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    line-height: 1.25;
+  }
+  .demo-card.is-phrase .demo-card-front .latin { font-size: clamp(1.3rem, 3.6vw, 1.7rem); }
+  .demo-card-front .hint {
+    margin-top: 18px;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--taupe);
+  }
+  .demo-card-back { display: none; padding: 8px 4px; text-align: center; }
+  .demo-card.flipped .demo-card-front { display: none; }
+  .demo-card.flipped .demo-card-back { display: flex; flex-direction: column; align-items: center; flex: 1; justify-content: center; }
+  .demo-card-back img {
+    max-width: 180px;
+    max-height: 180px;
+    margin: 0 auto 14px;
+    border-radius: 3px;
+    border: 1px solid var(--rule);
+  }
+  .demo-card.is-phrase .demo-card-back img { max-width: 140px; max-height: 140px; }
+  .demo-card-back .interlinear {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: clamp(1rem, 3vw, 1.25rem);
+    line-height: 1.4;
+    color: #B33A3A;
+    margin-bottom: 8px;
+    max-width: 100%;
+  }
+  .demo-card-back .latin {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 500;
+    color: var(--burgundy);
+    font-size: clamp(1.4rem, 4.5vw, 2rem);
+    line-height: 1.25;
+    margin-bottom: 16px;
+  }
+  .demo-card.is-phrase .demo-card-back .latin { font-size: clamp(1.1rem, 3.2vw, 1.45rem); }
+  .demo-card-back .play {
+    margin-top: 4px;
+    padding: 8px 18px;
+    border: 1px solid var(--gold);
+    background: var(--cream-soft);
+    border-radius: 3px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--taupe-deep);
+    cursor: pointer;
+  }
+  .demo-card-back .play:hover { background: var(--cream); }
+  .demo-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 18px;
+    gap: 16px;
+  }
+  .demo-controls button {
+    background: none;
+    border: 1px solid var(--rule);
+    color: var(--taupe-dark);
+    padding: 8px 14px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .demo-controls button:hover:not([disabled]) { color: var(--burgundy); border-color: var(--taupe); }
+  .demo-controls button[disabled] { opacity: 0.35; cursor: default; }
+  .demo-dots { display: flex; gap: 8px; }
+  .demo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--rule); border: 0; padding: 0; cursor: pointer; }
+  .demo-dot.active { background: var(--burgundy); }
+  .demo-cta {
+    margin-top: 28px;
+    text-align: center;
+    padding: 0 16px;
+  }
+  .demo-cta p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    font-style: italic;
+  }
+
+  /* ───── Testimonials band ────────────────────────────────────────────
+     Social proof. Real beta-user quotes go here once collected.
+     Marked as JSON-LD Review schema for SEO. */
+  .testimonials-band {
+    background: var(--cream-soft);
+    padding: 64px 0;
+    text-align: center;
+  }
+  .testimonials-band h2 { margin-top: 8px; }
+  .testimonials-band .lede { color: var(--ink-soft); max-width: 620px; margin: 12px auto 0; }
+  .testimonials {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1000px;
+    margin: 40px auto 0;
+    padding: 0 24px;
+    text-align: left;
+  }
+  .testimonial {
+    background: #fff;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 24px 22px;
+    position: relative;
+  }
+  .testimonial .quote-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.4rem;
+    color: var(--gold);
+    line-height: 0.5;
+    margin-bottom: 4px;
+  }
+  .testimonial .quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.05rem;
+    color: var(--ink);
+    line-height: 1.55;
+    margin-bottom: 14px;
+  }
+  .testimonial .attrib {
+    font-family: 'Lato', sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    color: var(--taupe-dark);
+    text-transform: uppercase;
+  }
+
+  /* ───── Compare band ─────────────────────────────────────────────────
+     "TheLatinMass.org vs Anki / Quizlet / Memrise / Memorise the Mass."
+     LLM-SEO play, also reassures the comparison-shopper visitor. */
+  .compare-band {
+    padding: 64px 0;
+    text-align: center;
+    border-top: 1px solid var(--rule);
+  }
+  .compare-band h2 { margin-top: 8px; }
+  .compare-band .lede { color: var(--ink-soft); max-width: 640px; margin: 12px auto 0; }
+  .compare-scroll {
+    margin: 36px auto 0;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 24px 8px;
+  }
+  table.compare {
+    border-collapse: collapse;
+    margin: 0 auto;
+    min-width: 720px;
+    font-family: 'Lato', sans-serif;
+    font-size: 0.92rem;
+    background: #fff;
+  }
+  table.compare th, table.compare td {
+    padding: 12px 16px;
+    text-align: center;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: middle;
+  }
+  table.compare thead th {
+    font-family: 'Cinzel', serif;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border-bottom: 2px solid var(--ink-soft);
+    background: var(--cream-soft);
+  }
+  table.compare thead th.us {
+    background: var(--burgundy);
+    color: var(--cream);
+    border-bottom-color: var(--burgundy);
+  }
+  table.compare tbody th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1rem;
+    background: var(--cream-soft);
+  }
+  table.compare td.yes { color: var(--burgundy); font-weight: 600; font-size: 1.15rem; }
+  table.compare td.no { color: var(--taupe); font-size: 1.1rem; }
+  table.compare td.partial { color: var(--taupe-dark); font-style: italic; font-size: 0.85rem; }
+  table.compare tbody tr.us-row td, table.compare tbody tr.us-row th { background: #FEF7EA; }
+  .compare-footnote {
+    margin-top: 18px;
+    font-size: 0.78rem;
+    color: var(--taupe);
+    max-width: 720px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 24px;
+  }
+
+  /* ───── FAQ band ─────────────────────────────────────────────────────
+     Visible mirror of the JSON-LD schema for crawlable HTML and trust. */
+  .faq-band {
+    background: var(--cream-soft);
+    padding: 64px 0;
+    border-top: 1px solid var(--rule);
+  }
+  .faq-band .container { text-align: center; }
+  .faq-band h2 { margin-top: 8px; }
+  .faq-band .lede { color: var(--ink-soft); max-width: 600px; margin: 12px auto 36px; }
+  .faq-list { max-width: 760px; margin: 0 auto; text-align: left; padding: 0 16px; }
+  .faq-item {
+    border-bottom: 1px solid var(--rule);
+    padding: 4px 0;
+  }
+  .faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    padding: 16px 4px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    color: var(--ink);
+    position: relative;
+    padding-right: 32px;
+  }
+  .faq-item summary::-webkit-details-marker { display: none; }
+  .faq-item summary::after {
+    content: '+';
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Cinzel', serif;
+    font-size: 1.4rem;
+    color: var(--taupe);
+    line-height: 1;
+  }
+  .faq-item[open] summary::after { content: '\2212'; }
+  .faq-item .answer {
+    padding: 4px 4px 18px;
+    color: var(--ink-soft);
+    font-size: 0.98rem;
+    line-height: 1.65;
+  }
+
+  /* ───── Share row + trust line in footer ─────────────────────────── */
+  .share-row {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin: 32px auto 0;
+    flex-wrap: wrap;
+    max-width: 520px;
+    padding: 0 24px;
+  }
+  .share-btn {
+    background: none;
+    border: 1px solid var(--gold);
+    color: var(--taupe-deep);
+    padding: 10px 22px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .share-btn:hover { background: var(--cream); }
+  .trust-line {
+    margin-top: 28px;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    color: var(--taupe);
+    font-size: 0.95rem;
+    text-align: center;
+  }
+
+  /* ───── Dark / sepia-night mode ──────────────────────────────────────
+     prefers-color-scheme is the default; data-theme="light"/"dark" on
+     <html> overrides. The palette is a candlelit-nave warm dark, not
+     pure black: deep burgundy bg, warm cream ink, gold accents. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #EAD9BC;
+      --ink-soft: #C8B498;
+      --cream: #211814;
+      --cream-soft: #1A130F;
+      --rule: #3D2F25;
+      --taupe: #BFA388;
+      --taupe-dark: #D9C2A4;
+      --taupe-deep: #EAD9BC;
+      --gold: #D4B57E;
+      --burgundy: #C68888;
+      --slider-cream: #EAD9BC;
+    }
+    :root:not([data-theme="light"]) body { background: #0F0B08; }
+    :root:not([data-theme="light"]) .demo-card,
+    :root:not([data-theme="light"]) .testimonial,
+    :root:not([data-theme="light"]) table.compare { background: #1A130F; }
+    :root:not([data-theme="light"]) table.compare thead th.us { background: #6B3535; }
+  }
+  :root[data-theme="dark"] {
+    --ink: #EAD9BC;
+    --ink-soft: #C8B498;
+    --cream: #211814;
+    --cream-soft: #1A130F;
+    --rule: #3D2F25;
+    --taupe: #BFA388;
+    --taupe-dark: #D9C2A4;
+    --taupe-deep: #EAD9BC;
+    --gold: #D4B57E;
+    --burgundy: #C68888;
+    --slider-cream: #EAD9BC;
+  }
+  :root[data-theme="dark"] body { background: #0F0B08; }
+  :root[data-theme="dark"] .demo-card,
+  :root[data-theme="dark"] .testimonial,
+  :root[data-theme="dark"] table.compare { background: #1A130F; }
+  :root[data-theme="dark"] table.compare thead th.us { background: #6B3535; }
 </style>
 </head>
 <body>
@@ -705,9 +1097,69 @@
   </div>
 </section>
 
+<section class="demo-band" aria-labelledby="demo-heading">
+  <span class="eyebrow">Try a card</span>
+  <h2 id="demo-heading">Five cards, no sign-up required</h2>
+  <p class="lede">Tap to reveal the English, hit Play to hear the Latin. The first three are common words from the Mass. The last two are whole phrases you will recognise.</p>
+  <div class="demo-wrap">
+    <div class="demo-card" id="demoCard" role="button" tabindex="0" aria-label="Tap to reveal English">
+      <div class="demo-card-front">
+        <div class="latin" id="demoFrontLatin" lang="la"></div>
+        <div class="hint">Tap to reveal</div>
+      </div>
+      <div class="demo-card-back">
+        <img id="demoBackImg" alt="" loading="lazy">
+        <div class="interlinear" id="demoBackEnglish"></div>
+        <div class="latin" id="demoBackLatin" lang="la"></div>
+        <button type="button" class="play" id="demoPlayBtn" aria-label="Play Latin audio">Play Latin</button>
+        <audio id="demoAudio" preload="none"></audio>
+      </div>
+    </div>
+    <div class="demo-controls">
+      <button type="button" id="demoPrevBtn" aria-label="Previous card">&larr; Prev</button>
+      <div class="demo-dots" id="demoDots" role="tablist" aria-label="Card 1 of 5"></div>
+      <button type="button" id="demoNextBtn" aria-label="Next card">Next &rarr;</button>
+    </div>
+    <div class="demo-cta">
+      <p id="demoCtaText">That is one of 726 cards. Sign up to study the rest and have each one scheduled for you.</p>
+      <a href="#signup" class="cta solid" style="display:inline-block">Sign up to study &rarr;</a>
+    </div>
+  </div>
+</section>
+
 <section class="quote-band" aria-label="Opening prayer of the Tridentine Mass">
   <p class="latin" lang="la">Introibo ad altare Dei.</p>
   <p class="english">I will go in to the altar of God.</p>
+</section>
+
+<section class="testimonials-band" aria-labelledby="testimonials-heading">
+  <div class="container">
+    <span class="eyebrow">From early users</span>
+    <h2 id="testimonials-heading">What people say so far</h2>
+    <p class="lede">Quotes from beta users (used with permission, names initialised). Want yours here? <a href="#signup" style="color:var(--burgundy)">Join the beta</a> and tell us what you think.</p>
+  </div>
+  <!-- IMPORTANT: real testimonials only. Each card stays empty until a
+       beta user has actually said this and given consent. Do NOT fill
+       these in with anything fictional; the ACCC treats fabricated
+       testimonials as misleading conduct. Replace .quote with the user's
+       exact words and .attrib with their role + first-name-initial. -->
+  <div class="testimonials">
+    <div class="testimonial">
+      <div class="quote-mark" aria-hidden="true">&ldquo;</div>
+      <p class="quote" style="color:var(--taupe);font-style:normal">Your quote here. Be the first lay parishioner to share how this changed your Sunday Mass.</p>
+      <p class="attrib">[Awaiting first beta-user quote]</p>
+    </div>
+    <div class="testimonial">
+      <div class="quote-mark" aria-hidden="true">&ldquo;</div>
+      <p class="quote" style="color:var(--taupe);font-style:normal">Your quote here. Are you a priest, schola director, or seminarian using this? We would love to feature you.</p>
+      <p class="attrib">[Awaiting first beta-user quote]</p>
+    </div>
+    <div class="testimonial">
+      <div class="quote-mark" aria-hidden="true">&ldquo;</div>
+      <p class="quote" style="color:var(--taupe);font-style:normal">Your quote here. Tell us how the app helped you follow the Mass or sing the propers.</p>
+      <p class="attrib">[Awaiting first beta-user quote]</p>
+    </div>
+  </div>
 </section>
 
 <section class="signup-band" id="signup" aria-labelledby="signup-heading">
@@ -795,6 +1247,137 @@
   </div>
 </section>
 
+<section class="compare-band" aria-labelledby="compare-heading">
+  <div class="container">
+    <span class="eyebrow">How it compares</span>
+    <h2 id="compare-heading">Built for the Mass, not for everything</h2>
+    <p class="lede">Generic flashcard apps work for any subject. That is also their weakness for Latin liturgy. Here is what changes when the corpus, the audio, and the imagery are all curated for the 1962 Missale Romanum.</p>
+  </div>
+  <div class="compare-scroll" role="region" aria-label="Feature comparison table" tabindex="0">
+    <table class="compare">
+      <thead>
+        <tr>
+          <th scope="col" style="text-align:left">Feature</th>
+          <th scope="col" class="us">TheLatinMass.org</th>
+          <th scope="col">Anki</th>
+          <th scope="col">Quizlet</th>
+          <th scope="col">Memrise</th>
+          <th scope="col">DIY Anki Mass deck</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="us-row">
+          <th scope="row">Mass-specific corpus (Order of Mass + Propers)</th>
+          <td class="yes">&#10003;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="yes">&#10003;</td>
+        </tr>
+        <tr class="us-row">
+          <th scope="row">Native (human) Latin audio per card</th>
+          <td class="yes">&#10003;</td>
+          <td class="partial">TTS only</td>
+          <td class="partial">user-uploaded</td>
+          <td class="partial">varies by course</td>
+          <td class="no">&minus;</td>
+        </tr>
+        <tr class="us-row">
+          <th scope="row">Devotional Renaissance imagery per word</th>
+          <td class="yes">&#10003;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+        </tr>
+        <tr class="us-row">
+          <th scope="row">Interlinear English in hand-missal style</th>
+          <td class="yes">&#10003;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+        </tr>
+        <tr>
+          <th scope="row">Modern FSRS scheduling</th>
+          <td class="yes">&#10003;</td>
+          <td class="yes">&#10003;</td>
+          <td class="no">SM-2 variant</td>
+          <td class="no">own algorithm</td>
+          <td class="yes">&#10003;</td>
+        </tr>
+        <tr class="us-row">
+          <th scope="row">Catholic teaching notes on each card</th>
+          <td class="yes">&#10003;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="partial">if author adds them</td>
+        </tr>
+        <tr>
+          <th scope="row">Works in any browser, no install</th>
+          <td class="yes">&#10003;</td>
+          <td class="partial">AnkiWeb limited</td>
+          <td class="yes">&#10003;</td>
+          <td class="yes">&#10003;</td>
+          <td class="partial">Anki only</td>
+        </tr>
+        <tr class="us-row">
+          <th scope="row">Revenue donated to TLM parishes</th>
+          <td class="yes">&#10003;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+          <td class="no">&minus;</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="compare-footnote">Comparison reflects publicly documented features as of 2026. Anki and Quizlet are general-purpose tools, not Latin-Mass products; the comparison is about fit for this specific purpose, not overall quality.</p>
+</section>
+
+<section class="faq-band" aria-labelledby="faq-heading">
+  <div class="container">
+    <span class="eyebrow">Common questions</span>
+    <h2 id="faq-heading">Frequently asked</h2>
+    <p class="lede">If you have a question that is not here, email <a href="mailto:info@thelatinmass.org" style="color:var(--burgundy)">info@thelatinmass.org</a> and it will probably make it onto this list.</p>
+  </div>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>What is The Latin Mass App?</summary>
+      <div class="answer">A spaced-repetition flashcard app for memorising the 1962 Tridentine Latin Mass. It contains 643 root words and 83 phrase pairs drawn from the Order of Mass and the Propers, with native Latin pronunciation audio on every card and curated devotional imagery.</div>
+    </details>
+    <details class="faq-item">
+      <summary>How many cards does it include?</summary>
+      <div class="answer">643 root words and 83 phrase pairs covering the Order of Mass and selected Propers from the 1962 Missale Romanum. Cards cover nouns, verbs, adjectives, and complete liturgical phrases with English translations.</div>
+    </details>
+    <details class="faq-item">
+      <summary>What scheduling algorithm does it use?</summary>
+      <div class="answer">FSRS (Free Spaced Repetition Scheduler), a modern algorithm that predicts when you are about to forget each card and brings it back just before that. FSRS measurably outperforms the older SM-2 algorithm used by Anki and Quizlet in published retention studies. You do not need to know any of this to use the app; the Hard / Good / Easy buttons do the work for you.</div>
+    </details>
+    <details class="faq-item">
+      <summary>What does it cost?</summary>
+      <div class="answer">Free during the beta. After beta, a small annual subscription will fund the project; the revenue after Stripe fees and minimal operating costs is split 50/50 between two Brisbane Latin Mass parishes. A public transparency ledger of every disbursement will be published when subscriptions go live.</div>
+    </details>
+    <details class="faq-item">
+      <summary>Who is it for?</summary>
+      <div class="answer">Lay parishioners who want to follow the Mass in Latin, choristers and schola directors learning the propers, seminarians preparing for ordination, and clergy refreshing their working Latin. The interlinear English layout works at any level.</div>
+    </details>
+    <details class="faq-item">
+      <summary>Do I need Anki or any other tool?</summary>
+      <div class="answer">No. The app runs in any modern browser, including on a phone, and stores your progress in the cloud so you can pick up where you left off on any device.</div>
+    </details>
+    <details class="faq-item">
+      <summary>Is the audio AI or a real voice?</summary>
+      <div class="answer">Native human-quality audio, recorded one card at a time. Not synthesised TTS. The result is what you would actually hear sung or recited in a Latin Mass.</div>
+    </details>
+    <details class="faq-item">
+      <summary>What is coming next?</summary>
+      <div class="answer">Currently in beta: 1962 Order of Mass + selected Propers. Roadmap (subject to change): the full annual Proper cycle, sung-tone audio variants, custom decks for individual scholas, and a printable phrase booklet companion. Beta users help set priorities.</div>
+    </details>
+  </div>
+</section>
+
 <section class="donate-band" id="funding" aria-labelledby="funding-heading">
   <span class="eyebrow">Where the money goes</span>
   <h2 id="funding-heading">A non-profit project for Brisbane's Latin Mass parishes</h2>
@@ -809,7 +1392,12 @@
 </main>
 
 <footer role="contentinfo">
-  <p>&copy; 2026 thelatinmass.org &middot; Built by a parishioner of Mary Immaculate Annerley, Brisbane</p>
+  <div class="share-row">
+    <button type="button" class="share-btn" id="shareBtn">Share with your parish</button>
+    <a href="#signup" class="share-btn">Join the beta</a>
+  </div>
+  <p class="trust-line">Made in Australia by a Catholic layman who is learning the Mass himself.</p>
+  <p style="margin-top:18px">&copy; 2026 thelatinmass.org &middot; Built by a parishioner of Mary Immaculate Annerley, Brisbane</p>
   <p style="margin-top:6px"><a href="mailto:info@thelatinmass.org">info@thelatinmass.org</a></p>
 </footer>
 
@@ -1321,6 +1909,140 @@
     JavaScript is required to sign up. Please enable it and refresh.
   </p>
 </noscript>
+
+<script>
+  // ─── Try-a-card demo player ─────────────────────────────────────────
+  // 5 hand-picked cards (3 iconic vocab + 2 famous phrases). No backend,
+  // no scheduling -- just flip + audio so a visitor can feel the format
+  // before committing an email. Audio + image paths reference the same
+  // /media tree the app uses; same-origin, no CORS.
+  (function () {
+    var DEMO = [
+      { id: 87,  type: 'vocab',  latin: 'Dominus', english: 'Lord',
+        audio: './media/audio/george/4_Dominus_Lord.mp3', image: './media/images/4_Dominus_Lord.jpg' },
+      { id: 91,  type: 'vocab',  latin: 'sanctus', english: 'holy',
+        audio: './media/audio/george/8_sanctus_holy.mp3', image: './media/images/8_sanctus_holy.jpg' },
+      { id: 107, type: 'vocab',  latin: 'pater',   english: 'father',
+        audio: './media/audio/george/24_pater_father.mp3', image: './media/images/24_pater_father.jpg' },
+      { id: 1,   type: 'phrase', latin: 'In nómine Patris, et Fílii, et Spíritus Sancti. Amen. Introíbo ad altáre Dei.',
+        english: 'In the Name of the Father, and of the Son, and of the Holy Ghost. Amen. I will go in to the altar of God.',
+        audio: './media/audio/george/phrase_001_Incipit.mp3', image: './media/images/phrase_001_Incipit.jpg' },
+      { id: 9,   type: 'phrase', latin: 'Glória Patri, et Fílio, et Spirítui Sancto.',
+        english: 'Glory be to the Father, and to the Son, and to the Holy Ghost.',
+        audio: './media/audio/george/phrase_009_Incipit.mp3', image: './media/images/phrase_009_Incipit.jpg' }
+    ];
+
+    var card = document.getElementById('demoCard');
+    if (!card) return; // landing without the demo section: bail safely
+    var frontLat   = document.getElementById('demoFrontLatin');
+    var backImg    = document.getElementById('demoBackImg');
+    var backEn     = document.getElementById('demoBackEnglish');
+    var backLat    = document.getElementById('demoBackLatin');
+    var audioEl    = document.getElementById('demoAudio');
+    var playBtn    = document.getElementById('demoPlayBtn');
+    var prevBtn    = document.getElementById('demoPrevBtn');
+    var nextBtn    = document.getElementById('demoNextBtn');
+    var dotsBox    = document.getElementById('demoDots');
+    var ctaText    = document.getElementById('demoCtaText');
+
+    var idx = 0;
+
+    // Build dot indicators (clickable).
+    DEMO.forEach(function (_, i) {
+      var dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'demo-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', 'Go to card ' + (i + 1));
+      dot.addEventListener('click', function () { goTo(i); });
+      dotsBox.appendChild(dot);
+    });
+
+    function render() {
+      var c = DEMO[idx];
+      frontLat.textContent = c.latin;
+      backImg.src = c.image;
+      backImg.alt = c.english;
+      backEn.textContent = c.english;
+      backLat.textContent = c.latin;
+      audioEl.src = c.audio;
+      card.classList.remove('flipped');
+      card.classList.toggle('is-phrase', c.type === 'phrase');
+      dotsBox.querySelectorAll('.demo-dot').forEach(function (d, i) {
+        d.classList.toggle('active', i === idx);
+      });
+      prevBtn.disabled = idx === 0;
+      nextBtn.disabled = idx === DEMO.length - 1;
+      if (idx === DEMO.length - 1) {
+        ctaText.textContent = 'That is the last demo card. There are 643 root words and 83 phrases waiting. Sign up to study them all with scheduling that brings each one back right before you would forget.';
+      } else {
+        ctaText.textContent = 'That is one of 726 cards. Sign up to study the rest and have each one scheduled for you.';
+      }
+    }
+
+    function flip() {
+      card.classList.add('flipped');
+      // Play audio on reveal -- the tap was a user gesture so mobile
+      // autoplay-restriction is satisfied.
+      var p = audioEl.play();
+      if (p && typeof p.catch === 'function') p.catch(function () { /* user can hit Play */ });
+      // Track demo engagement for conversion analysis.
+      if (typeof window.tlmTrack === 'function') window.tlmTrack('demo_flip', { idx: idx + 1 });
+    }
+
+    function goTo(n) {
+      idx = Math.max(0, Math.min(DEMO.length - 1, n));
+      render();
+    }
+
+    card.addEventListener('click', function (e) {
+      // Only flip on a tap of the card itself, not the inner Play button.
+      if (e.target && e.target.id === 'demoPlayBtn') return;
+      if (!card.classList.contains('flipped')) flip();
+    });
+    card.addEventListener('keydown', function (e) {
+      if ((e.key === 'Enter' || e.key === ' ') && !card.classList.contains('flipped')) {
+        e.preventDefault();
+        flip();
+      }
+    });
+    playBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      audioEl.currentTime = 0;
+      var p = audioEl.play();
+      if (p && typeof p.catch === 'function') p.catch(function () {});
+    });
+    prevBtn.addEventListener('click', function () { goTo(idx - 1); });
+    nextBtn.addEventListener('click', function () { goTo(idx + 1); });
+
+    render();
+  })();
+
+  // ─── Share-with-parish button (Web Share API with clipboard fallback) ─
+  (function () {
+    var btn = document.getElementById('shareBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var data = {
+        title: 'The Latin Mass App',
+        text: 'Spaced-repetition flashcards for the Traditional Latin Mass. Free during beta.',
+        url: 'https://thelatinmass.org/'
+      };
+      if (navigator.share) {
+        navigator.share(data).catch(function () { /* user cancelled, fine */ });
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(data.url).then(function () {
+          var prev = btn.textContent;
+          btn.textContent = 'Link copied';
+          setTimeout(function () { btn.textContent = prev; }, 2000);
+        }).catch(function () {
+          window.prompt('Copy the link:', data.url);
+        });
+      } else {
+        window.prompt('Copy the link:', data.url);
+      }
+    });
+  })();
+</script>
 
 </body>
 </html>
