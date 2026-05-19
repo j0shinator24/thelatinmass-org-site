@@ -990,10 +990,13 @@
     max-width: 520px;
     padding: 0 24px;
   }
+  /* Footer sits on near-black (--ink) so these need a cream tone to
+     read. Dotted-underline from `footer a` is overridden here too. */
   .share-btn {
-    background: none;
+    display: inline-block;
+    background: transparent;
     border: 1px solid var(--gold);
-    color: var(--taupe-deep);
+    color: var(--slider-cream);
     padding: 10px 22px;
     font-family: 'Cinzel', serif;
     font-size: 0.72rem;
@@ -1001,15 +1004,19 @@
     text-transform: uppercase;
     border-radius: 3px;
     cursor: pointer;
+    text-decoration: none;
   }
-  .share-btn:hover { background: var(--cream); }
+  a.share-btn { border-bottom: 1px solid var(--gold); }
+  .share-btn:hover { background: rgba(232, 218, 196, 0.12); color: #fff; border-color: var(--slider-cream); }
+  a.share-btn:hover { border-bottom-color: var(--slider-cream); }
   .trust-line {
     margin-top: 28px;
     font-family: 'Cormorant Garamond', serif;
     font-style: italic;
-    color: var(--taupe);
-    font-size: 0.95rem;
+    color: rgba(232, 218, 196, 0.78);
+    font-size: 1.02rem;
     text-align: center;
+    line-height: 1.5;
   }
 
   /* ───── Dark / sepia-night mode ──────────────────────────────────────
