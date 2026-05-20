@@ -1512,6 +1512,23 @@
   :root[data-theme="dark"] .rating-breakdown .rb { background: #211814; }
   :root[data-theme="dark"] .stat-grid .stat { background: #1A130F; }
   :root[data-theme="dark"] .rate-btn { background: #211814; color: #EAD9BC; }
+  /* Card FRONT (the Latin prompt) uses color:var(--burgundy) which goes
+     to #6B3535 in dark -- on the dark card surface it disappears. The
+     Latin is the primary content, so make it bright cream on dark. */
+  :root[data-theme="dark"] .card .front { color: #EAD9BC; }
+  /* Session-expired / Done card had background:#fff hardcoded so the
+     whole panel stayed white in dark mode, stranding cream child text
+     on white. Flip the panel to dark; inputs use inline white bg via
+     style="", so override with !important to flip those too. */
+  :root[data-theme="dark"] .done { background: #1A130F; border-color: #3D2F25; }
+  :root[data-theme="dark"] .done h2 { color: #EAD9BC; }
+  :root[data-theme="dark"] .done input[type="email"],
+  :root[data-theme="dark"] .done input[type="password"],
+  :root[data-theme="dark"] .done input[type="text"] {
+    background: #211814 !important;
+    color: #EAD9BC !important;
+    border-color: #3D2F25 !important;
+  }
   /* Rate-button per-rating colours had hardcoded light-mode values that
      stranded text on dark in dark mode. Brighten each one so the label
      reads against the dark card surface, and replace the pastel hover
@@ -1766,7 +1783,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v52-2026-05-20-bright-body-text';
+  var APP_BUILD = 'v53-2026-05-20-card-front-and-reauth-dark';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
