@@ -47,13 +47,15 @@
 <link rel="manifest" href="./manifest.json">
 <link rel="mask-icon" href="./favicon.svg" color="#5E2A2A">
 <script>
-  // Dark/light theme init -- runs before paint to avoid FOUC. Reads
-  // tlm_theme from localStorage; if absent, prefers-color-scheme decides
-  // via the CSS @media query. Values: "dark" | "light" | (absent = system).
+  // Theme init before paint (avoids FOUC). Default is LIGHT; only opt-in
+  // dark mode is applied. The OS preference is intentionally ignored --
+  // most devices default to dark these days and many users dislike being
+  // dragged into a not-fully-polished dark theme without asking.
   (function () {
     try {
-      var t = localStorage.getItem('tlm_theme');
-      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+      if (localStorage.getItem('tlm_theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
     } catch (_) {}
   })();
 </script>
@@ -1019,30 +1021,12 @@
     line-height: 1.5;
   }
 
-  /* ───── Dark / sepia-night mode ──────────────────────────────────────
-     prefers-color-scheme is the default; data-theme="light"/"dark" on
-     <html> overrides. The palette is a candlelit-nave warm dark, not
-     pure black: deep burgundy bg, warm cream ink, gold accents. */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ink: #EAD9BC;
-      --ink-soft: #C8B498;
-      --cream: #211814;
-      --cream-soft: #1A130F;
-      --rule: #3D2F25;
-      --taupe: #BFA388;
-      --taupe-dark: #D9C2A4;
-      --taupe-deep: #EAD9BC;
-      --gold: #D4B57E;
-      --burgundy: #C68888;
-      --slider-cream: #EAD9BC;
-    }
-    :root:not([data-theme="light"]) body { background: #0F0B08; }
-    :root:not([data-theme="light"]) .demo-card,
-    :root:not([data-theme="light"]) .testimonial,
-    :root:not([data-theme="light"]) table.compare { background: #1A130F; }
-    :root:not([data-theme="light"]) table.compare thead th.us { background: #6B3535; }
-  }
+  /* ───── Dark mode (opt-in only) ─────────────────────────────────────
+     LIGHT IS DEFAULT. Dark mode applies only when the user picks Dark
+     from Settings (which sets data-theme="dark" on <html>). The OS-level
+     prefers-color-scheme is intentionally not honoured -- most devices
+     default to dark and that landed users in a not-yet-polished dark
+     theme without consent. Palette: candlelit-nave warm dark. */
   :root[data-theme="dark"] {
     --ink: #EAD9BC;
     --ink-soft: #C8B498;
@@ -1061,6 +1045,42 @@
   :root[data-theme="dark"] .testimonial,
   :root[data-theme="dark"] table.compare { background: #1A130F; }
   :root[data-theme="dark"] table.compare thead th.us { background: #6B3535; }
+  /* The default .cta is outline (cream border + cream text) which works
+     on dark. But .cta.solid is bg=slider-cream + color=ink -- in dark
+     both vars resolve to the same cream, so the text disappears. Override
+     to a warm burgundy fill with cream text for the solid variant, and
+     give the outline-cta hover a visible dark text on cream bg. */
+  :root[data-theme="dark"] .cta:hover {
+    background: rgba(232, 218, 196, 0.12);
+    color: #fff;
+    border-color: #fff;
+  }
+  :root[data-theme="dark"] .cta.solid {
+    background: #6B3535;
+    color: #F7F2EA;
+    border-color: #6B3535;
+  }
+  :root[data-theme="dark"] .cta.solid:hover {
+    background: #8B4747;
+    color: #fff;
+    border-color: #8B4747;
+  }
+  /* Quote-band Latin/English colours hard-coded against cream in the
+     default, become cream-on-near-cream in dark. */
+  :root[data-theme="dark"] .quote-band .latin,
+  :root[data-theme="dark"] .quote-band .english { color: #EAD9BC; }
+  /* Footer body text already uses rgba cream so it's fine. Footer link
+     dotted underline border colour stays cream. */
+  :root[data-theme="dark"] .testimonial .quote { color: #EAD9BC; }
+  :root[data-theme="dark"] .testimonial .attrib { color: rgba(232, 218, 196, 0.7); }
+  :root[data-theme="dark"] .demo-card-back .latin { color: #D9C2A4; }
+  :root[data-theme="dark"] .demo-card-front .latin { color: #EAD9BC; }
+  :root[data-theme="dark"] .demo-card-back .play { color: #EAD9BC; background: #221912; }
+  :root[data-theme="dark"] .demo-controls button { color: #C8B498; }
+  :root[data-theme="dark"] table.compare tbody tr.us-row td,
+  :root[data-theme="dark"] table.compare tbody tr.us-row th { background: #2A1F18; }
+  :root[data-theme="dark"] table.compare tbody th { background: #1A130F; color: #EAD9BC; }
+  :root[data-theme="dark"] .faq-item summary { color: #EAD9BC; }
 </style>
 </head>
 <body>

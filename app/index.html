@@ -11,12 +11,14 @@
 <link rel="apple-touch-icon" href="../apple-touch-icon.svg">
 <link rel="manifest" href="../manifest.json">
 <script>
-  // Dark/light theme init before paint (avoids FOUC). Reads tlm_theme;
-  // if absent, the CSS @media (prefers-color-scheme: dark) takes over.
+  // Theme init before paint. Default LIGHT; only opt-in dark applies.
+  // OS prefers-color-scheme is intentionally ignored -- see landing
+  // index.html for the rationale.
   (function () {
     try {
-      var t = localStorage.getItem('tlm_theme');
-      if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+      if (localStorage.getItem('tlm_theme') === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
     } catch (_) {}
   })();
 </script>
@@ -1458,39 +1460,10 @@
     .card .back .form-ct { font-size: 0.72rem; }
   }
 
-  /* ─── Dark / sepia-night mode ────────────────────────────────────────
-     Mirrors the landing page; candlelit-nave warm dark, not pure black.
-     System preference applies unless tlm_theme localStorage forces it. */
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --ink: #EAD9BC;
-      --ink-soft: #C8B498;
-      --cream: #211814;
-      --cream-soft: #1A130F;
-      --rule: #3D2F25;
-      --taupe: #BFA388;
-      --taupe-dark: #D9C2A4;
-      --taupe-deep: #EAD9BC;
-      --gold: #D4B57E;
-      --burgundy: #C68888;
-    }
-    :root:not([data-theme="light"]) body { background: #0F0B08; }
-    :root:not([data-theme="light"]) .card,
-    :root:not([data-theme="light"]) .deck-card,
-    :root:not([data-theme="light"]) .forecast-row,
-    :root:not([data-theme="light"]) .day-preview,
-    :root:not([data-theme="light"]) .stat,
-    :root:not([data-theme="light"]) .lb-row,
-    :root:not([data-theme="light"]) .lb-tabs { background: #1A130F; }
-    :root:not([data-theme="light"]) .lb-tab.active { background: #6B3535; border-color: #6B3535; color: #EAD9BC; }
-    :root:not([data-theme="light"]) .rate-btn { background: #211814; }
-    :root:not([data-theme="light"]) .card-state-pill.cs-new { background: #2E2A22; color: #D9C2A4; }
-    :root:not([data-theme="light"]) .card-state-pill.cs-learning { background: #2E2A1E; color: #E0C988; }
-    :root:not([data-theme="light"]) .card-state-pill.cs-review { background: #1F2E22; color: #B3D4BC; }
-    :root:not([data-theme="light"]) .card-note { background: #221912; }
-    :root:not([data-theme="light"]) .form-chip { background: #221912; }
-    :root:not([data-theme="light"]) .forms-primer { background: #221912; }
-  }
+  /* ─── Dark mode (opt-in only) ───────────────────────────────────────
+     LIGHT IS DEFAULT. Dark applies only when the user picks Dark from
+     Settings (sets data-theme="dark" on <html>). OS prefers-color-scheme
+     is not honoured -- see the landing page CSS for the rationale. */
   :root[data-theme="dark"] {
     --ink: #EAD9BC;
     --ink-soft: #C8B498;
@@ -1691,7 +1664,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v43-2026-05-18-footer-contrast';
+  var APP_BUILD = 'v44-2026-05-18-light-default';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -2176,15 +2149,14 @@
              +     '<div class="settings-row">'
              +       '<div class="label-stack">'
              +         '<div class="lbl">Theme</div>'
-             +         '<div class="hint">Sepia by day, warm dark by night. <strong>System</strong> follows your phone or browser setting; <strong>Light</strong> and <strong>Dark</strong> override it.</div>'
+             +         '<div class="hint">Light is the default. Dark mode is opt-in (currently in beta, some screens may still need polish).</div>'
              +       '</div>'
              +     '</div>'
              +     (function () {
-                     var cur = (function () { try { return localStorage.getItem("tlm_theme") || "system"; } catch (_) { return "system"; } })();
+                     var cur = (function () { try { return localStorage.getItem("tlm_theme") === "dark" ? "dark" : "light"; } catch (_) { return "light"; } })();
                      return '<div class="theme-row" role="tablist" aria-label="Theme">'
-                          + '<button type="button" class="theme-btn' + (cur === "system" ? " active" : "") + '" data-theme="system">System</button>'
-                          + '<button type="button" class="theme-btn' + (cur === "light"  ? " active" : "") + '" data-theme="light">Light</button>'
-                          + '<button type="button" class="theme-btn' + (cur === "dark"   ? " active" : "") + '" data-theme="dark">Dark</button>'
+                          + '<button type="button" class="theme-btn' + (cur === "light" ? " active" : "") + '" data-theme="light">Light</button>'
+                          + '<button type="button" class="theme-btn' + (cur === "dark"  ? " active" : "") + '" data-theme="dark">Dark</button>'
                           + '</div>';
                    })()
              +   '</div>'
@@ -2259,16 +2231,16 @@
       SETTINGS.play_audio = !!audioEl.checked;
       persistSettings();
     });
-    // Theme picker (System / Light / Dark)
+    // Theme picker (Light / Dark) -- light is the default
     document.querySelectorAll('.theme-btn[data-theme]').forEach(function (b) {
       b.addEventListener('click', function () {
         var v = b.getAttribute('data-theme');
         try {
-          if (v === 'system') localStorage.removeItem('tlm_theme');
-          else localStorage.setItem('tlm_theme', v);
+          if (v === 'dark') localStorage.setItem('tlm_theme', 'dark');
+          else localStorage.removeItem('tlm_theme');
         } catch (_) {}
-        if (v === 'system') document.documentElement.removeAttribute('data-theme');
-        else document.documentElement.setAttribute('data-theme', v);
+        if (v === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+        else document.documentElement.removeAttribute('data-theme');
         document.querySelectorAll('.theme-btn[data-theme]').forEach(function (x) {
           x.classList.toggle('active', x === b);
         });
