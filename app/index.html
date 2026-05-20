@@ -1475,6 +1475,9 @@
     --taupe-deep: #EAD9BC;
     --gold: #D4B57E;
     --burgundy: #C68888;
+    --green: #8FBFA0;
+    --green-bright: #A8D4BA;
+    --amber: #E0BA6B;
   }
   :root[data-theme="dark"] body { background: #0F0B08; }
   :root[data-theme="dark"] .card,
@@ -1485,7 +1488,20 @@
   :root[data-theme="dark"] .lb-row,
   :root[data-theme="dark"] .lb-tabs { background: #1A130F; }
   :root[data-theme="dark"] .lb-tab.active { background: #6B3535; border-color: #6B3535; color: #EAD9BC; }
-  :root[data-theme="dark"] .rate-btn { background: #211814; }
+  :root[data-theme="dark"] .rate-btn { background: #211814; color: #EAD9BC; }
+  /* Rate-button per-rating colours had hardcoded light-mode values that
+     stranded text on dark in dark mode. Brighten each one so the label
+     reads against the dark card surface, and replace the pastel hover
+     backgrounds with warm dark equivalents. */
+  :root[data-theme="dark"] .rate-btn[data-rating="1"] { border-color: #C68888; color: #E89C9C; }
+  :root[data-theme="dark"] .rate-btn[data-rating="1"]:hover { background: #2E1A1A; }
+  :root[data-theme="dark"] .rate-btn[data-rating="2"] { border-color: #E0BA6B; color: #E0BA6B; }
+  :root[data-theme="dark"] .rate-btn[data-rating="2"]:hover { background: #2E2418; }
+  :root[data-theme="dark"] .rate-btn[data-rating="3"] { border-color: #8FBFA0; color: #A8D4BA; }
+  :root[data-theme="dark"] .rate-btn[data-rating="3"]:hover { background: #1E2A22; }
+  :root[data-theme="dark"] .rate-btn[data-rating="4"] { border-color: #BFA388; color: #EAD9BC; }
+  :root[data-theme="dark"] .rate-btn[data-rating="4"]:hover { background: #2A211A; }
+  :root[data-theme="dark"] .rate-btn .interval-hint { color: #C8B498; }
   :root[data-theme="dark"] .card-state-pill.cs-new { background: #2E2A22; color: #D9C2A4; }
   :root[data-theme="dark"] .card-state-pill.cs-learning { background: #2E2A1E; color: #E0C988; }
   :root[data-theme="dark"] .card-state-pill.cs-review { background: #1F2E22; color: #B3D4BC; }
@@ -1716,7 +1732,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v47-2026-05-20-settings-theme-default';
+  var APP_BUILD = 'v48-2026-05-20-dark-mode-audit';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────

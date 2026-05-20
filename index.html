@@ -384,7 +384,7 @@
   /* ───── Signup ───── */
   .signup-band {
     padding: 88px 24px;
-    background: #fff;
+    background: var(--cream-soft);
   }
   .signup {
     max-width: 480px;
@@ -1124,6 +1124,37 @@
   :root[data-theme="dark"] table.compare tbody tr.us-row th { background: #2A1F18; }
   :root[data-theme="dark"] table.compare tbody th { background: #1A130F; color: #EAD9BC; }
   :root[data-theme="dark"] .faq-item summary { color: #EAD9BC; }
+  /* Donate band uses var(--ink) for bg, which inverts to cream in dark
+     mode and strands the hardcoded #fff h2 + rgba cream paragraph text.
+     Lock the band to its dark identity in both modes. */
+  :root[data-theme="dark"] .donate-band { background: #15110D; color: #EAD9BC; }
+  :root[data-theme="dark"] .donate-band h2 { color: #F7F2EA; }
+  :root[data-theme="dark"] .donate-band p { color: rgba(232, 218, 196, 0.78); }
+  /* Signup band: was background:#fff hardcoded, now uses --cream-soft.
+     Make sure the signup form heading + lede are readable on the dark
+     warm background (cream-soft = #1A130F in dark). */
+  :root[data-theme="dark"] .signup-band { background: #1A130F; }
+  :root[data-theme="dark"] .signup h2 { color: #EAD9BC; }
+  :root[data-theme="dark"] .signup .lede { color: #C8B498; }
+  /* button.primary uses #fff on var(--burgundy). In dark, burgundy is
+     light pink (#C68888), so white-on-pink is washed out. Use a deeper
+     burgundy explicitly in dark mode. */
+  :root[data-theme="dark"] button.primary {
+    background: #6B3535;
+    color: #F7F2EA;
+    border-color: #6B3535;
+  }
+  :root[data-theme="dark"] button.primary:hover { background: #8B4747; border-color: #8B4747; }
+  /* Form card surface + inputs */
+  :root[data-theme="dark"] .form-card { background: #1A130F; }
+  :root[data-theme="dark"] .form-card input,
+  :root[data-theme="dark"] .form-card select,
+  :root[data-theme="dark"] .form-card textarea {
+    background: #221912;
+    color: #EAD9BC;
+    border-color: #3D2F25;
+  }
+  :root[data-theme="dark"] .form-card label { color: #C8B498; }
 </style>
 </head>
 <body>
