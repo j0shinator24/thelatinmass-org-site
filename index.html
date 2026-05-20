@@ -1158,24 +1158,16 @@
     border-color: #3D2F25;
   }
   :root[data-theme="dark"] .form-card label { color: #C8B498; }
-  /* Feature band is a "spotlight" section -- keep its light identity in
-     dark mode so the 510/83/FSRS stat cards never look muddy. */
-  :root[data-theme="dark"] section.feature-band {
-    background: #FBF8F2;
-    border-bottom-color: #E2D9CB;
-  }
-  :root[data-theme="dark"] section.feature-band h2,
-  :root[data-theme="dark"] section.feature-band .lede,
-  :root[data-theme="dark"] section.feature-band .feature .label,
-  :root[data-theme="dark"] section.feature-band .eyebrow { color: #4D4238; }
-  :root[data-theme="dark"] section.feature-band .lede,
-  :root[data-theme="dark"] section.feature-band .feature .label { color: #5A5048; }
+  /* In dark mode the feature band itself stays dark like the rest of
+     the page (heading + lede flow with the theme). Only the .feature
+     STAT CARDS keep their light identity, since the 510/83/FSRS/Audio
+     numbers and labels are styled to read on a white card surface. */
   :root[data-theme="dark"] section.feature-band .feature {
     background: #fff;
     border-color: #E2D9CB;
   }
   :root[data-theme="dark"] section.feature-band .feature .num { color: #5E2A2A; }
-  :root[data-theme="dark"] section.feature-band .eyebrow { color: #987F71; }
+  :root[data-theme="dark"] section.feature-band .feature .label { color: #5A5048; }
   /* Footer uses background:var(--ink) -- in dark, --ink flips to cream
      and the whole footer becomes cream-on-cream. The text colours are
      hardcoded rgba cream values so they already read on dark; just
@@ -1185,6 +1177,16 @@
      went to deep #6B3535 in dark, the checks vanished on the dark bg.
      Use a brighter shade for the affirmative ticks in dark mode. */
   :root[data-theme="dark"] table.compare td.yes { color: #D87878; }
+  /* Inline-burgundy hyperlinks (Join the beta, info@thelatinmass.org)
+     went dark-on-dark in dark mode. Themed class instead of inline. */
+  .inline-link {
+    color: var(--burgundy);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-thickness: 1px;
+  }
+  .inline-link:hover { text-decoration-thickness: 2px; }
+  :root[data-theme="dark"] .inline-link { color: #fff; }
 </style>
 </head>
 <body>
@@ -1278,7 +1280,7 @@
   <div class="container">
     <span class="eyebrow">From early users</span>
     <h2 id="testimonials-heading">What people say so far</h2>
-    <p class="lede">Quotes from beta users (used with permission, names initialised). Want yours here? <a href="#signup" style="color:var(--burgundy)">Join the beta</a> and tell us what you think.</p>
+    <p class="lede">Quotes from beta users (used with permission, names initialised). Want yours here? <a href="#signup" class="inline-link">Join the beta</a> and tell us what you think.</p>
   </div>
   <!-- IMPORTANT: real testimonials only. Each card stays empty until a
        beta user has actually said this and given consent. Do NOT fill
@@ -1482,7 +1484,7 @@
   <div class="container">
     <span class="eyebrow">Common questions</span>
     <h2 id="faq-heading">Frequently asked</h2>
-    <p class="lede">If you have a question that is not here, email <a href="mailto:info@thelatinmass.org" style="color:var(--burgundy)">info@thelatinmass.org</a> and it will probably make it onto this list.</p>
+    <p class="lede">If you have a question that is not here, email <a href="mailto:info@thelatinmass.org" class="inline-link">info@thelatinmass.org</a> and it will probably make it onto this list.</p>
   </div>
   <div class="faq-list">
     <details class="faq-item">
