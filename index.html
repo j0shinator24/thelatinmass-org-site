@@ -686,6 +686,49 @@
     *, *::before, *::after { transition-duration: 0.01ms !important; }
   }
 
+  /* ───── Floating theme toggle (corner button) ────────────────────────
+     Matches the PatronAtlas pattern: fixed top-right circular button with
+     a Sun/Moon icon. Click to flip light <-> dark. Writes tlm_theme to
+     localStorage and toggles data-theme on <html>. Always-on-top, subtle
+     drop shadow so it reads on any background. */
+  .theme-toggle-fab {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 100;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--cream-soft);
+    border: 1px solid var(--gold);
+    color: var(--ink);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    transition: background-color 0.18s, color 0.18s, transform 0.18s, border-color 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .theme-toggle-fab:hover { background: var(--cream); transform: scale(1.05); }
+  .theme-toggle-fab:active { transform: scale(0.95); }
+  .theme-toggle-fab svg { width: 20px; height: 20px; display: block; }
+  .theme-toggle-fab .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle-fab {
+    background: #1A130F;
+    border-color: var(--gold);
+    color: #EAD9BC;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+  :root[data-theme="dark"] .theme-toggle-fab:hover { background: #221912; }
+  :root[data-theme="dark"] .theme-toggle-fab .icon-sun { display: block; }
+  :root[data-theme="dark"] .theme-toggle-fab .icon-moon { display: none; }
+  @media (max-width: 560px) {
+    .theme-toggle-fab { top: 12px; right: 12px; width: 38px; height: 38px; }
+    .theme-toggle-fab svg { width: 18px; height: 18px; }
+  }
+
   /* ───── Try-a-card demo band ─────────────────────────────────────────
      A playable 5-card preview. No signup, no scheduling, just lets a
      visitor feel the flip + audio + interlinear convention before
@@ -1084,6 +1127,17 @@
 </style>
 </head>
 <body>
+
+<button id="themeToggleFab" class="theme-toggle-fab" type="button" aria-label="Switch to dark mode" title="Switch theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
+
 
 <header class="hero" role="banner">
   <div class="hero-inner">
@@ -2042,6 +2096,31 @@
     nextBtn.addEventListener('click', function () { goTo(idx + 1); });
 
     render();
+  })();
+
+  // ─── Floating theme toggle (Sun/Moon) ──────────────────────────────
+  // Click to flip light <-> dark. Light is default; we only ever WRITE the
+  // 'dark' value (or remove the key for light) so the early-paint script
+  // can stay tiny.
+  (function () {
+    var btn = document.getElementById('themeToggleFab');
+    if (!btn) return;
+    function syncLabel() {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+    syncLabel();
+    btn.addEventListener('click', function () {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      try {
+        if (isDark) localStorage.removeItem('tlm_theme');
+        else localStorage.setItem('tlm_theme', 'dark');
+      } catch (_) {}
+      if (isDark) document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', 'dark');
+      syncLabel();
+      if (typeof window.tlmTrack === 'function') window.tlmTrack('theme_toggle', { to: isDark ? 'light' : 'dark' });
+    });
   })();
 
   // ─── Share-with-parish button (Web Share API with clipboard fallback) ─

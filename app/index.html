@@ -1632,9 +1632,61 @@
   @media (prefers-reduced-motion: reduce) {
     .candle-load .flame { animation: none; }
   }
+
+  /* ───── Floating theme toggle (corner FAB) ──────────────────────────
+     Matches the PatronAtlas pattern: fixed top-right circular Sun/Moon
+     button. Writes tlm_theme to localStorage and flips data-theme on
+     <html>. The Settings page picker reflects the same state when shown. */
+  .theme-toggle-fab {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 100;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--cream-soft);
+    border: 1px solid var(--gold);
+    color: var(--ink);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+    transition: background-color 0.18s, color 0.18s, transform 0.18s, border-color 0.18s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .theme-toggle-fab:hover { background: var(--cream); transform: scale(1.05); }
+  .theme-toggle-fab:active { transform: scale(0.95); }
+  .theme-toggle-fab svg { width: 20px; height: 20px; display: block; }
+  .theme-toggle-fab .icon-sun { display: none; }
+  :root[data-theme="dark"] .theme-toggle-fab {
+    background: #1A130F;
+    border-color: var(--gold);
+    color: #EAD9BC;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  }
+  :root[data-theme="dark"] .theme-toggle-fab:hover { background: #221912; }
+  :root[data-theme="dark"] .theme-toggle-fab .icon-sun { display: block; }
+  :root[data-theme="dark"] .theme-toggle-fab .icon-moon { display: none; }
+  @media (max-width: 560px) {
+    .theme-toggle-fab { top: 10px; right: 10px; width: 36px; height: 36px; }
+    .theme-toggle-fab svg { width: 16px; height: 16px; }
+  }
 </style>
 </head>
 <body>
+
+<button id="themeToggleFab" class="theme-toggle-fab" type="button" aria-label="Switch to dark mode" title="Switch theme">
+  <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+  <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+  </svg>
+</button>
 
 <header class="app-header">
   <a href="../" class="brand">The <em>Latin Mass</em></a>
@@ -1664,7 +1716,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v45-2026-05-18-demo-card-swap';
+  var APP_BUILD = 'v46-2026-05-20-theme-toggle-fab';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -1787,6 +1839,34 @@
     redirectToLanding();
   }
   document.getElementById('signoutBtn').addEventListener('click', signOut);
+
+  // ─── Floating theme toggle (Sun/Moon corner FAB) ────────────────────
+  // Click to flip light <-> dark. Light is default; only 'dark' is ever
+  // written to localStorage. The Settings page picker reads the same key.
+  (function () {
+    var btn = document.getElementById('themeToggleFab');
+    if (!btn) return;
+    function syncLabel() {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+    }
+    syncLabel();
+    btn.addEventListener('click', function () {
+      var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      try {
+        if (isDark) localStorage.removeItem('tlm_theme');
+        else localStorage.setItem('tlm_theme', 'dark');
+      } catch (_) {}
+      if (isDark) document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.setAttribute('data-theme', 'dark');
+      // If the Settings picker is currently rendered, mirror the new state.
+      document.querySelectorAll('.theme-btn[data-theme]').forEach(function (b) {
+        b.classList.toggle('active', b.getAttribute('data-theme') === (isDark ? 'light' : 'dark'));
+      });
+      syncLabel();
+      if (typeof window.tlmTrack === 'function') window.tlmTrack('theme_toggle', { to: isDark ? 'light' : 'dark' });
+    });
+  })();
 
   // ─── Supabase REST helpers (with user JWT) ──────────────────────────────
   function authHeaders(session) {
