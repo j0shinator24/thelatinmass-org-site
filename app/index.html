@@ -1716,7 +1716,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v46-2026-05-20-theme-toggle-fab';
+  var APP_BUILD = 'v47-2026-05-20-settings-theme-default';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -2223,13 +2223,14 @@
              +     '</div>'
              +   '</div>'
 
-             // ── Appearance / theme picker
+             // ── Appearance / theme picker (saved default; the corner
+             // Sun/Moon button is the quick in-app flip)
              +   '<div class="settings-section">'
              +     '<h3>Appearance</h3>'
              +     '<div class="settings-row">'
              +       '<div class="label-stack">'
-             +         '<div class="lbl">Theme</div>'
-             +         '<div class="hint">Light is the default. Dark mode is opt-in (currently in beta, some screens may still need polish).</div>'
+             +         '<div class="lbl">Default theme</div>'
+             +         '<div class="hint">Sets your saved default. For a quick flip, use the <strong>moon/sun button</strong> in the top-right corner of any screen.</div>'
              +       '</div>'
              +     '</div>'
              +     (function () {
