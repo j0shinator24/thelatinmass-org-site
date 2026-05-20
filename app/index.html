@@ -1477,7 +1477,7 @@
     --taupe-dark: #D9C2A4;
     --taupe-deep: #EAD9BC;
     --gold: #D4B57E;
-    --burgundy: #C68888;
+    --burgundy: #C56666;
     --green: #8FBFA0;
     --green-bright: #A8D4BA;
     --amber: #E0BA6B;
@@ -1491,12 +1491,32 @@
   :root[data-theme="dark"] .lb-row,
   :root[data-theme="dark"] .lb-tabs { background: #1A130F; }
   :root[data-theme="dark"] .lb-tab.active { background: #6B3535; border-color: #6B3535; color: #EAD9BC; }
+  /* ────────────────────────────────────────────────────────────────
+     White-surface sweep: many surfaces had `background: #fff` hardcoded
+     (the app header was the most visible -- cream text on white). All
+     forced to warm dark in dark mode. The legacy var-only overrides
+     above already handled .card/.deck-card/.forecast-row/.stat/.lb-row;
+     this block catches the rest. */
+  :root[data-theme="dark"] header.app-header { background: #1A130F; border-bottom-color: #3D2F25; }
+  :root[data-theme="dark"] .settings-section { background: #1A130F; }
+  :root[data-theme="dark"] .settings-btn,
+  :root[data-theme="dark"] .oauth-btn { background: #211814; color: #EAD9BC; border-color: #3D2F25; }
+  :root[data-theme="dark"] .settings-btn:hover,
+  :root[data-theme="dark"] .oauth-btn:hover { background: #2A211A; }
+  :root[data-theme="dark"] .goal-banner { background: #1A130F; }
+  :root[data-theme="dark"] .goal-settings { background: #1A130F; }
+  :root[data-theme="dark"] .target-chip { background: #211814; color: #EAD9BC; border-color: #3D2F25; }
+  :root[data-theme="dark"] .target-chip.active { background: #2A211A; border-color: var(--gold); color: #EAD9BC; }
+  :root[data-theme="dark"] .forecast-summary .stat { background: #1A130F; }
+  :root[data-theme="dark"] .heatmap { background: #1A130F; }
+  :root[data-theme="dark"] .rating-breakdown .rb { background: #211814; }
+  :root[data-theme="dark"] .stat-grid .stat { background: #1A130F; }
   :root[data-theme="dark"] .rate-btn { background: #211814; color: #EAD9BC; }
   /* Rate-button per-rating colours had hardcoded light-mode values that
      stranded text on dark in dark mode. Brighten each one so the label
      reads against the dark card surface, and replace the pastel hover
      backgrounds with warm dark equivalents. */
-  :root[data-theme="dark"] .rate-btn[data-rating="1"] { border-color: #C68888; color: #E89C9C; }
+  :root[data-theme="dark"] .rate-btn[data-rating="1"] { border-color: #C56666; color: #D87878; }
   :root[data-theme="dark"] .rate-btn[data-rating="1"]:hover { background: #2E1A1A; }
   :root[data-theme="dark"] .rate-btn[data-rating="2"] { border-color: #E0BA6B; color: #E0BA6B; }
   :root[data-theme="dark"] .rate-btn[data-rating="2"]:hover { background: #2E2418; }
@@ -1735,7 +1755,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v48-2026-05-20-dark-mode-audit';
+  var APP_BUILD = 'v49-2026-05-20-dark-header-and-brick-red';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
