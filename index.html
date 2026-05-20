@@ -949,14 +949,17 @@
     font-size: 0.7rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--ink-soft);
-    border-bottom: 2px solid var(--ink-soft);
-    background: var(--cream-soft);
+    color: #fff;
+    border-bottom: 2px solid var(--burgundy);
+    background: var(--burgundy);
   }
   table.compare thead th.us {
     background: var(--burgundy);
-    color: var(--cream);
+    color: #fff;
     border-bottom-color: var(--burgundy);
+    /* Gold inset keeps the "us" column drawn without breaking the
+       white-on-burgundy unity of the row. */
+    box-shadow: inset 0 -3px 0 var(--gold);
   }
   table.compare tbody th {
     text-align: left;
@@ -1080,7 +1083,7 @@
     --taupe-dark: #D9C2A4;
     --taupe-deep: #EAD9BC;
     --gold: #D4B57E;
-    --burgundy: #C56666;
+    --burgundy: #6B3535;
     --slider-cream: #EAD9BC;
   }
   :root[data-theme="dark"] body { background: #0F0B08; }
@@ -1155,6 +1158,33 @@
     border-color: #3D2F25;
   }
   :root[data-theme="dark"] .form-card label { color: #C8B498; }
+  /* Feature band is a "spotlight" section -- keep its light identity in
+     dark mode so the 510/83/FSRS stat cards never look muddy. */
+  :root[data-theme="dark"] section.feature-band {
+    background: #FBF8F2;
+    border-bottom-color: #E2D9CB;
+  }
+  :root[data-theme="dark"] section.feature-band h2,
+  :root[data-theme="dark"] section.feature-band .lede,
+  :root[data-theme="dark"] section.feature-band .feature .label,
+  :root[data-theme="dark"] section.feature-band .eyebrow { color: #4D4238; }
+  :root[data-theme="dark"] section.feature-band .lede,
+  :root[data-theme="dark"] section.feature-band .feature .label { color: #5A5048; }
+  :root[data-theme="dark"] section.feature-band .feature {
+    background: #fff;
+    border-color: #E2D9CB;
+  }
+  :root[data-theme="dark"] section.feature-band .feature .num { color: #5E2A2A; }
+  :root[data-theme="dark"] section.feature-band .eyebrow { color: #987F71; }
+  /* Footer uses background:var(--ink) -- in dark, --ink flips to cream
+     and the whole footer becomes cream-on-cream. The text colours are
+     hardcoded rgba cream values so they already read on dark; just
+     lock the bg to the light-mode --ink value. */
+  :root[data-theme="dark"] footer { background: #2A2520; }
+  /* Compare-table check marks use color:var(--burgundy). When --burgundy
+     went to deep #6B3535 in dark, the checks vanished on the dark bg.
+     Use a brighter shade for the affirmative ticks in dark mode. */
+  :root[data-theme="dark"] table.compare td.yes { color: #D87878; }
 </style>
 </head>
 <body>

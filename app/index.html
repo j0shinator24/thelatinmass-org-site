@@ -1477,7 +1477,7 @@
     --taupe-dark: #D9C2A4;
     --taupe-deep: #EAD9BC;
     --gold: #D4B57E;
-    --burgundy: #C56666;
+    --burgundy: #6B3535;
     --green: #8FBFA0;
     --green-bright: #A8D4BA;
     --amber: #E0BA6B;
@@ -1516,8 +1516,19 @@
      stranded text on dark in dark mode. Brighten each one so the label
      reads against the dark card surface, and replace the pastel hover
      backgrounds with warm dark equivalents. */
-  :root[data-theme="dark"] .rate-btn[data-rating="1"] { border-color: #C56666; color: #D87878; }
+  /* --burgundy in dark = #6B3535 (matches the CTA button bg). Too dark
+     to read as text on the dark surface, so foreground uses get a
+     brighter shade explicitly. */
+  :root[data-theme="dark"] .rate-btn[data-rating="1"] { border-color: #A85959; color: #D87878; }
   :root[data-theme="dark"] .rate-btn[data-rating="1"]:hover { background: #2E1A1A; }
+  :root[data-theme="dark"] .deck-card .stats .num { color: #D4B57E; }
+  :root[data-theme="dark"] header.app-header nav a:hover,
+  :root[data-theme="dark"] header.app-header nav button:hover { color: #D4B57E; }
+  :root[data-theme="dark"] header.app-header nav a.active,
+  :root[data-theme="dark"] header.app-header nav button.active {
+    color: #D4B57E;
+    border-bottom-color: #D4B57E;
+  }
   :root[data-theme="dark"] .rate-btn[data-rating="2"] { border-color: #E0BA6B; color: #E0BA6B; }
   :root[data-theme="dark"] .rate-btn[data-rating="2"]:hover { background: #2E2418; }
   :root[data-theme="dark"] .rate-btn[data-rating="3"] { border-color: #8FBFA0; color: #A8D4BA; }
@@ -1755,7 +1766,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v49-2026-05-20-dark-header-and-brick-red';
+  var APP_BUILD = 'v50-2026-05-20-dark-visual-audit';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
