@@ -87,7 +87,10 @@
   header.app-header {
     background: #fff;
     border-bottom: 1px solid var(--rule);
-    padding: 14px 20px;
+    /* Extra right padding keeps the rightmost nav item (sign-out) clear
+       of the fixed top-right theme-toggle FAB (42px button at right:18px,
+       so reserve 70px to leave a comfortable gap). */
+    padding: 14px 72px 14px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -1423,7 +1426,7 @@
     .rate-row { gap: 6px; }
     .rate-btn { padding: 12px 4px; min-height: 60px; font-size: 0.72rem; letter-spacing: 0.1em; }
     .rate-btn .interval-hint { font-size: 0.72rem; margin-top: 4px; }
-    header.app-header { padding: 10px 14px; gap: 8px; }
+    header.app-header { padding: 10px 56px 10px 14px; gap: 8px; }
     header.app-header .brand { font-size: 1.1rem; }
     header.app-header .user { display: none; }
     header.app-header nav { gap: 10px; font-size: 0.62rem; letter-spacing: 0.1em; }
