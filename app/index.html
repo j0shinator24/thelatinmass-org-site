@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-<title>The Latin Mass — Study</title>
+<title>The Latin Mass | Study</title>
 <meta name="description" content="Spaced-repetition flashcards for the 1962 Tridentine Latin Mass.">
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" type="image/svg+xml" href="../favicon.svg">
@@ -56,6 +56,8 @@
     --amber: #b8862e;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* The hidden attribute must win over any display rule (.cta, .form-card). */
+  [hidden] { display: none !important; }
   html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
   body {
     font-family: 'Lato', system-ui, sans-serif;
@@ -1783,7 +1785,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v53-2026-05-20-card-front-and-reauth-dark';
+  var APP_BUILD = 'v54-2026-10-04-review-fixes';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -2144,8 +2146,48 @@
     persistSettings();
     return next;
   }
-  var REVIEW_START = 0;
-  var SESSION_REVIEWS = 0;
+  var SESSION_REVIEWS = 0;  // ratings given this sitting (a re-drilled card counts each time)
+  var SESSION_CARDS = {};   // distinct card ids rated this sitting
+
+  // Cards first introduced today (card id -> true), read from the review log
+  // so the new-cards-per-day cap still holds when a new card is rated more
+  // than once, or was started on another device.
+  var INTRO_TODAY = { day: '', ids: {} };
+  function introSet() {
+    var k = todayKey();
+    if (INTRO_TODAY.day !== k) INTRO_TODAY = { day: k, ids: {} };
+    return INTRO_TODAY.ids;
+  }
+  function fetchIntroducedToday() {
+    var start = new Date();
+    start.setHours(0, 0, 0, 0);
+    return rest('/user_review_log?select=card_id&state_before=eq.0&review_time=gte.'
+                + encodeURIComponent(start.toISOString()) + '&limit=2000', SESSION)
+      .then(function (rows) {
+        var ids = introSet();
+        (rows || []).forEach(function (r) { ids[r.card_id] = true; });
+      })
+      .catch(function (err) {
+        // Non-fatal: getTodayStats falls back to the reps === 1 estimate.
+        console.warn('[tlm-app] introduced-today fetch failed:', err && err.message);
+      });
+  }
+
+  // A card is due when its timer has run out. Cards on a day-scale interval
+  // count as due from the start of their due day, so a card rated at 9pm is
+  // ready the next morning and the deck agrees with the calendar. Learning
+  // steps measured in minutes are exact.
+  function endOfTodayMs() {
+    var d = new Date();
+    d.setHours(24, 0, 0, 0);
+    return d.getTime();
+  }
+  function isDue(s, nowMs) {
+    if (!s || !s.due) return false;
+    var dueMs = new Date(s.due).getTime();
+    if ((s.scheduled_days || 0) >= 1) return dueMs < endOfTodayMs();
+    return dueMs <= nowMs;
+  }
 
   // ─── Boot ───────────────────────────────────────────────────────────────
   // Resolve the session async (will refresh if expired), then either run the
@@ -2167,7 +2209,7 @@
     console.info('[tlm-app] boot ok, user:', SESSION.user && SESSION.user.email);
     document.getElementById('userEmail').textContent = (SESSION.user && SESSION.user.email) || '';
     wireNav();
-    Promise.all([fetchStatic(), fetchUserState(), fetchSettingsRemote(), fetchProfile(), fetchArchdioceses()])
+    Promise.all([fetchStatic(), fetchUserState(), fetchSettingsRemote(), fetchProfile(), fetchArchdioceses(), fetchIntroducedToday()])
       .then(function () { showDeckPicker(); })
       .catch(function (err) {
         // 401 from fetchUserState would already have triggered a refresh+retry
@@ -2192,8 +2234,11 @@
       if (!SESSION) return;
       var awayMs = Date.now() - _lastHiddenAt;
       if (_lastHiddenAt === 0 || awayMs < 60000) return; // skip short blips
+      // Mid-session: leave the card on screen alone. Re-rendering here used
+      // to drop the user back on the deck list every time the phone locked.
+      if (ACTIVE_VIEW === 'study') return;
       console.info('[tlm-app] tab back after', Math.round(awayMs/1000) + 's away, resyncing');
-      Promise.all([fetchUserState(), fetchSettingsRemote()]).then(function () {
+      Promise.all([fetchUserState(), fetchSettingsRemote(), fetchIntroducedToday()]).then(function () {
         // Re-render the current view so updated numbers land immediately.
         var rerender = ({
           decks: showDeckPicker,
@@ -2334,11 +2379,11 @@
              +     '<div id="setProfileMsg" class="settings-msg" role="status" aria-live="polite"></div>'
              +   '</form>'
 
-             // ── Daily targets (link to deck picker which has the chip UI)
+             // ── Daily targets (the chip UI lives on the Calendar page)
              +   '<div class="settings-section">'
              +     '<h3>Daily targets</h3>'
              +     '<p class="goal-settings-hint">New cards per day: <strong>' + escapeHtml(String(SETTINGS.new_per_day)) + '</strong>. Daily cap: <strong>' + escapeHtml(String(SETTINGS.max_per_day)) + '</strong>.</p>'
-             +     '<button class="settings-btn" id="setTargetsBtn">Change targets on deck page</button>'
+             +     '<button class="settings-btn" id="setTargetsBtn">Change targets on the Calendar page</button>'
              +   '</div>'
 
              // ── Subscription (read-only — Stripe not wired yet)
@@ -2460,8 +2505,8 @@
       });
     });
 
-    // ── Daily targets shortcut: deck picker is where the chip UI lives.
-    document.getElementById('setTargetsBtn').addEventListener('click', showDeckPicker);
+    // ── Daily targets shortcut: the Calendar page is where the chip UI lives.
+    document.getElementById('setTargetsBtn').addEventListener('click', function () { showCalendar(); });
 
     // ── Sign out / delete account
     document.getElementById('setSignOutBtn').addEventListener('click', signOut);
@@ -2502,14 +2547,19 @@
         if (s && s.user && s.user.email) prefillEmail = s.user.email;
       }
     } catch (_) {}
+    var hadSession = false;
+    try { hadSession = !!localStorage.getItem('tlm_session'); } catch (_) {}
     // Clear the stale session so landing shows the signup form (not the
     // "Continue to study" CTA) if the user navigates away.
     try { localStorage.removeItem('tlm_session'); } catch (_) {}
+    // The nav buttons do nothing without a session, so take them away.
+    var navEl = document.querySelector('header.app-header nav');
+    if (navEl) navEl.style.display = 'none';
 
     var main = document.getElementById('main');
     main.innerHTML = '<div class="done" style="padding:36px 24px;text-align:left;max-width:420px;margin:0 auto">'
-      + '<h2 style="text-align:center;margin-bottom:6px">Your session expired</h2>'
-      + '<p style="text-align:center;margin-bottom:22px">Sign in again to pick up where you left off.</p>'
+      + '<h2 style="text-align:center;margin-bottom:6px">' + (hadSession ? 'Your session expired' : 'Sign in') + '</h2>'
+      + '<p style="text-align:center;margin-bottom:22px">' + (hadSession ? 'Sign in again to pick up where you left off.' : 'Sign in to open your decks.') + '</p>'
       + '<form id="reauthForm" action="javascript:void(0)" method="post" novalidate>'
         + '<label for="reauthEmail" style="display:block;font-family:\'Cinzel\',serif;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--taupe-dark);margin-bottom:6px">Email</label>'
         + '<input type="email" id="reauthEmail" name="email" required autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" value="' + escapeHtml(prefillEmail) + '" style="width:100%;padding:12px 14px;font-size:16px;font-family:\'Lato\',sans-serif;border:1px solid var(--rule);background:#fff;color:var(--ink);margin-bottom:14px">'
@@ -2530,6 +2580,7 @@
           + '<span>Google</span>'
         + '</button>'
       + '</div>'
+      + '<p style="text-align:center;margin:20px 0 0;font-size:0.9rem">New here? <a href="../#signup" style="color:inherit">Create a free account</a></p>'
       + '</div>';
 
     var form = document.getElementById('reauthForm');
@@ -2544,7 +2595,7 @@
       msg.style.display = 'block';
       msg.style.background = kind === 'error' ? '#f8e8e8' : '#e6efe9';
       msg.style.border = '1px solid ' + (kind === 'error' ? '#c08383' : '#7da090');
-      msg.style.color = kind === 'error' ? 'var(--burgundy)' : 'var(--green)';
+      msg.style.color = kind === 'error' ? '#7a1f1f' : '#2d5d3f';
     }
 
     form.addEventListener('submit', function (e) {
@@ -2625,7 +2676,9 @@
       STATIC.notesById = {};
       data.notes.forEach(function (n) { STATIC.notesById[n.id] = n; });
       STATIC.cardsByDeck = {};
+      STATIC.cardsById = {};
       data.cards.forEach(function (c) {
+        STATIC.cardsById[c.id] = c;
         if (!STATIC.cardsByDeck[c.deck_id]) STATIC.cardsByDeck[c.deck_id] = [];
         STATIC.cardsByDeck[c.deck_id].push(c);
       });
@@ -2694,14 +2747,12 @@
              + '<div class="deck-list">';
     STATIC.decks.forEach(function (d) {
       var cards = STATIC.cardsByDeck[d.id] || [];
-      var dueCount = 0, newCount = 0, reviewCount = 0;
+      var dueCount = 0, newCount = 0;
       var now = Date.now();
       cards.forEach(function (c) {
         var s = USER_STATE[c.id];
         if (!s) { newCount++; return; }
-        var dueMs = new Date(s.due || s.last_review || 0).getTime();
-        if (dueMs <= now) dueCount++;
-        if (s.reps > 0) reviewCount++;
+        if (isDue(s, now)) dueCount++;
       });
       html += '<button class="deck-card" data-deck="' + d.id + '">'
             + '<h3>' + escapeHtml(d.name) + '</h3>'
@@ -2798,7 +2849,6 @@
     var unseenLeft = countUnseenCards();
     var dailyTargetN = getDailyTarget();
     var maxPerDay = getMaxPerDay();
-    var totalDaysWithNew = 0;
     // Spillover: due cards that couldn't fit today defer to tomorrow
     var spillover = Math.max(0, buckets[0].count - maxPerDay);
     buckets[0].newPlanned = 0;
@@ -2820,7 +2870,6 @@
 
       buckets[i].count = rawDue;
       buckets[i].newPlanned = planned;
-      if (planned > 0) totalDaysWithNew++;
       unseenLeft -= planned;
     }
     // Any remaining spillover beyond 14 days lands in the overflow bucket
@@ -2908,10 +2957,10 @@
                       + '<details class="goal-science">'
                         + '<summary>Why these numbers matter</summary>'
                         + '<div class="goal-science-body">'
-                          + '<p><strong>The forgetting curve (Ebbinghaus, 1885)</strong> — we lose roughly half of new information within 24 hours and ~70% within a week unless something brings it back. Spacing the review just before you would have forgotten is what turns short daily practice into long-term retention.</p>'
-                          + '<p><strong>SuperMemo (Piotr Wozniak, 1987 onwards)</strong> turned that observation into the SM-family of algorithms. Anki popularised SM-2. The app you\'re holding uses <a href="https://github.com/open-spaced-repetition/fsrs4anki" target="_blank" rel="noopener">FSRS-4.5</a> (Jarrett Ye et al, 2023) which models three latent variables per card — Difficulty, Stability, Retrievability — and schedules each review at the moment your retention probability hits 90%. That target retention of 0.9 is the published sweet spot: lower wastes reviews on cards you still know, higher drowns you in re-reviews of cards you keep forgetting.</p>'
-                          + '<p><strong>Why a daily cap on new cards</strong> — every new card you start today adds roughly 0.7 to 1.5 future reviews per day to your steady-state load, depending on its difficulty. At 10 new/day the mature daily review queue settles around 25 to 40 cards total, about 5 to 10 minutes per day. At 30 new/day it piles up to 80 to 120 daily reviews, 30 to 45 minutes — and the public Anki / SuperMemo retention surveys (Wozniak\'s own user data, Anki community polls) show drop-off accelerates sharply past ~30 daily minutes.</p>'
-                          + '<p><strong>Cognitive interference</strong> is the second cap. Adult vocabulary-acquisition research (Pimsleur 1967, Nation 2001, Krashen) consistently finds that introducing more than around 15 to 20 new items in one sitting causes the items to blur into each other — you remember the <em>list</em> rather than the individual words. The 10-per-day default keeps each new lemma well under that threshold and gives every word at least one isolated retrieval before the next batch arrives.</p>'
+                          + '<p><strong>The forgetting curve (Ebbinghaus, 1885).</strong> We lose roughly half of new information within 24 hours and ~70% within a week unless something brings it back. Spacing the review just before you would have forgotten is what turns short daily practice into long-term retention.</p>'
+                          + '<p><strong>SuperMemo (Piotr Wozniak, 1987 onwards)</strong> turned that observation into the SM-family of algorithms. Anki popularised SM-2. The app you\'re holding uses <a href="https://github.com/open-spaced-repetition/fsrs4anki" target="_blank" rel="noopener">FSRS-4.5</a> (Jarrett Ye et al, 2023) which models three latent variables per card (Difficulty, Stability, Retrievability) and schedules each review at the moment your retention probability hits 90%. That target retention of 0.9 is the published sweet spot: lower wastes reviews on cards you still know, higher drowns you in re-reviews of cards you keep forgetting.</p>'
+                          + '<p><strong>Why a daily cap on new cards.</strong> Every new card you start today adds roughly 0.7 to 1.5 future reviews per day to your steady-state load, depending on its difficulty. At 10 new/day the mature daily review queue settles around 25 to 40 cards total, about 5 to 10 minutes per day. At 30 new/day it piles up to 80 to 120 daily reviews, 30 to 45 minutes, and the public Anki / SuperMemo retention surveys (Wozniak\'s own user data, Anki community polls) show drop-off accelerates sharply past ~30 daily minutes.</p>'
+                          + '<p><strong>Cognitive interference</strong> is the second cap. Adult vocabulary-acquisition research (Pimsleur 1967, Nation 2001, Krashen) consistently finds that introducing more than around 15 to 20 new items in one sitting causes the items to blur into each other: you remember the <em>list</em> rather than the individual words. The 10-per-day default keeps each new lemma well under that threshold and gives every word at least one isolated retrieval before the next batch arrives.</p>'
                           + '<p>So the practical heuristic: <em>diminishing returns are real and they hit fast above 20</em>. Sustainable rhythm beats heroic sessions. The cap is here to protect future you from past you.</p>'
                         + '</div>'
                       + '</details>'
@@ -2925,7 +2974,7 @@
              + goalBanner
              + settingsStrip
              + '<div class="forecast-summary">'
-               + '<div class="stat"><div class="num">' + (overdueCount + buckets[0].count - overdueCount) + '</div><div class="lbl">Due today</div></div>'
+               + '<div class="stat"><div class="num">' + buckets[0].count + '</div><div class="lbl">Due today</div></div>'
                + '<div class="stat"><div class="num">' + newCount + '</div><div class="lbl">New cards</div></div>'
                + '<div class="stat"><div class="num">' + (totalScheduled + overdueCount) + '</div><div class="lbl">In rotation</div></div>'
              + '</div>'
@@ -3006,7 +3055,14 @@
     // collapse. Latin only -- no English -- so previewing doesn't spoil
     // upcoming recalls.
     document.querySelectorAll('.forecast-row[data-bucket]').forEach(function (row) {
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
       row.addEventListener('click', function () {
+        toggleDayPreview(row, parseInt(row.dataset.bucket, 10));
+      });
+      row.addEventListener('keydown', function (e) {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
         toggleDayPreview(row, parseInt(row.dataset.bucket, 10));
       });
     });
@@ -3066,16 +3122,7 @@
       } else {
         if (dueMs < startMs || dueMs >= endMs) return;
       }
-      // Find the card -> note
-      var cid = parseInt(cidStr, 10);
-      var card = null;
-      for (var dId in STATIC.cardsByDeck) {
-        var arr = STATIC.cardsByDeck[dId];
-        for (var i = 0; i < arr.length; i++) {
-          if (arr[i].id === cid) { card = arr[i]; break; }
-        }
-        if (card) break;
-      }
+      var card = STATIC.cardsById[cidStr];
       if (!card) return;
       var note = STATIC.notesById[card.note_id];
       if (!note) return;
@@ -3212,7 +3259,7 @@
                + '<div class="stat"><div class="num">' + rows.length + '</div><div class="lbl">Times Practiced</div></div>'
                + '<div class="stat"><div class="num">' + totalLast30 + '</div><div class="lbl">Last 30 days</div></div>'
                + '<div class="stat"><div class="num">' + streak + '</div><div class="lbl">Day streak</div></div>'
-               + '<div class="stat"><div class="num">' + (retention === null ? '—' : retention + '%') + '</div><div class="lbl">Retention</div></div>'
+               + '<div class="stat"><div class="num">' + (retention === null ? 'n/a' : retention + '%') + '</div><div class="lbl">Retention</div></div>'
              + '</div>'
              + '<p class="mini-legend"><strong>Retention</strong> = how often you recalled a card correctly when it came back. <strong>Day streak</strong> = days in a row you have practiced.</p>'
              + (function () {
@@ -3297,23 +3344,28 @@
     var todayMs = todayStart.getTime();
     var nowMs = Date.now();
     var reviewedToday = 0, newIntroducedToday = 0, dueNow = 0;
+    var intro = introSet();
     Object.keys(USER_STATE).forEach(function (cid) {
       var s = USER_STATE[cid];
       if (!s.last_review) return;
       var lr = new Date(s.last_review).getTime();
       if (lr >= todayMs) {
         reviewedToday++;
-        // reps==1 with last_review=today is a card that became "in rotation"
-        // today, i.e. introduced. Approximation -- holds unless undo path
-        // walked it back to reps=0 then back up to 1, which is rare.
-        if (s.reps === 1) newIntroducedToday++;
+        // Introduced today = first rated today. The review log says so
+        // exactly (intro); reps === 1 covers the case where that fetch failed.
+        if (s.reps === 1 || intro[cid]) newIntroducedToday++;
       }
     });
+    // dueNow = everything due right now. dueFresh leaves out cards already
+    // practiced today (learning steps coming back round), because those are
+    // already inside reviewedToday and must not be counted twice in the goal.
+    var dueFresh = 0;
     if (STATIC && STATIC.cards) {
       STATIC.cards.forEach(function (c) {
         var s = USER_STATE[c.id];
-        if (!s || !s.due || s.reps <= 0) return;
-        if (new Date(s.due).getTime() <= nowMs) dueNow++;
+        if (!isDue(s, nowMs)) return;
+        dueNow++;
+        if (!(s.last_review && new Date(s.last_review).getTime() >= todayMs)) dueFresh++;
       });
     }
     // Extra (today-only override) is purely additive on top of whatever
@@ -3325,7 +3377,7 @@
     // todayGoal = the single canonical denominator used by the banner,
     // the in-card progress strip, and the calendar today-row. Caps at
     // MAX (plus extra), but never falls below what you've already done.
-    var available = reviewedToday + dueNow + newRemaining;
+    var available = reviewedToday + dueFresh + newRemaining;
     var todayGoal = Math.max(reviewedToday, Math.min(maxCap, available));
     var totalGoal = Math.max(0, todayGoal - reviewedToday);
     return {
@@ -3490,7 +3542,7 @@
     el.style.display = 'block';
     el.style.background = kind === 'error' ? '#f8e8e8' : '#e6efe9';
     el.style.border = '1px solid ' + (kind === 'error' ? '#c08383' : '#7da090');
-    el.style.color = kind === 'error' ? 'var(--burgundy)' : 'var(--green)';
+    el.style.color = kind === 'error' ? '#7a1f1f' : '#2d5d3f';
   }
 
   // ─── Leaderboard view ───────────────────────────────────────────────────
@@ -3526,15 +3578,11 @@
       cards_mature: 'Words Mastered',
     };
     var metric = LB_METRIC;
-    var myIdx = -1;
-    for (var i = 0; i < rows.length; i++) {
-      if (rows[i].user_id === SESSION.user.id) { myIdx = i; break; }
-    }
 
     var header = '<div class="view-header">'
                + '<span class="eyebrow">Leaderboard</span>'
                + '<h2>' + escapeHtml(PROFILE.archdiocese) + '</h2>'
-               + '<p class="lede">' + rows.length + (rows.length === 1 ? ' faithful' : ' faithful') + ' from the Archdiocese of ' + escapeHtml(PROFILE.archdiocese) + '. Rankings refresh as people study.</p>'
+               + '<p class="lede">' + rows.length + ' faithful from the Archdiocese of ' + escapeHtml(PROFILE.archdiocese) + '. Rankings refresh as people study.</p>'
                + '</div>';
 
     var tabs = '<div class="lb-tabs">'
@@ -3589,37 +3637,46 @@
   // ─── Review session ─────────────────────────────────────────────────────
   function startDeck(deckId) {
     ACTIVE_DECK = STATIC.decks.find(function (d) { return d.id === deckId; });
+    ACTIVE_VIEW = 'study'; // nav keeps "Decks" highlighted; see wireVisibilityRefresh
     SESSION_REVIEWS = 0;
+    SESSION_CARDS = {};
     HISTORY = [];
     buildQueue();
     nextCard();
   }
 
   function buildQueue() {
-    // Queue rule: total queue size capped at MAX_PER_DAY (minus what's
-    // already done today). Due reviews take priority (oldest first); new
-    // cards (most-frequent-in-the-Mass first) fill whatever budget remains
-    // up to NEW_PER_DAY. Both caps are global across decks.
+    // Order: cards still on a learning step from earlier today (always shown,
+    // they don't use up the daily budget), then due cards oldest first, then
+    // new cards most-frequent-in-the-Mass first. Due + new together are capped
+    // at MAX_PER_DAY minus what's already been done today; new cards are also
+    // capped at NEW_PER_DAY. Both caps are global across decks.
     var now = Date.now();
+    var todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    var todayMs = todayStart.getTime();
+    var relearn = [];
     var due = [];
     var fresh = [];
     var cards = STATIC.cardsByDeck[ACTIVE_DECK.id] || [];
     cards.forEach(function (c) {
       var s = USER_STATE[c.id];
-      if (!s) {
-        fresh.push(c);
-      } else if (s.reps > 0) {
-        var dueMs = new Date(s.due).getTime();
-        if (dueMs <= now) due.push({ card: c, dueMs: dueMs });
-      }
+      if (!s) { fresh.push(c); return; }
+      if (!isDue(s, now)) return;
+      var entry = { card: c, dueMs: new Date(s.due).getTime() };
+      var practicedToday = s.last_review && new Date(s.last_review).getTime() >= todayMs;
+      (practicedToday ? relearn : due).push(entry);
     });
-    due.sort(function (a, b) { return a.dueMs - b.dueMs; });
+    function byDue(a, b) { return a.dueMs - b.dueMs; }
+    relearn.sort(byDue);
+    due.sort(byDue);
     var stats = getTodayStats();
     var budget = Math.max(0, stats.maxCap - stats.reviewedToday);
     var dueSlots = Math.min(due.length, budget);
-    var queuedDue = due.slice(0, dueSlots).map(function (e) { return e.card; });
     var newSlots = Math.max(0, Math.min(stats.newRemaining, budget - dueSlots));
-    QUEUE = queuedDue.concat(fresh.slice(0, newSlots));
+    QUEUE = relearn.concat(due.slice(0, dueSlots))
+      .map(function (e) { return e.card; })
+      .concat(fresh.slice(0, newSlots));
   }
 
   function nextCard() {
@@ -3630,7 +3687,6 @@
     CURRENT = QUEUE.shift();
     CURRENT_FLIPPED = false;
     IMAGE_PEEKED = false;
-    REVIEW_START = Date.now();
     renderCard();
   }
 
@@ -3790,7 +3846,7 @@
               // gloss above the Latin prompt, with audio + meta below.
               + imageBlock
               + interlinearBlock
-              + '<div class="front">' + escapeHtml(latin) + '</div>'
+              + '<div class="front" lang="la">' + escapeHtml(latin) + '</div>'
               + (CURRENT_FLIPPED ?
                   '<div class="back">'
                     + audioBlock
@@ -3900,7 +3956,7 @@
     {
       eyebrow: 'Welcome',
       title: 'Tap the card to reveal the English',
-      body: 'The Latin is on the front. Tap anywhere on the card, or press the Reveal button, and the English translation appears above it in red italic, the way a hand-missal lays out a bilingual translation.'
+      body: 'The Latin is on the front. Tap anywhere on the card, or press Show answer, and the English translation appears above it in red italic, the way a hand-missal lays out a bilingual translation.'
     },
     {
       eyebrow: 'Step 2',
@@ -3958,6 +4014,24 @@
     CURRENT_FLIPPED = true;
     renderCard();
   }
+
+  // Keyboard: Space or Enter shows the answer, 1 to 4 rate it. Ignored while
+  // a control has focus (so buttons keep their normal behaviour), while the
+  // welcome tour is open, and outside a study session.
+  document.addEventListener('keydown', function (e) {
+    if (ACTIVE_VIEW !== 'study' || !CURRENT) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+    var t = e.target;
+    if (t && /^(INPUT|TEXTAREA|SELECT|BUTTON|A)$/.test(t.tagName)) return;
+    if (document.querySelector('.tour-overlay')) return;
+    if (!document.getElementById('cardEl')) return; // done screen
+    if (!CURRENT_FLIPPED) {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); }
+    } else if (e.key >= '1' && e.key <= '4') {
+      e.preventDefault();
+      rate(parseInt(e.key, 10));
+    }
+  });
 
   // ─── FSRS-4.5 scheduling ────────────────────────────────────────────────
   // Default open-source weights from the FSRS reference implementation.
@@ -4247,16 +4321,26 @@
       headers: { 'Prefer': 'return=minimal' },
     }).catch(function (e) { console.warn('save review failed', e); });
 
+    if (!prev || !prev.reps) introSet()[CURRENT.id] = true;
+
+    // Learning steps (Again or Hard on a new or lapsed card) come back in this
+    // same sitting a few cards later. Before this, the card just sat until the
+    // deck was reopened, and the session ended with it still outstanding.
+    if (nextState.scheduled_days === 0) {
+      var gap = rating === 1 ? 3 : 6;
+      QUEUE.splice(Math.min(gap, QUEUE.length), 0, CURRENT);
+    }
+
     SESSION_REVIEWS += 1;
+    SESSION_CARDS[CURRENT.id] = true;
     nextCard();
   }
 
   // Anki-style "Previous" / undo. Pops the last rated card off HISTORY,
   // restores both the displayed card AND its USER_STATE row, and shows it
   // flipped so the user can re-rate. The next rate() call overwrites the
-  // earlier server-side upsert (same composite PK), so re-rating doesn't
-  // double-count. We DON'T re-insert into QUEUE; if they rate this card
-  // again, that becomes the new tail and they continue forward.
+  // earlier server-side upsert (same composite PK). The review log keeps
+  // both ratings, so an undone rating still counts once in the stats.
   function goPrevious() {
     if (!HISTORY.length) return;
     var entry = HISTORY.pop();
@@ -4265,7 +4349,11 @@
       USER_STATE[entry.card.id] = entry.prevState;
     } else {
       delete USER_STATE[entry.card.id];
+      delete introSet()[entry.card.id];
     }
+    // If that rating re-queued the card as a learning step, take that copy
+    // out so it isn't shown twice.
+    QUEUE = QUEUE.filter(function (c) { return c.id !== entry.card.id; });
     // If we'd already advanced to a later card, that card is still in
     // CURRENT/QUEUE -- push CURRENT back onto QUEUE front so it's the next
     // card after the user re-rates.
@@ -4301,6 +4389,7 @@
     console.info('[tlm-app] +' + n + ' extra new today; total extra now', getExtraToday());
     if (ACTIVE_DECK) {
       SESSION_REVIEWS = 0;
+      SESSION_CARDS = {};
       HISTORY = [];
       buildQueue();
       if (QUEUE.length > 0) {
@@ -4319,27 +4408,29 @@
     var main = document.getElementById('main');
 
     // Four flavours of "you're done" depending on what just happened.
-    // Important: SESSION_REVIEWS counts only the current sitting; reviewedToday
-    // counts every review since local midnight. They diverge when the user
-    // opens the deck again after an earlier session.
+    // SESSION_* cover only the current sitting; reviewedToday covers every
+    // card practiced since local midnight. They diverge when the user opens
+    // the deck again after an earlier session.
     var headline, message;
     var n = stats.reviewedToday;
     var nWord = n + ' card' + (n === 1 ? '' : 's');
+    // Distinct cards, not ratings: a card drilled three times is one card.
+    var sessionCards = Object.keys(SESSION_CARDS).length;
     if (SESSION_REVIEWS === 0 && n === 0) {
       headline = 'All caught up';
       message = "Nothing's due right now. Check the calendar for when your next cards come around.";
     } else if (SESSION_REVIEWS === 0 && n > 0) {
       // Returning visit after they already hit their target earlier today.
       headline = 'Already done for today';
-      message = "You've reviewed " + nWord + " today. Rest now and come back tomorrow for the next batch.";
-    } else if (SESSION_REVIEWS > 0 && n === SESSION_REVIEWS) {
+      message = "You've practiced " + nWord + " today. Rest now and come back tomorrow for the next batch.";
+    } else if (sessionCards >= n) {
       // First session of the day, queue cleared cleanly.
       headline = 'Done for today';
-      message = 'You reviewed ' + nWord + '. Rest now and come back tomorrow.';
+      message = 'You practiced ' + nWord + '. Rest now and come back tomorrow.';
     } else {
       // Mid-day: this session adds onto an earlier one.
       headline = 'Done for today';
-      message = 'Another ' + SESSION_REVIEWS + ' card' + (SESSION_REVIEWS === 1 ? '' : 's')
+      message = 'Another ' + sessionCards + ' card' + (sessionCards === 1 ? '' : 's')
               + ' in this session, ' + nWord + ' total today. Rest now and come back tomorrow.';
     }
 
@@ -4356,7 +4447,7 @@
                    + '<h2>' + escapeHtml(headline) + '</h2>'
                    + '<p>' + escapeHtml(message) + '</p>'
                    + '<div class="done-stats">'
-                     + '<div class="stat-tile"><span class="num">' + stats.reviewedToday + '</span><span class="lbl">Reviewed today</span></div>'
+                     + '<div class="stat-tile"><span class="num">' + stats.reviewedToday + '</span><span class="lbl">Practiced today</span></div>'
                      + '<div class="stat-tile"><span class="num">' + stats.newIntroducedToday + '</span><span class="lbl">New started</span></div>'
                      + '<div class="stat-tile"><span class="num">' + stats.dueNow + '</span><span class="lbl">Still due</span></div>'
                    + '</div>'
