@@ -1786,7 +1786,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v57-2026-10-10-csp-keepalive';
+  var APP_BUILD = 'v58-2026-10-10-leaderboard-rpc';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -3562,7 +3562,8 @@
     }
     var main = document.getElementById('main');
     main.innerHTML = '<div class="status-msg">Loading leaderboard…</div>';
-    rest('/leaderboard?select=user_id,display_name,country,archdiocese,cards_seen,cards_mature,total_reviews,total_lapses,last_review_at&archdiocese=eq.' + encodeURIComponent(PROFILE.archdiocese) + '&order=' + LB_METRIC + '.desc&limit=200', SESSION)
+    // DSS-LATINMASS-APP-002/003: server function returns display columns for the caller's archdiocese only.
+    rest('/rpc/leaderboard_rows', SESSION, { method: 'POST', body: { p_metric: LB_METRIC, p_limit: 200 } })
       .then(function (rows) {
         renderLeaderboard(rows || []);
       })
@@ -3603,7 +3604,7 @@
     var listHtml = rows.map(function (r, idx) {
       var rank = idx + 1;
       var rankDisplay = rank <= 3 ? '<span class="lb-rank-medal">' + medals[rank] + '</span>' : '#' + rank;
-      var isMe = r.user_id === SESSION.user.id;
+      var isMe = r.is_me === true;
       var num = r[metric] || 0;
       var subBits = [];
       if (r.cards_mature) subBits.push(r.cards_mature + ' mastered');
