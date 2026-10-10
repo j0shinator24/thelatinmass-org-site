@@ -1785,7 +1785,7 @@
 <script>
   // IMPORTANT: when bumping APP_BUILD, also update app/version.json to match,
   // otherwise users on stale-cached HTML won't auto-reload.
-  var APP_BUILD = 'v54-2026-10-04-review-fixes';
+  var APP_BUILD = 'v55-2026-10-10-contact-address';
   console.info('[thelatinmass] app-' + APP_BUILD);
 
   // ─── Stale-cache auto-reload ───────────────────────────────────────────
@@ -2527,9 +2527,9 @@
         'Please permanently delete the account associated with this email: ' + email + '.\n\n'
         + '(Sent from the in-app Settings page.)'
       );
-      window.location.href = 'mailto:admin@thelatinmass.org?subject=' + subj + '&body=' + body;
+      window.location.href = 'mailto:info@thelatinmass.org?subject=' + subj + '&body=' + body;
       setMsg(dangerMsg,
-        'Opened your email app with a pre-filled request to admin@thelatinmass.org. '
+        'Opened your email app with a pre-filled request to info@thelatinmass.org. '
         + 'Send it and we will delete your account within 48 hours.',
         'ok'
       );
