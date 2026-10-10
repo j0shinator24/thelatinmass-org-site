@@ -1,0 +1,27 @@
+# Keeps the free-tier Supabase project awake. Supabase pauses a free project after
+# about a week with no API activity, which took sign-up and login down between
+# July and October 2026. A tiny authenticated read every two days counts as activity.
+# The key below is the public (anon) key that already ships in app/index.html.
+name: keepalive
+on:
+  schedule:
+    - cron: "17 3 */2 * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping thelatinmass Supabase REST
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            "https://kugcbqfqataxbyjtaume.supabase.co/rest/v1/profiles?select=user_id&limit=1" \
+            -H "apikey: sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi")
+          echo "thelatinmass REST -> $code"
+          test "$code" = "200"
+      - name: Ping thelatinmass auth
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' \
+            "https://kugcbqfqataxbyjtaume.supabase.co/auth/v1/health" \
+            -H "apikey: sb_publishable_E90qtGbDdlijn20tF5nVZw_CMe7goVi")
+          echo "thelatinmass auth -> $code"
+          test "$code" = "200"
