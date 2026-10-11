@@ -1278,14 +1278,27 @@
   .quote-band .english:last-child { margin-bottom: 0; }
   .quote-band .vr { font-family: 'Cinzel', serif; font-style: normal; font-size: .6em; color: var(--rubric); letter-spacing: .08em; margin-right: .5em; vertical-align: .12em; }
 
-  /* Compare table on phones: the feature names stay put while the columns slide. */
-  .compare-hint { display: none; font-family: 'Cinzel', serif; font-size: .72rem; letter-spacing: .18em; text-transform: uppercase; color: var(--text-muted); margin-top: 22px; }
+  /* Compare table on phones: each feature is a card. Our line runs full width, the four others sit two by two.
+     Nothing scrolls sideways (WCAG 1.4.10 Reflow; Law of Proximity, Laws of UX). Column names are real text. */
+  table.compare .cl { display: none; }
   @media (max-width: 780px) {
-    .compare-hint { display: block; }
-    .compare-scroll { margin-top: 14px; padding-left: 0; }
-    table.compare { min-width: 660px; }
-    table.compare thead th:first-child, table.compare tbody th { position: sticky; left: 0; z-index: 2; min-width: 136px; max-width: 150px; box-shadow: 1px 0 0 var(--rule); }
-    table.compare thead th:first-child { background: var(--burgundy); z-index: 3; }
+    .compare-scroll { overflow: visible; margin-top: 28px; padding: 0 16px; }
+    table.compare { display: block; min-width: 0; width: 100%; max-width: 520px; background: transparent; font-size: .92rem; }
+    table.compare thead { display: none; }
+    table.compare tbody { display: grid; gap: 14px; }
+    table.compare tbody tr { display: grid; grid-template-columns: 1fr 1fr; background: #fff; border: 1px solid var(--rule); border-top: 2px solid var(--plate-edge); text-align: left; }
+    table.compare tbody th, table.compare tbody tr.us-row th { grid-column: 1 / -1; padding: 14px 16px 12px; font-size: 1.2rem; line-height: 1.25; background: transparent; border-bottom: 0; }
+    table.compare td, table.compare tbody tr.us-row td { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; text-align: right; border-bottom: 0; border-top: 1px solid var(--rule); background: transparent; }
+    table.compare td:nth-of-type(2n) { border-right: 1px solid var(--rule); }
+    table.compare td:first-of-type, table.compare tbody tr.us-row td:first-of-type { grid-column: 1 / -1; background: #FEF7EA; border-right: 0; }
+    table.compare .cl { display: inline; font-style: normal; font-family: 'Cinzel', serif; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); text-align: left; }
+    table.compare td:first-of-type .cl { color: var(--rubric); font-size: .72rem; }
+    table.compare td.partial .cv { font-size: .84rem; line-height: 1.3; max-width: 9.5em; }
+    :root[data-theme="dark"] table.compare { background: transparent; }
+    :root[data-theme="dark"] table.compare tbody tr { background: #1A130F; }
+    :root[data-theme="dark"] table.compare tbody th { background: transparent; }
+    :root[data-theme="dark"] table.compare td:first-of-type, :root[data-theme="dark"] table.compare tbody tr.us-row td:first-of-type { background: rgba(212, 181, 126, .1); }
+    :root[data-theme="dark"] table.compare td, :root[data-theme="dark"] table.compare tbody tr.us-row td { background: transparent; }
   }
   footer .foot-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; margin: 26px auto 0; max-width: 640px; }
   footer .foot-links a { padding: 8px 2px; }
@@ -1574,7 +1587,6 @@
     <h2 id="compare-heading">Built for the Mass, not for everything</h2>
     <p class="lede">Generic flashcard apps work for any subject. That is also their weakness for Latin liturgy. Here is what changes when the corpus, the audio, and the imagery are all curated for the 1962 Missale Romanum.</p>
   </div>
-  <p class="compare-hint" aria-hidden="true">Swipe to compare &rarr;</p>
   <div class="compare-scroll" role="region" aria-label="Feature comparison table" tabindex="0">
     <table class="compare">
       <thead>
@@ -1590,67 +1602,67 @@
       <tbody>
         <tr class="us-row">
           <th scope="row">Mass-specific corpus (Order of Mass + Propers)</th>
-          <td class="yes">&#10003;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="yes">&#10003;</td>
+          <td class="yes"><span class="cl">TheLatinMass.org</span><span class="cv">&#10003;</span></td>
+          <td class="no"><span class="cl">Anki</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Quizlet</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Memrise</span><span class="cv">&minus;</span></td>
+          <td class="yes"><span class="cl">DIY Anki Mass deck</span><span class="cv">&#10003;</span></td>
         </tr>
         <tr class="us-row">
           <th scope="row">Latin audio in Roman pronunciation on every card</th>
-          <td class="yes">&#10003;</td>
-          <td class="partial">device TTS only</td>
-          <td class="partial">user-uploaded</td>
-          <td class="partial">varies by course</td>
-          <td class="no">&minus;</td>
+          <td class="yes"><span class="cl">TheLatinMass.org</span><span class="cv">&#10003;</span></td>
+          <td class="partial"><span class="cl">Anki</span><span class="cv">device TTS only</span></td>
+          <td class="partial"><span class="cl">Quizlet</span><span class="cv">user-uploaded</span></td>
+          <td class="partial"><span class="cl">Memrise</span><span class="cv">varies by course</span></td>
+          <td class="no"><span class="cl">DIY Anki Mass deck</span><span class="cv">&minus;</span></td>
         </tr>
         <tr class="us-row">
           <th scope="row">Devotional Renaissance imagery per word</th>
-          <td class="yes">&#10003;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
+          <td class="yes"><span class="cl">TheLatinMass.org</span><span class="cv">&#10003;</span></td>
+          <td class="no"><span class="cl">Anki</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Quizlet</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Memrise</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">DIY Anki Mass deck</span><span class="cv">&minus;</span></td>
         </tr>
         <tr class="us-row">
           <th scope="row">Interlinear English in hand-missal style</th>
-          <td class="yes">&#10003;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
+          <td class="yes"><span class="cl">TheLatinMass.org</span><span class="cv">&#10003;</span></td>
+          <td class="no"><span class="cl">Anki</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Quizlet</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Memrise</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">DIY Anki Mass deck</span><span class="cv">&minus;</span></td>
         </tr>
         <tr>
           <th scope="row">Modern FSRS scheduling</th>
-          <td class="yes">&#10003;</td>
-          <td class="yes">&#10003;</td>
-          <td class="partial">not verified</td>
-          <td class="partial">not verified</td>
-          <td class="yes">&#10003;</td>
+          <td class="yes"><span class="cl">TheLatinMass.org</span><span class="cv">&#10003;</span></td>
+          <td class="yes"><span class="cl">Anki</span><span class="cv">&#10003;</span></td>
+          <td class="partial"><span class="cl">Quizlet</span><span class="cv">not verified</span></td>
+          <td class="partial"><span class="cl">Memrise</span><span class="cv">not verified</span></td>
+          <td class="yes"><span class="cl">DIY Anki Mass deck</span><span class="cv">&#10003;</span></td>
         </tr>
         <tr class="us-row">
           <th scope="row">Catholic teaching notes on each card</th>
-          <td class="yes">&#10003;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="partial">if author adds them</td>
+          <td class="yes"><span class="cl">TheLatinMass.org</span><span class="cv">&#10003;</span></td>
+          <td class="no"><span class="cl">Anki</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Quizlet</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Memrise</span><span class="cv">&minus;</span></td>
+          <td class="partial"><span class="cl">DIY Anki Mass deck</span><span class="cv">if author adds them</span></td>
         </tr>
         <tr>
           <th scope="row">Works in any browser, no install</th>
-          <td class="yes">&#10003;</td>
-          <td class="partial">AnkiWeb limited</td>
-          <td class="yes">&#10003;</td>
-          <td class="yes">&#10003;</td>
-          <td class="partial">Anki only</td>
+          <td class="yes"><span class="cl">TheLatinMass.org</span><span class="cv">&#10003;</span></td>
+          <td class="partial"><span class="cl">Anki</span><span class="cv">AnkiWeb limited</span></td>
+          <td class="yes"><span class="cl">Quizlet</span><span class="cv">&#10003;</span></td>
+          <td class="yes"><span class="cl">Memrise</span><span class="cv">&#10003;</span></td>
+          <td class="partial"><span class="cl">DIY Anki Mass deck</span><span class="cv">Anki only</span></td>
         </tr>
         <tr class="us-row">
           <th scope="row">Revenue donated to TLM parishes</th>
-          <td class="yes">&#10003;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
-          <td class="no">&minus;</td>
+          <td class="yes"><span class="cl">TheLatinMass.org</span><span class="cv">&#10003;</span></td>
+          <td class="no"><span class="cl">Anki</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Quizlet</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">Memrise</span><span class="cv">&minus;</span></td>
+          <td class="no"><span class="cl">DIY Anki Mass deck</span><span class="cv">&minus;</span></td>
         </tr>
       </tbody>
     </table>
