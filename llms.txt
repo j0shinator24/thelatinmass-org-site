@@ -1,0 +1,16 @@
+# The Latin Mass App
+
+> Free spaced-repetition flashcards for the Latin of the 1962 Tridentine (Traditional Latin) Mass: 643 root words and 83 phrase pairs from the Order of Mass and selected Propers. Every card has AI-generated Latin audio (ElevenLabs) in Roman ecclesiastical pronunciation, an English meaning and a devotional image. Cards are scheduled with FSRS. In beta, runs in any browser, made in Australia.
+
+## Pages
+- [Home, with five free sample cards](https://thelatinmass.org/)
+
+## Facts
+- Cards: 726 (643 root words, 83 phrase pairs)
+- Source text: Order of Mass and selected Propers, 1962 Missale Romanum
+- Audio: AI-generated, not a human recording
+- Cost: free during the beta
+- Funding plan: after fees and running costs, subscription revenue is to be split 50/50 between two Brisbane Latin Mass parishes
+
+## Contact
+- info@thelatinmass.org

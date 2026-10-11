@@ -12,3 +12,10 @@
 
 /app/version.json
   Cache-Control: no-store
+
+# The pages.dev copies (mirror and branch previews) must not compete with thelatinmass.org.
+# Host-scoped, so it can never noindex the real domain.
+https://thelatinmass-org-site.pages.dev/*
+  X-Robots-Tag: noindex
+https://:branch.thelatinmass-org-site.pages.dev/*
+  X-Robots-Tag: noindex
