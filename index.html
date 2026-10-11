@@ -1290,6 +1290,66 @@
   footer .foot-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; margin: 26px auto 0; max-width: 640px; }
   footer .foot-links a { padding: 8px 2px; }
   :root[data-theme="dark"] .oauth-btn { color: #2A2520; }
+
+  /* ===== Hero as an illuminated title page (dev, 12 Oct 2026) =====
+     Copy beside the photograph, the photograph in a pointed arch with a gilt keyline and a candle nimbus behind it.
+     The photo is no longer darkened, so the sanctuary reads as it is. Aesthetic-Usability Effect, Law of Common Region
+     (Laws of UX); the H1 is 14:1 on cream and the rubric italic 8.9:1 (WCAG 1.4.3). */
+  .hero {
+    display: block; min-height: 0; text-align: left; color: var(--ink);
+    background: var(--cream-soft) var(--orn-lattice); background-size: 56px 56px;
+    border-bottom: 1px solid var(--rule); overflow: hidden;
+  }
+  .hero-wrap { max-width: 1180px; margin: 0 auto; padding: 34px 24px 56px; display: grid; gap: 30px; align-items: center; }
+  .hero-inner { max-width: 600px; padding: 0; margin: 0 auto; text-align: center; position: relative; z-index: 1; }
+  .hero .eyebrow { color: var(--rubric); margin-bottom: 18px; display: inline-flex; align-items: center; gap: 12px; }
+  .hero .eyebrow::before { content: ""; width: 13px; height: 13px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath fill='black' d='M17 2h6l-1.6 14.6L36 15l2 5-2 5-14.6-1.6L23 38h-6l1.6-14.6L4 25l-2-5 2-5 14.6 1.6z'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath fill='black' d='M17 2h6l-1.6 14.6L36 15l2 5-2 5-14.6-1.6L23 38h-6l1.6-14.6L4 25l-2-5 2-5 14.6 1.6z'/%3E%3C/svg%3E") center / contain no-repeat; }
+  .hero h1 { color: var(--ink); font-size: clamp(3.1rem, 13vw, 4.4rem); line-height: 1; letter-spacing: 0; margin-bottom: 18px; }
+  .hero h1 em { color: var(--rubric); }
+  .hero .tagline { color: var(--ink-soft); font-size: clamp(1.25rem, 4.6vw, 1.5rem); max-width: 30ch; margin: 0 auto 22px; }
+  .hero-facts { list-style: none; display: flex; flex-wrap: nowrap; justify-content: center; align-items: baseline; margin: 0 0 28px; font-family: 'Cinzel', serif; font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+  .hero-facts li { padding: 0 10px; border-left: 1px solid var(--plate-edge); line-height: 1.9; }
+  .hero-facts li:last-child { padding-right: 0; }
+  .hero-facts li:first-child { border-left: 0; padding-left: 0; }
+  .hero-facts b { font-family: 'Cormorant Garamond', serif; font-size: 1.5em; font-weight: 600; letter-spacing: .02em; color: var(--ink); margin-right: .25em; }
+  .hero .cta { border-color: #6B3535; color: #6B3535; }
+  .hero .cta:hover { background: #6B3535; color: #F7F2EA; }
+  .hero .cta.solid { background: #6B3535; color: #F7F2EA; border-color: #6B3535; box-shadow: inset 0 1px 0 rgba(255, 240, 210, .22), 0 6px 18px rgba(94, 42, 42, .22); }
+  .hero .cta.solid:hover { background: #8B4747; border-color: #8B4747; color: #fff; }
+  :root[data-theme="dark"] .hero { background-color: #15110D; }
+  :root[data-theme="dark"] .hero .cta:not(.solid) { color: #EAD9BC; border-color: #BFA388; }
+  :root[data-theme="dark"] .hero .cta:not(.solid):hover { background: #EAD9BC; color: #1A130F; }
+
+  .hero-photo { position: relative; isolation: isolate; margin: 0 auto; width: 100%; max-width: 400px; order: -1; }
+  /* The nimbus: candle light rising behind the crown of the arch. An empty layer, so nothing paints over the photo. */
+  .hero-photo::before {
+    content: ""; position: absolute; z-index: -1; pointer-events: none; inset: -16% -22% 34% -22%;
+    background: radial-gradient(closest-side, rgba(244, 226, 174, .95), rgba(212, 183, 110, .42) 46%, rgba(212, 183, 110, 0) 74%);
+  }
+  :root[data-theme="dark"] .hero-photo::before { background: radial-gradient(closest-side, rgba(244, 214, 150, .5), rgba(200, 150, 70, .2) 48%, rgba(200, 150, 70, 0) 76%); }
+  .hero-photo .arch { aspect-ratio: 1 / 1; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500' preserveAspectRatio='none'%3E%3Cpath d='M0 500V214A330 330 0 0 1 200 0A330 330 0 0 1 400 214V500Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 500' preserveAspectRatio='none'%3E%3Cpath d='M0 500V214A330 330 0 0 1 200 0A330 330 0 0 1 400 214V500Z'/%3E%3C/svg%3E") center / 100% 100% no-repeat; background: #17110C; }
+  .hero-photo .arch img { width: 100%; height: 100%; object-fit: cover; object-position: 49% 46%; }
+  .arch-line { position: absolute; inset: -7px; width: calc(100% + 14px); height: calc(100% + 14px); overflow: visible; pointer-events: none; }
+  .arch-line path { fill: none; stroke: #C8A871; stroke-width: 1.5; }
+  .arch-line.outer { inset: -13px; width: calc(100% + 26px); height: calc(100% + 26px); }
+  .arch-line.outer path { stroke: rgba(200, 168, 113, .5); stroke-width: 1; }
+  @media (prefers-reduced-motion: no-preference) {
+    @keyframes tlm-breathe { from { opacity: .7; } to { opacity: 1; } }
+    .hero-photo::before { animation: tlm-breathe 9s ease-in-out infinite alternate; }
+  }
+  @media (min-width: 900px) {
+    .hero-wrap { grid-template-columns: 1.02fr .98fr; gap: 64px; padding: 72px 40px 88px; min-height: min(86vh, 860px); }
+    .hero-inner { text-align: left; margin: 0; }
+    .hero h1 { font-size: clamp(4.2rem, 7.2vw, 6.4rem); }
+    .hero .tagline { margin-left: 0; font-size: 1.6rem; max-width: 26ch; }
+    .hero-facts { justify-content: flex-start; font-size: .78rem; letter-spacing: .18em; }
+    .hero-facts li { padding: 0 14px; }
+    .hero-buttons { justify-content: flex-start; }
+    .hero-photo { order: 2; max-width: 500px; }
+    .hero-photo .arch { aspect-ratio: 4 / 5; }
+    .hero-photo .arch img { object-position: 49% 50%; }
+  }
+  @media (max-width: 600px) { .hero-buttons { margin: 0 auto; } }
 </style>
 </head>
 <body>
@@ -1306,15 +1366,27 @@
 
 
 <header class="hero" role="banner">
-  <div class="hero-inner">
-    <span class="eyebrow">Beta in Progress</span>
-    <h1>The <em>Latin Mass</em></h1>
-    <p class="tagline">Spaced-repetition flashcards for the 1962 Tridentine vocabulary and the Order of Mass.</p>
-    <div class="hero-buttons">
-      <a href="./app/" class="cta solid" id="heroContinueBtn" hidden>Continue to study &rarr;</a>
-      <a href="#signup" class="cta solid" id="heroSignupBtn">Start free</a>
-      <a href="#funding" class="cta">About the project</a>
+  <div class="hero-wrap">
+    <div class="hero-inner">
+      <span class="eyebrow">Beta in Progress</span>
+      <h1>The <em>Latin Mass</em></h1>
+      <p class="tagline">Spaced-repetition flashcards for the 1962 Tridentine vocabulary and the Order of Mass.</p>
+      <ul class="hero-facts" aria-label="What is in the app">
+        <li><b>643</b> root words</li>
+        <li><b>83</b> phrases</li>
+        <li>Free in beta</li>
+      </ul>
+      <div class="hero-buttons">
+        <a href="./app/" class="cta solid" id="heroContinueBtn" hidden>Continue to study &rarr;</a>
+        <a href="#signup" class="cta solid" id="heroSignupBtn">Start free</a>
+        <a href="#funding" class="cta">About the project</a>
+      </div>
     </div>
+    <figure class="hero-photo">
+      <div class="arch"><img src="./hero.jpg" width="1800" height="1200" fetchpriority="high" decoding="async" alt="The sanctuary of a church during a Traditional Latin Mass: the altar under a pointed arch, with the priest and servers seated at either side."></div>
+      <svg class="arch-line" viewBox="0 0 400 500" preserveAspectRatio="none" aria-hidden="true"><path d="M0 500V214A330 330 0 0 1 200 0A330 330 0 0 1 400 214V500Z" vector-effect="non-scaling-stroke"/></svg>
+      <svg class="arch-line outer" viewBox="0 0 400 500" preserveAspectRatio="none" aria-hidden="true"><path d="M0 500V214A330 330 0 0 1 200 0A330 330 0 0 1 400 214V500Z" vector-effect="non-scaling-stroke"/></svg>
+    </figure>
   </div>
 </header>
 
