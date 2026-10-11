@@ -4,6 +4,8 @@
 
 ## Pages
 - [Home, with five free sample cards](https://thelatinmass.org/)
+- [How to pronounce the Latin of the Mass](https://thelatinmass.org/latin-pronunciation/): the Roman (ecclesiastical) pronunciation rules, with sample words you can hear
+- [The most common Latin words of the Mass](https://thelatinmass.org/latin-mass-words/): forty words with meanings and how often each appears
 
 ## Facts
 - Cards: 726 (643 root words, 83 phrase pairs)
