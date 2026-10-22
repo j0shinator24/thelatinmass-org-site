@@ -71,3 +71,7 @@ footer nav a { padding: 8px 2px; }
   table { font-size: .96rem; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+footer a.foot-credit { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .25rem; font-size: .75rem; text-decoration: none; border: 0; opacity: .78; }
+footer a.foot-credit:hover { opacity: 1; }
+footer .foot-credit img { height: 24px; width: auto; }
+.foot-credit-wrap { margin-top: 10px; }

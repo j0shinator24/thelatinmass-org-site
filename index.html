@@ -635,6 +635,10 @@
   }
   footer a { color: rgba(247, 242, 234, 0.78); text-decoration: none; border-bottom: 1px dotted rgba(232, 218, 196, 0.3); }
   footer a:hover { color: var(--slider-cream); border-color: var(--slider-cream); }
+  footer a.foot-credit { display: inline-flex; align-items: center; gap: .5rem; padding: .5rem .25rem; font-size: .75rem; text-decoration: none; border: 0; opacity: .78; }
+  footer a.foot-credit:hover { opacity: 1; }
+  footer .foot-credit img { height: 24px; width: auto; }
+  .foot-credit-wrap { margin-top: 10px; }
 
   /* ───── Mobile tightening (narrow viewports) ─────
      These rules ONLY tighten spacing and stack horizontal rows; they do not
@@ -1734,6 +1738,7 @@
   <p class="trust-line">Made in Australia by a Catholic layman who is learning the Mass himself.</p>
   <p style="margin-top:18px">&copy; 2026 thelatinmass.org &middot; Built by a parishioner of Mary Immaculate Annerley, Brisbane</p>
   <p style="margin-top:6px"><a href="mailto:info@thelatinmass.org">info@thelatinmass.org</a></p>
+  <p class="foot-credit-wrap"><a href="https://waylight.com.au" rel="nofollow noopener" class="foot-credit"><span>Website by</span><img src="/waylight-web-design.svg" alt="Waylight Web Design" width="134" height="24" loading="lazy" decoding="async"></a></p>
 </footer>
 
 <script>
